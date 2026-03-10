@@ -78,6 +78,7 @@ function initSidebar() {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       navigateTo(a.dataset.page);
+      closeSidebar();
     });
   });
 
@@ -86,13 +87,529 @@ function initSidebar() {
   document.querySelector('.sidebar-user .name').textContent = u.name;
   document.querySelector('.sidebar-user .role').textContent = getRoleBadge(u.role);
   document.querySelector('.sidebar-user .avatar').textContent = u.name[0];
+
+  // ハンバーガーメニュー
+  const hamburger = document.getElementById('hamburger-btn');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (hamburger) {
+    hamburger.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.toggle('open');
+      overlay.classList.toggle('show');
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener('click', closeSidebar);
+  }
 }
 
-// ── 通知ベル ──
+function closeSidebar() {
+  document.querySelector('.sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('show');
+}
+
+// ── 通知ドロップダウン ──
 function initNotificationBell() {
   const unread = MOCK_DATA.notifications.filter(n => !n.isRead).length;
-  const badge = document.querySelector('.notification-bell .badge');
-  if (badge) badge.textContent = unread;
+  const badge = document.getElementById('notif-badge');
+  if (badge) {
+    badge.textContent = unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+
+  const bell = document.getElementById('notif-bell');
+  const dropdown = document.getElementById('notif-dropdown');
+  if (bell && dropdown) {
+    bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dropdown.classList.contains('show');
+      dropdown.classList.toggle('show');
+      if (!isOpen) renderNotifDropdown();
+    });
+    document.addEventListener('click', () => dropdown.classList.remove('show'));
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+  }
+}
+
+function renderNotifDropdown() {
+  const dropdown = document.getElementById('notif-dropdown');
+  const notifications = MOCK_DATA.notifications;
+  const typeIcons = { task_due: '⏰', task_assigned: '📋', report_created: '📝' };
+
+  dropdown.innerHTML = `
+    <div class="notif-dropdown-header">
+      <h4>通知</h4>
+      <button class="btn btn-sm btn-secondary" onclick="markAllRead()">すべて既読</button>
+    </div>
+    <div class="notif-dropdown-body">
+      ${notifications.length === 0
+        ? '<div style="padding:24px;text-align:center;color:var(--gray-400);font-size:13px;">通知はありません</div>'
+        : notifications.map(n => `
+          <div class="notif-dropdown-item ${n.isRead ? '' : 'unread'}" onclick="onNotifClick('${n.id}')">
+            <div class="notif-type-icon ${n.type}">${typeIcons[n.type] || '🔔'}</div>
+            <div>
+              <div class="notif-dropdown-text">${n.message}</div>
+              <div class="notif-dropdown-time">${formatRelativeTime(n.createdAt)}</div>
+            </div>
+          </div>
+        `).join('')}
+    </div>
+    <div class="notif-dropdown-footer">
+      <a href="#" onclick="event.preventDefault();document.getElementById('notif-dropdown').classList.remove('show');navigateTo('dashboard')">すべての通知を見る</a>
+    </div>
+  `;
+}
+
+function formatRelativeTime(iso) {
+  const now = new Date();
+  const d = new Date(iso);
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 60) return `${diffMin}分前`;
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return `${diffH}時間前`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `${diffD}日前`;
+  return formatDate(iso);
+}
+
+function onNotifClick(notifId) {
+  const n = MOCK_DATA.notifications.find(x => x.id === notifId);
+  if (n) n.isRead = true;
+  updateNotifBadge();
+  renderNotifDropdown();
+}
+
+function markAllRead() {
+  MOCK_DATA.notifications.forEach(n => n.isRead = true);
+  updateNotifBadge();
+  renderNotifDropdown();
+}
+
+function updateNotifBadge() {
+  const unread = MOCK_DATA.notifications.filter(n => !n.isRead).length;
+  const badge = document.getElementById('notif-badge');
+  if (badge) {
+    badge.textContent = unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+}
+
+// ── タスク作成モーダル ──
+function openTaskModal() {
+  const modal = document.getElementById('task-create-modal');
+  const clientSelect = document.getElementById('new-task-client');
+  const assigneeSelect = document.getElementById('new-task-assignee');
+
+  clientSelect.innerHTML = MOCK_DATA.clients.filter(c => c.isActive).map(c =>
+    `<option value="${c.id}">${c.name}</option>`
+  ).join('');
+
+  assigneeSelect.innerHTML = MOCK_DATA.users.filter(u => u.isActive && u.role !== 'admin').map(u =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join('');
+
+  document.getElementById('new-task-title').value = '';
+  document.getElementById('new-task-due').value = '';
+  document.getElementById('new-task-status').value = '未着手';
+
+  modal.classList.add('show');
+}
+
+function closeTaskModal() {
+  document.getElementById('task-create-modal').classList.remove('show');
+}
+
+function submitNewTask() {
+  const title = document.getElementById('new-task-title').value.trim();
+  const clientId = document.getElementById('new-task-client').value;
+  const assigneeId = document.getElementById('new-task-assignee').value;
+  const dueDate = document.getElementById('new-task-due').value;
+  const status = document.getElementById('new-task-status').value;
+
+  if (!title) { alert('タスク名を入力してください'); return; }
+  if (!dueDate) { alert('期限を入力してください'); return; }
+
+  const newId = 'tk-' + String(MOCK_DATA.tasks.length + 1).padStart(3, '0');
+  const now = new Date().toISOString().slice(0, 10);
+
+  MOCK_DATA.tasks.push({
+    id: newId,
+    clientId,
+    assigneeUserId: assigneeId,
+    title,
+    status,
+    dueDate,
+    createdAt: now,
+  });
+
+  closeTaskModal();
+
+  // 現在のページを再描画
+  if (currentPage === 'tasks') navigateTo('tasks');
+  else if (currentPage === 'dashboard') navigateTo('dashboard');
+  else alert(`タスク「${title}」を作成しました`);
+}
+
+// ── 顧客追加モーダル ──
+function openClientModal() {
+  const modal = document.getElementById('client-create-modal');
+  const mainSelect = document.getElementById('new-client-main');
+  const subSelect = document.getElementById('new-client-sub');
+  const fiscalSelect = document.getElementById('new-client-fiscal');
+
+  const staffOptions = MOCK_DATA.users.filter(u => u.isActive && u.role !== 'admin').map(u =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join('');
+  mainSelect.innerHTML = staffOptions;
+  subSelect.innerHTML = '<option value="">なし</option>' + staffOptions;
+
+  fiscalSelect.innerHTML = Array.from({length: 12}, (_, i) =>
+    `<option value="${i + 1}" ${i + 1 === 3 ? 'selected' : ''}>${i + 1}月</option>`
+  ).join('');
+
+  document.getElementById('new-client-name').value = '';
+  document.getElementById('new-client-type').value = '法人';
+  document.getElementById('new-client-sales').value = '';
+  document.getElementById('new-client-address').value = '';
+  document.getElementById('new-client-tel').value = '';
+  document.getElementById('new-client-industry').value = '';
+  document.getElementById('new-client-representative').value = '';
+  document.getElementById('new-client-taxoffice').value = '';
+
+  modal.classList.add('show');
+}
+
+function closeClientModal() {
+  document.getElementById('client-create-modal').classList.remove('show');
+}
+
+function submitNewClient() {
+  const name = document.getElementById('new-client-name').value.trim();
+  const clientType = document.getElementById('new-client-type').value;
+  const fiscalMonth = parseInt(document.getElementById('new-client-fiscal').value);
+  const mainUserId = document.getElementById('new-client-main').value;
+  const subUserId = document.getElementById('new-client-sub').value || null;
+  const monthlySales = parseInt(document.getElementById('new-client-sales').value) || 0;
+  const address = document.getElementById('new-client-address').value.trim();
+  const tel = document.getElementById('new-client-tel').value.trim();
+  const industry = document.getElementById('new-client-industry').value.trim();
+  const representative = document.getElementById('new-client-representative').value.trim();
+  const taxOffice = document.getElementById('new-client-taxoffice').value.trim();
+
+  if (!name) { alert('顧客名を入力してください'); return; }
+  if (!monthlySales) { alert('月額報酬を入力してください'); return; }
+
+  const nextCode = String(parseInt(MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode) + 1).padStart(6, '0');
+  const newId = 'c-' + String(MOCK_DATA.clients.length + 1).padStart(3, '0');
+
+  MOCK_DATA.clients.push({
+    id: newId,
+    clientCode: nextCode,
+    name,
+    clientType,
+    fiscalMonth,
+    isActive: true,
+    mainUserId,
+    subUserId,
+    mgrUserId: mainUserId,
+    monthlySales,
+    address,
+    tel,
+    industry,
+    representative,
+    taxOffice,
+    memo: '',
+    establishDate: '',
+  });
+
+  closeClientModal();
+
+  if (currentPage === 'clients') navigateTo('clients');
+  else navigateTo('client-detail', { id: newId });
+}
+
+// ── 職員追加モーダル ──
+function openStaffModal() {
+  const modal = document.getElementById('staff-create-modal');
+  const deptSelect = document.getElementById('new-staff-deptId');
+
+  deptSelect.innerHTML = '<option value="">選択してください</option>' +
+    MOCK_DATA.departments.filter(d => d.status === 1)
+      .map(d => `<option value="${d.deptId}">${d.deptName}</option>`).join('');
+
+  document.getElementById('new-staff-lastName').value = '';
+  document.getElementById('new-staff-firstName').value = '';
+  document.getElementById('new-staff-lastNameKana').value = '';
+  document.getElementById('new-staff-firstNameKana').value = '';
+  document.getElementById('new-staff-email').value = '';
+  document.getElementById('new-staff-tel').value = '';
+  document.getElementById('new-staff-mobile').value = '';
+  document.getElementById('new-staff-position').value = '';
+  document.getElementById('new-staff-employmentType').value = '正社員';
+  document.getElementById('new-staff-joinDate').value = '';
+  document.getElementById('new-staff-role').value = 'member';
+  document.getElementById('new-staff-staffFlag').value = '税務';
+  document.getElementById('new-staff-memo').value = '';
+
+  modal.classList.add('show');
+}
+
+function closeStaffModal() {
+  document.getElementById('staff-create-modal').classList.remove('show');
+}
+
+function submitNewStaff() {
+  const lastName = document.getElementById('new-staff-lastName').value.trim();
+  const firstName = document.getElementById('new-staff-firstName').value.trim();
+  const lastNameKana = document.getElementById('new-staff-lastNameKana').value.trim();
+  const firstNameKana = document.getElementById('new-staff-firstNameKana').value.trim();
+  const email = document.getElementById('new-staff-email').value.trim();
+  const tel = document.getElementById('new-staff-tel').value.trim();
+  const mobile = document.getElementById('new-staff-mobile').value.trim();
+  const deptIdVal = document.getElementById('new-staff-deptId').value;
+  const deptId = deptIdVal ? parseInt(deptIdVal) : null;
+  const position = document.getElementById('new-staff-position').value.trim();
+  const employmentType = document.getElementById('new-staff-employmentType').value;
+  const joinDate = document.getElementById('new-staff-joinDate').value;
+  const role = document.getElementById('new-staff-role').value;
+  const staffFlag = document.getElementById('new-staff-staffFlag').value;
+  const memo = document.getElementById('new-staff-memo').value.trim();
+
+  if (!lastName) { alert('姓を入力してください'); return; }
+  if (!email) { alert('メールアドレスを入力してください'); return; }
+
+  const name = firstName ? lastName + ' ' + firstName : lastName;
+  const nextCode = 'A' + String(MOCK_DATA.users.length + 1).padStart(3, '0');
+  const newId = 'u-' + String(MOCK_DATA.users.length + 1).padStart(3, '0');
+  const loginId = email.split('@')[0];
+
+  MOCK_DATA.users.push({
+    id: newId,
+    staffCode: nextCode,
+    lastName,
+    firstName,
+    lastNameKana,
+    firstNameKana,
+    name,
+    email,
+    tel,
+    mobile,
+    role,
+    deptId,
+    team: null,
+    position,
+    employmentType,
+    joinDate,
+    memo,
+    loginId,
+    isActive: true,
+    baseRatio: null,
+    staffFlag,
+  });
+
+  closeStaffModal();
+
+  if (currentPage === 'staff') navigateTo('staff');
+  else alert(`職員「${name}」を登録しました`);
+}
+
+// ── タスク編集モーダル ──
+function openTaskEditModal(taskId) {
+  const t = MOCK_DATA.tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const modal = document.getElementById('task-edit-modal');
+  document.getElementById('edit-task-id').value = t.id;
+  document.getElementById('edit-task-title').value = t.title;
+  document.getElementById('edit-task-status').value = t.status;
+  document.getElementById('edit-task-due').value = t.dueDate;
+
+  const assigneeSelect = document.getElementById('edit-task-assignee');
+  assigneeSelect.innerHTML = MOCK_DATA.users.filter(u => u.isActive && u.role !== 'admin').map(u =>
+    `<option value="${u.id}" ${u.id === t.assigneeUserId ? 'selected' : ''}>${u.name}</option>`
+  ).join('');
+
+  modal.classList.add('show');
+}
+
+function closeTaskEditModal() {
+  document.getElementById('task-edit-modal').classList.remove('show');
+}
+
+function submitEditTask() {
+  const id = document.getElementById('edit-task-id').value;
+  const t = MOCK_DATA.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.title = document.getElementById('edit-task-title').value.trim();
+  t.assigneeUserId = document.getElementById('edit-task-assignee').value;
+  t.status = document.getElementById('edit-task-status').value;
+  t.dueDate = document.getElementById('edit-task-due').value;
+  closeTaskEditModal();
+  navigateTo('task-detail', { id });
+}
+
+function deleteTask() {
+  const id = document.getElementById('edit-task-id').value;
+  if (!confirm('このタスクを削除しますか？')) return;
+  MOCK_DATA.tasks = MOCK_DATA.tasks.filter(x => x.id !== id);
+  closeTaskEditModal();
+  navigateTo('tasks');
+}
+
+// ── 工数入力モーダル ──
+function openTimesheetModal() {
+  const modal = document.getElementById('timesheet-create-modal');
+  document.getElementById('new-ts-user').innerHTML = MOCK_DATA.users.filter(u => u.isActive).map(u =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join('');
+  document.getElementById('new-ts-client').innerHTML = MOCK_DATA.clients.filter(c => c.isActive).map(c =>
+    `<option value="${c.id}">${c.name}</option>`
+  ).join('');
+  document.getElementById('new-ts-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('new-ts-hours').value = '';
+  document.getElementById('new-ts-desc').value = '';
+  modal.classList.add('show');
+}
+
+function closeTimesheetModal() {
+  document.getElementById('timesheet-create-modal').classList.remove('show');
+}
+
+function submitNewTimeEntry() {
+  const userId = document.getElementById('new-ts-user').value;
+  const clientId = document.getElementById('new-ts-client').value;
+  const date = document.getElementById('new-ts-date').value;
+  const hours = parseFloat(document.getElementById('new-ts-hours').value);
+  const description = document.getElementById('new-ts-desc').value.trim();
+
+  if (!hours || hours <= 0) { alert('時間を入力してください'); return; }
+  if (!description) { alert('作業内容を入力してください'); return; }
+
+  const newId = 'te-' + String(MOCK_DATA.timeEntries.length + 1).padStart(3, '0');
+  MOCK_DATA.timeEntries.push({ id: newId, userId, clientId, taskId: null, date, hours, description });
+  closeTimesheetModal();
+  if (currentPage === 'timesheet') navigateTo('timesheet');
+  else alert('工数を登録しました');
+}
+
+// ── 報告書作成モーダル ──
+function openReportModal() {
+  const modal = document.getElementById('report-create-modal');
+  document.getElementById('new-rp-type').value = '業務報告書';
+  document.getElementById('new-rp-category').value = '確定申告';
+  document.getElementById('new-rp-client').value = '';
+  document.getElementById('new-rp-title').value = '';
+  document.getElementById('new-rp-rank').value = 'B';
+  document.getElementById('new-rp-attach').checked = false;
+  modal.classList.add('show');
+}
+
+function closeReportModal() {
+  document.getElementById('report-create-modal').classList.remove('show');
+}
+
+function submitNewReport() {
+  const title = document.getElementById('new-rp-title').value.trim();
+  const clientName = document.getElementById('new-rp-client').value.trim();
+  const type = document.getElementById('new-rp-type').value;
+  const category = document.getElementById('new-rp-category').value;
+  const rank = document.getElementById('new-rp-rank').value;
+  const hasAttachment = document.getElementById('new-rp-attach').checked;
+
+  if (!title) { alert('タイトルを入力してください'); return; }
+
+  const newId = 'rp-' + String(MOCK_DATA.reports.length + 1).padStart(3, '0');
+
+  MOCK_DATA.reports.push({
+    id: newId, createdAt: new Date().toISOString(),
+    authorId: MOCK_DATA.currentUser.id, type, category,
+    clientName, title, rank, readStatus: '一時保存中', hasAttachment,
+  });
+  closeReportModal();
+  if (currentPage === 'reports') navigateTo('reports');
+  else alert(`報告書「${title}」を作成しました`);
+}
+
+// ── 進捗管理表 作成モーダル ──
+function openProgressCreateModal(type) {
+  const modal = document.getElementById('progress-create-modal');
+  document.getElementById('pg-modal-title').textContent = `進捗管理表の作成（${type}）`;
+  document.getElementById('new-pg-manager').innerHTML = MOCK_DATA.users.filter(u => u.isActive && (u.role === 'admin' || u.role === 'team_leader')).map(u =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join('');
+  document.getElementById('new-pg-name').value = '';
+  document.getElementById('new-pg-category').value = '法人決算';
+
+  if (type === '中間申告・予定納付') {
+    document.getElementById('new-pg-category').value = '中間申告';
+    document.getElementById('new-pg-columns').value = '資料回収, 中間計算, 申告書作成, レビュー, 電子申告';
+  } else if (type === 'サンプル') {
+    document.getElementById('new-pg-columns').value = '資料回収, 記帳確認, 決算整理, 申告書作成, レビュー, 電子申告, 納品';
+  } else {
+    document.getElementById('new-pg-columns').value = '';
+  }
+
+  // ドロップダウンを閉じる
+  const menu = document.getElementById('pg-create-menu');
+  if (menu) menu.style.display = 'none';
+
+  modal.classList.add('show');
+}
+
+function closeProgressCreateModal() {
+  document.getElementById('progress-create-modal').classList.remove('show');
+}
+
+function submitNewProgress() {
+  const name = document.getElementById('new-pg-name').value.trim();
+  const category = document.getElementById('new-pg-category').value;
+  const managerId = document.getElementById('new-pg-manager').value;
+  const columnsText = document.getElementById('new-pg-columns').value.trim();
+
+  if (!name) { alert('管理表名を入力してください'); return; }
+  if (!columnsText) { alert('工程列を入力してください'); return; }
+
+  const columns = columnsText.split(',').map(c => c.trim()).filter(Boolean);
+  const newId = 'ps-' + String(MOCK_DATA.progressSheets.length + 1).padStart(3, '0');
+
+  MOCK_DATA.progressSheets.push({
+    id: newId, name, category, status: '利用中',
+    managerId, createdAt: new Date().toISOString().slice(0, 10),
+    columns, targets: [],
+  });
+  closeProgressCreateModal();
+  if (currentPage === 'progress') navigateTo('progress');
+  else alert(`進捗管理表「${name}」を作成しました`);
+}
+
+// ── 進捗管理表 設定変更モーダル ──
+function openProgressSettingsModal(sheetId) {
+  const s = MOCK_DATA.progressSheets.find(x => x.id === sheetId);
+  if (!s) return;
+  const modal = document.getElementById('progress-settings-modal');
+  document.getElementById('edit-pg-id').value = s.id;
+  document.getElementById('edit-pg-name').value = s.name;
+  document.getElementById('edit-pg-status').value = s.status;
+
+  document.getElementById('edit-pg-manager').innerHTML = MOCK_DATA.users.filter(u => u.isActive && (u.role === 'admin' || u.role === 'team_leader')).map(u =>
+    `<option value="${u.id}" ${u.id === s.managerId ? 'selected' : ''}>${u.name}</option>`
+  ).join('');
+
+  modal.classList.add('show');
+}
+
+function closeProgressSettingsModal() {
+  document.getElementById('progress-settings-modal').classList.remove('show');
+}
+
+function submitEditProgress() {
+  const id = document.getElementById('edit-pg-id').value;
+  const s = MOCK_DATA.progressSheets.find(x => x.id === id);
+  if (!s) return;
+  s.name = document.getElementById('edit-pg-name').value.trim();
+  s.status = document.getElementById('edit-pg-status').value;
+  s.managerId = document.getElementById('edit-pg-manager').value;
+  closeProgressSettingsModal();
+  if (currentPage === 'progress') navigateTo('progress');
 }
 
 // ── 全ページ登録 ──
@@ -209,7 +726,7 @@ function renderClients(el) {
         <option value="inactive">無効</option>
       </select>
       <div class="spacer"></div>
-      <button class="btn btn-primary" onclick="alert('モックのため操作不可')">+ 新規顧客</button>
+      <button class="btn btn-primary" onclick="openClientModal()">+ 新規顧客</button>
     </div>
     <div class="card">
       <div class="table-wrapper">
@@ -279,6 +796,13 @@ function renderClientDetail(el, params) {
           <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value"><span class="type-badge ${c.clientType === '法人' ? 'type-corp' : 'type-individual'}">${c.clientType}</span></div></div>
           <div class="detail-row"><div class="detail-label">決算月</div><div class="detail-value">${c.fiscalMonth}月</div></div>
           <div class="detail-row"><div class="detail-label">月額報酬（税抜）</div><div class="detail-value">${c.monthlySales.toLocaleString()}円</div></div>
+          <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${c.address || '-'}</div></div>
+          <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${c.tel || '-'}</div></div>
+          ${c.clientType === '法人' ? `<div class="detail-row"><div class="detail-label">代表者</div><div class="detail-value">${c.representative || '-'}</div></div>` : ''}
+          ${c.clientType === '法人' ? `<div class="detail-row"><div class="detail-label">設立日</div><div class="detail-value">${formatDate(c.establishDate)}</div></div>` : ''}
+          <div class="detail-row"><div class="detail-label">業種</div><div class="detail-value">${c.industry || '-'}</div></div>
+          <div class="detail-row"><div class="detail-label">管轄税務署</div><div class="detail-value">${c.taxOffice || '-'}</div></div>
+          ${c.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${c.memo}</div></div>` : ''}
           <div class="detail-row"><div class="detail-label">ステータス</div><div class="detail-value">${c.isActive ? '有効' : '無効'}</div></div>
         </div>
       </div>
@@ -293,7 +817,7 @@ function renderClientDetail(el, params) {
       </div>
     </div>
     <div class="card" style="margin-top:24px">
-      <div class="card-header"><h3>関連タスク</h3><button class="btn btn-primary btn-sm" onclick="alert('モックのため操作不可')">+ タスク追加</button></div>
+      <div class="card-header"><h3>関連タスク</h3><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ タスク追加</button></div>
       <div class="card-body">
         <div class="table-wrapper">
           <table>
@@ -335,7 +859,7 @@ function renderTasks(el) {
         ${MOCK_DATA.users.filter(u => u.isActive).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
       </select>
       <div class="spacer"></div>
-      <button class="btn btn-primary" onclick="alert('モックのため操作不可')">+ 新規タスク</button>
+      <button class="btn btn-primary" onclick="openTaskModal()">+ 新規タスク</button>
     </div>
     <div class="card">
       <div class="table-wrapper">
@@ -396,7 +920,7 @@ function renderTaskDetail(el, params) {
     <div style="margin-bottom:16px"><a href="#" onclick="event.preventDefault();navigateTo('tasks')">&larr; タスク一覧に戻る</a></div>
     <div class="detail-grid">
       <div class="card">
-        <div class="card-header"><h3>タスク情報</h3><button class="btn btn-secondary btn-sm" onclick="alert('モックのため操作不可')">編集</button></div>
+        <div class="card-header"><h3>タスク情報</h3><button class="btn btn-secondary btn-sm" onclick="openTaskEditModal('${t.id}')">編集</button></div>
         <div class="card-body">
           <div class="detail-row"><div class="detail-label">タスク名</div><div class="detail-value">${t.title}</div></div>
           <div class="detail-row"><div class="detail-label">顧客</div><div class="detail-value"><a href="#" onclick="event.preventDefault();navigateTo('client-detail',{id:'${t.clientId}'})">${client?.name || '-'}</a></div></div>
@@ -445,9 +969,9 @@ function renderProgress(el) {
       <div class="dropdown" style="position:relative;">
         <button class="btn btn-primary" id="pg-create-btn">+ 作成</button>
         <div class="dropdown-menu" id="pg-create-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid var(--gray-200);border-radius:6px;box-shadow:var(--shadow-lg);z-index:10;min-width:240px;">
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();alert('モックのため操作不可')">進捗管理表の作成（通常版）</a>
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();alert('モックのため操作不可')">進捗管理表の作成（中間申告・予定納付）</a>
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();alert('モックのため操作不可')">サンプルから作成</a>
+          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('通常')">進捗管理表の作成（通常版）</a>
+          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('中間申告・予定納付')">進捗管理表の作成（中間申告・予定納付）</a>
+          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('サンプル')">サンプルから作成</a>
         </div>
       </div>
       <div class="spacer"></div>
@@ -516,7 +1040,7 @@ function renderProgress(el) {
                     <td>${incomplete > 0 ? `<span class="count-badge count-warn">${incomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${mgr?.name || '-'}</td>
                     <td>
-                      <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();alert('モックのため操作不可')">設定変更</button>
+                      <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openProgressSettingsModal('${s.id}')">設定変更</button>
                     </td>
                   </tr>`;
                 }).join('')}
@@ -703,23 +1227,42 @@ function renderProgressDetail(el, params) {
 // ===========================
 // 職員一覧
 // ===========================
+function getDeptName(deptId) {
+  if (!deptId) return '-';
+  const dept = MOCK_DATA.departments.find(d => d.deptId === deptId);
+  return dept ? dept.deptName : '-';
+}
+
 function renderStaff(el) {
+  const deptOptions = MOCK_DATA.departments.filter(d => d.status === 1)
+    .map(d => `<option value="${d.deptId}">${d.deptName}</option>`).join('');
+  const empTypes = [...new Set(MOCK_DATA.users.map(u => u.employmentType).filter(Boolean))];
+  const empTypeOptions = empTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+
   el.innerHTML = `
     <div class="toolbar">
-      <input type="text" class="search-input" placeholder="氏名・コードで検索..." id="staff-search">
+      <input type="text" class="search-input" placeholder="氏名・コード・フリガナで検索..." id="staff-search">
       <select class="filter-select" id="staff-role-filter">
         <option value="">全ロール</option>
         <option value="admin">管理者</option>
         <option value="team_leader">チームリーダー</option>
         <option value="member">メンバー</option>
       </select>
+      <select class="filter-select" id="staff-dept-filter">
+        <option value="">全部署</option>
+        ${deptOptions}
+      </select>
+      <select class="filter-select" id="staff-emptype-filter">
+        <option value="">全雇用形態</option>
+        ${empTypeOptions}
+      </select>
       <div class="spacer"></div>
-      <button class="btn btn-primary" onclick="alert('モックのため操作不可')">+ 職員追加</button>
+      <button class="btn btn-primary" onclick="openStaffModal()">+ 職員追加</button>
     </div>
     <div class="card">
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>コード</th><th>氏名</th><th>ロール</th><th>チーム</th><th>分類</th><th>基準割合</th><th>状態</th></tr></thead>
+          <thead><tr><th>コード</th><th>氏名</th><th>フリガナ</th><th>メール</th><th>部署</th><th>役職</th><th>雇用形態</th><th>ステータス</th></tr></thead>
           <tbody id="staff-table-body"></tbody>
         </table>
       </div>
@@ -729,30 +1272,44 @@ function renderStaff(el) {
 
   document.getElementById('staff-search').addEventListener('input', renderStaffTable);
   document.getElementById('staff-role-filter').addEventListener('change', renderStaffTable);
+  document.getElementById('staff-dept-filter').addEventListener('change', renderStaffTable);
+  document.getElementById('staff-emptype-filter').addEventListener('change', renderStaffTable);
 }
 
 function renderStaffTable() {
   const search = (document.getElementById('staff-search')?.value || '').toLowerCase();
   const roleFilter = document.getElementById('staff-role-filter')?.value || '';
+  const deptFilter = document.getElementById('staff-dept-filter')?.value || '';
+  const empTypeFilter = document.getElementById('staff-emptype-filter')?.value || '';
 
   let users = MOCK_DATA.users.filter(u => {
-    if (search && !u.name.toLowerCase().includes(search) && !u.staffCode.toLowerCase().includes(search)) return false;
+    if (search) {
+      const kana = ((u.lastNameKana || '') + ' ' + (u.firstNameKana || '')).toLowerCase();
+      const fullName = ((u.lastName || '') + ' ' + (u.firstName || '')).toLowerCase();
+      if (!u.name.toLowerCase().includes(search) && !u.staffCode.toLowerCase().includes(search) && !kana.includes(search) && !fullName.includes(search)) return false;
+    }
     if (roleFilter && u.role !== roleFilter) return false;
+    if (deptFilter && String(u.deptId) !== deptFilter) return false;
+    if (empTypeFilter && u.employmentType !== empTypeFilter) return false;
     return true;
   });
 
   const tbody = document.getElementById('staff-table-body');
-  tbody.innerHTML = users.map(u => `
+  tbody.innerHTML = users.map(u => {
+    const displayName = (u.lastName || '') + (u.firstName ? ' ' + u.firstName : '');
+    const displayKana = (u.lastNameKana || '') + (u.firstNameKana ? ' ' + u.firstNameKana : '');
+    return `
     <tr>
-      <td>${u.staffCode}</td>
-      <td><strong>${u.name}</strong></td>
-      <td><span class="role-badge role-${u.role}">${getRoleBadge(u.role)}</span></td>
-      <td>${u.team || '-'}</td>
-      <td>${u.staffFlag || '-'}</td>
-      <td>${u.baseRatio != null ? u.baseRatio + '%' : '-'}</td>
+      <td>${u.staffCode || '-'}</td>
+      <td><strong>${displayName || u.name}</strong></td>
+      <td>${displayKana || '-'}</td>
+      <td>${u.email || '-'}</td>
+      <td>${getDeptName(u.deptId)}</td>
+      <td>${u.position || '-'}</td>
+      <td>${u.employmentType || '-'}</td>
       <td>${u.isActive ? '<span style="color:var(--success)">有効</span>' : '<span style="color:var(--gray-400)">無効</span>'}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 // ===========================
@@ -767,7 +1324,7 @@ function renderTimesheet(el) {
       </select>
       <input type="date" class="filter-select" id="ts-date-filter" value="2026-03-07">
       <div class="spacer"></div>
-      <button class="btn btn-primary" onclick="alert('モックのため操作不可')">+ 工数入力</button>
+      <button class="btn btn-primary" onclick="openTimesheetModal()">+ 工数入力</button>
     </div>
 
     <div class="stats-grid" id="ts-summary"></div>
@@ -845,55 +1402,253 @@ function renderTimesheetData() {
 }
 
 // ===========================
-// 報告書
+// 報告書一覧
 // ===========================
+let rpPage = 1;
+const rpPerPage = 20;
+let rpReadFilter = '全て';      // 全て / 未読
+let rpTypeFilter = '両方';      // 両方 / 業務報告書 / 日報
+let rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
+
 function renderReports(el) {
+  rpPage = 1;
+  rpReadFilter = '全て';
+  rpTypeFilter = '両方';
+  rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
+
   el.innerHTML = `
-    <div class="toolbar">
-      <select class="filter-select" id="rp-team-filter">
-        <option value="">全チーム</option>
-        ${MOCK_DATA.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-      </select>
-      <div class="spacer"></div>
-      <button class="btn btn-primary" onclick="alert('モックのため操作不可')">+ 新規報告書</button>
+    <div class="rp-header-bar">
+      <h2>報告書一覧</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="rpMarkAllRead()">全てを既読にする</button>
+        <button class="btn btn-primary btn-sm" onclick="openReportModal()">+ 新規報告書</button>
+      </div>
     </div>
-    <div id="rp-list"></div>
-  `;
-  renderReportList();
-  document.getElementById('rp-team-filter').addEventListener('change', renderReportList);
-}
 
-function renderReportList() {
-  const teamFilter = document.getElementById('rp-team-filter')?.value || '';
-  let reports = MOCK_DATA.reports.filter(r => {
-    if (teamFilter && r.teamId !== teamFilter) return false;
-    return true;
-  });
-  reports.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    <div class="rp-tabs">
+      <button class="rp-tab active" data-rf="全て" onclick="rpSetReadFilter(this)">全て</button>
+      <button class="rp-tab" data-rf="未読" onclick="rpSetReadFilter(this)">未読</button>
+      <span class="rp-tab-sep">|</span>
+      <button class="rp-tab" onclick="rpExpandAll()">全て開く</button>
+      <button class="rp-tab" onclick="rpCollapseAll()">全て閉じる</button>
+      <span class="rp-tab-sep">|</span>
+      <span class="rp-view-label">表示：</span>
+      <button class="rp-tab active" data-tf="両方" onclick="rpSetTypeFilter(this)">両方</button>
+      <button class="rp-tab" data-tf="業務報告書" onclick="rpSetTypeFilter(this)">業務報告書</button>
+      <button class="rp-tab" data-tf="日報" onclick="rpSetTypeFilter(this)">日報</button>
+    </div>
 
-  const container = document.getElementById('rp-list');
-  container.innerHTML = reports.length === 0
-    ? '<div class="empty-state"><div class="icon">?</div><p>報告書がありません</p></div>'
-    : reports.map(r => {
-      const author = getUserById(r.authorId);
-      const team = MOCK_DATA.teams.find(t => t.id === r.teamId);
-      return `
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-header">
-            <h3>${r.title}</h3>
-            <span class="status-badge status-done">${r.status}</span>
+    <div class="rp-layout">
+      <div>
+        <div class="rp-list" id="rp-list-body"></div>
+        <div class="rp-pagination" id="rp-pagination"></div>
+      </div>
+      <div class="rp-search-panel">
+        <h4>検索</h4>
+        <div class="rp-search-group">
+          <label>種別：</label>
+          <select id="rp-s-category">
+            <option value="">すべて</option>
+            <option value="確定申告">確定申告</option>
+            <option value="決算業務">決算業務</option>
+            <option value="月次業務">月次業務</option>
+            <option value="その他">その他</option>
+            <option value="日報">日報</option>
+          </select>
+        </div>
+        <div class="rp-search-group">
+          <label>顧客：</label>
+          <input type="text" id="rp-s-client" placeholder="顧客名で検索...">
+        </div>
+        <div class="rp-search-group">
+          <label>作成者：</label>
+          <select id="rp-s-author">
+            <option value="">すべて</option>
+            ${MOCK_DATA.users.filter(u => u.isActive).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="rp-search-group">
+          <label>期間：</label>
+          <div class="rp-period-btns">
+            <button class="rp-period-btn active" data-p="1年以内" onclick="rpSetPeriod(this)">1年以内</button>
+            <button class="rp-period-btn" data-p="2年以内" onclick="rpSetPeriod(this)">2年以内</button>
+            <button class="rp-period-btn" data-p="全て" onclick="rpSetPeriod(this)">全て</button>
           </div>
-          <div class="card-body">
-            <div style="display:flex;gap:24px;margin-bottom:12px;font-size:12px;color:var(--gray-500);">
-              <span>作成者: ${author?.name || '-'}</span>
-              <span>チーム: ${team?.name || '-'}</span>
-              <span>作成日: ${formatDate(r.createdAt)}</span>
-            </div>
-            <p style="font-size:13px;color:var(--gray-700);line-height:1.8;">${r.content}</p>
+          <div class="rp-date-range">
+            <input type="date" id="rp-s-from">
+            <span>～</span>
+            <input type="date" id="rp-s-to">
           </div>
         </div>
-      `;
+        <div class="rp-search-group">
+          <label>ランク：</label>
+          <div class="rp-rank-btns" id="rp-rank-btns">
+            <button class="rp-rank-btn" data-rank="A" onclick="rpToggleRank(this)">A</button>
+            <button class="rp-rank-btn" data-rank="B" onclick="rpToggleRank(this)">B</button>
+            <button class="rp-rank-btn" data-rank="C" onclick="rpToggleRank(this)">C</button>
+            <button class="rp-rank-btn" data-rank="日報" onclick="rpToggleRank(this)">日報</button>
+          </div>
+        </div>
+        <div class="rp-search-group">
+          <label>オプション：</label>
+          <div class="rp-search-opts">
+            <label><input type="checkbox" id="rp-s-attach"> 添付ファイルのみ</label>
+            <label><input type="checkbox" id="rp-s-draft"> 一時保存中のみ</label>
+          </div>
+        </div>
+        <div class="rp-search-group">
+          <label>キーワード：</label>
+          <input type="text" id="rp-s-keyword" placeholder="キーワード検索...">
+        </div>
+        <div class="rp-search-actions">
+          <button class="btn btn-primary btn-sm" onclick="rpDoSearch()">検索</button>
+          <button class="btn btn-secondary btn-sm" onclick="rpClearSearch()">検索クリア</button>
+        </div>
+      </div>
+    </div>
+  `;
+  rpRenderList();
+}
+
+function rpGetFiltered() {
+  let reports = [...MOCK_DATA.reports];
+  // 既読フィルタ
+  if (rpReadFilter === '未読') reports = reports.filter(r => r.readStatus === '未読');
+  // タイプフィルタ
+  if (rpTypeFilter !== '両方') reports = reports.filter(r => r.type === rpTypeFilter);
+  // 検索条件
+  const s = rpSearchState;
+  if (s.category) reports = reports.filter(r => r.category === s.category);
+  if (s.client) reports = reports.filter(r => (r.clientName || '').includes(s.client));
+  if (s.author) reports = reports.filter(r => r.authorId === s.author);
+  if (s.ranks.length > 0) reports = reports.filter(r => s.ranks.includes(r.rank));
+  if (s.attachOnly) reports = reports.filter(r => r.hasAttachment);
+  if (s.draftOnly) reports = reports.filter(r => r.readStatus === '一時保存中');
+  if (s.keyword) {
+    const kw = s.keyword.toLowerCase();
+    reports = reports.filter(r => r.title.toLowerCase().includes(kw) || (r.clientName || '').toLowerCase().includes(kw));
+  }
+  if (s.dateFrom) reports = reports.filter(r => r.createdAt >= s.dateFrom);
+  if (s.dateTo) reports = reports.filter(r => r.createdAt <= s.dateTo + 'T23:59:59');
+  // 期間プリセット
+  if (s.period !== '全て' && !s.dateFrom && !s.dateTo) {
+    const now = new Date();
+    const years = s.period === '1年以内' ? 1 : 2;
+    const cutoff = new Date(now.getFullYear() - years, now.getMonth(), now.getDate()).toISOString();
+    reports = reports.filter(r => r.createdAt >= cutoff);
+  }
+  reports.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return reports;
+}
+
+function rpRenderList() {
+  const all = rpGetFiltered();
+  const totalPages = Math.max(1, Math.ceil(all.length / rpPerPage));
+  if (rpPage > totalPages) rpPage = totalPages;
+  const start = (rpPage - 1) * rpPerPage;
+  const page = all.slice(start, start + rpPerPage);
+
+  const body = document.getElementById('rp-list-body');
+  if (all.length === 0) {
+    body.innerHTML = '<div class="empty-state" style="padding:40px"><div class="icon">📝</div><p>該当する報告書がありません</p></div>';
+  } else {
+    body.innerHTML = page.map(r => {
+      const author = getUserById(r.authorId);
+      const isUnread = r.readStatus === '未読';
+      const isDraft = r.readStatus === '一時保存中';
+      const badgeClass = isUnread ? 'rp-badge-unread' : isDraft ? 'rp-badge-draft' : 'rp-badge-read';
+      const badgeText = isUnread ? '未読' : isDraft ? '一時保存中' : '';
+      return `<div class="rp-row ${isUnread ? 'unread' : ''}" onclick="rpClickReport('${r.id}')">
+        <span class="rp-row-date">${formatDate(r.createdAt)}</span>
+        <span class="rp-row-author">${author?.name || '-'}</span>
+        <span class="rp-row-title">${r.hasAttachment ? '<span class="attach-icon">📎</span>' : ''}${r.title}</span>
+        ${badgeText ? `<span class="rp-row-badge ${badgeClass}">${badgeText}</span>` : '<span></span>'}
+      </div>`;
     }).join('');
+  }
+
+  // ページネーション
+  const pag = document.getElementById('rp-pagination');
+  pag.innerHTML = `
+    <button onclick="rpGoPage(1)" ${rpPage <= 1 ? 'disabled' : ''}>&laquo;最初</button>
+    <button onclick="rpGoPage(${rpPage - 1})" ${rpPage <= 1 ? 'disabled' : ''}>&lsaquo;前</button>
+    <span class="page-info">${rpPage} / ${totalPages}</span>
+    <button onclick="rpGoPage(${rpPage + 1})" ${rpPage >= totalPages ? 'disabled' : ''}>次&rsaquo;</button>
+    <button onclick="rpGoPage(${totalPages})" ${rpPage >= totalPages ? 'disabled' : ''}>最後&raquo;</button>
+  `;
+}
+
+function rpGoPage(n) { rpPage = n; rpRenderList(); }
+
+function rpSetReadFilter(btn) {
+  rpReadFilter = btn.dataset.rf;
+  btn.closest('.rp-tabs').querySelectorAll('[data-rf]').forEach(b => b.classList.toggle('active', b === btn));
+  rpPage = 1;
+  rpRenderList();
+}
+
+function rpSetTypeFilter(btn) {
+  rpTypeFilter = btn.dataset.tf;
+  btn.closest('.rp-tabs').querySelectorAll('[data-tf]').forEach(b => b.classList.toggle('active', b === btn));
+  rpPage = 1;
+  rpRenderList();
+}
+
+function rpMarkAllRead() {
+  MOCK_DATA.reports.forEach(r => { if (r.readStatus === '未読') r.readStatus = '既読'; });
+  rpRenderList();
+}
+
+function rpClickReport(id) {
+  const r = MOCK_DATA.reports.find(x => x.id === id);
+  if (r && r.readStatus === '未読') r.readStatus = '既読';
+  rpRenderList();
+  // 将来的に詳細画面に遷移可能
+}
+
+function rpExpandAll() { /* placeholder for accordion */ }
+function rpCollapseAll() { /* placeholder for accordion */ }
+
+function rpSetPeriod(btn) {
+  rpSearchState.period = btn.dataset.p;
+  btn.closest('.rp-period-btns').querySelectorAll('.rp-period-btn').forEach(b => b.classList.toggle('active', b === btn));
+}
+
+function rpToggleRank(btn) {
+  btn.classList.toggle('active');
+  const rank = btn.dataset.rank;
+  const idx = rpSearchState.ranks.indexOf(rank);
+  if (idx >= 0) rpSearchState.ranks.splice(idx, 1);
+  else rpSearchState.ranks.push(rank);
+}
+
+function rpDoSearch() {
+  rpSearchState.category = document.getElementById('rp-s-category').value;
+  rpSearchState.client = document.getElementById('rp-s-client').value.trim();
+  rpSearchState.author = document.getElementById('rp-s-author').value;
+  rpSearchState.dateFrom = document.getElementById('rp-s-from').value;
+  rpSearchState.dateTo = document.getElementById('rp-s-to').value;
+  rpSearchState.attachOnly = document.getElementById('rp-s-attach').checked;
+  rpSearchState.draftOnly = document.getElementById('rp-s-draft').checked;
+  rpSearchState.keyword = document.getElementById('rp-s-keyword').value.trim();
+  rpPage = 1;
+  rpRenderList();
+}
+
+function rpClearSearch() {
+  rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
+  document.getElementById('rp-s-category').value = '';
+  document.getElementById('rp-s-client').value = '';
+  document.getElementById('rp-s-author').value = '';
+  document.getElementById('rp-s-from').value = '';
+  document.getElementById('rp-s-to').value = '';
+  document.getElementById('rp-s-attach').checked = false;
+  document.getElementById('rp-s-draft').checked = false;
+  document.getElementById('rp-s-keyword').value = '';
+  document.querySelectorAll('.rp-rank-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rp-period-btn').forEach(b => b.classList.toggle('active', b.dataset.p === '1年以内'));
+  rpPage = 1;
+  rpRenderList();
 }
 
 // ===========================
@@ -1159,12 +1914,28 @@ function renderIntegrations(el) {
 function renderSettings(el) {
   const u = MOCK_DATA.currentUser;
   const fullUser = getUserById(u.id);
+  const office = MOCK_DATA.office;
+  const sec = MOCK_DATA.securitySettings;
+  const depts = MOCK_DATA.departments;
 
-  el.innerHTML = `
-    <div class="detail-grid">
-      <div>
-        <div class="card" style="margin-bottom:24px;">
-          <div class="card-header"><h3>プロフィール</h3></div>
+  const tabs = [
+    { key: 'personal', label: '個人設定' },
+    { key: 'staff', label: 'スタッフ管理' },
+    { key: 'office', label: 'オフィス管理' },
+    { key: 'security', label: 'セキュリティ管理' },
+    { key: 'crm', label: 'CRM設定' },
+    { key: 'features', label: '機能設定' },
+  ];
+
+  const logoutOpts = [5,10,15,30,60,120].map(m =>
+    `<option value="${m}" ${office.logoutTime === m ? 'selected' : ''}>${m}分</option>`
+  ).join('');
+
+  const panels = {
+    personal: `
+      <div class="detail-grid">
+        <div class="card">
+          <div class="card-header"><h3>マイ設定</h3></div>
           <div class="card-body">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
               <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:600;">${u.name[0]}</div>
@@ -1173,116 +1944,149 @@ function renderSettings(el) {
                 <div style="font-size:13px;color:var(--gray-500);">${u.email} / ${getRoleBadge(u.role)}</div>
               </div>
             </div>
-            <div class="form-group">
-              <label>表示名</label>
-              <input type="text" value="${u.name}">
-            </div>
-            <div class="form-group">
-              <label>メールアドレス</label>
-              <input type="email" value="${u.email}">
-            </div>
-            <div class="form-group">
-              <label>所属チーム</label>
-              <input type="text" value="${fullUser?.team || '（なし）'}" disabled style="background:var(--gray-50);">
-            </div>
+            <div class="form-group"><label>表示名</label><input type="text" value="${u.name}"></div>
+            <div class="form-group"><label>メールアドレス</label><input type="email" value="${u.email}"></div>
+            <div class="form-group"><label>所属チーム</label><input type="text" value="${fullUser?.team || '（なし）'}" disabled style="background:var(--gray-50);"></div>
             <button class="btn btn-primary" onclick="alert('保存しました（モック）')">保存</button>
           </div>
         </div>
-
         <div class="card">
           <div class="card-header"><h3>パスワード変更</h3></div>
           <div class="card-body">
-            <div class="form-group">
-              <label>現在のパスワード</label>
-              <input type="password" placeholder="現在のパスワード">
-            </div>
-            <div class="form-group">
-              <label>新しいパスワード</label>
-              <input type="password" placeholder="新しいパスワード">
-            </div>
-            <div class="form-group">
-              <label>新しいパスワード（確認）</label>
-              <input type="password" placeholder="もう一度入力">
-            </div>
+            <div class="form-group"><label>現在のパスワード</label><input type="password" placeholder="現在のパスワード"></div>
+            <div class="form-group"><label>新しいパスワード</label><input type="password" placeholder="新しいパスワード"></div>
+            <div class="form-group"><label>新しいパスワード（確認）</label><input type="password" placeholder="もう一度入力"></div>
             <button class="btn btn-primary" onclick="alert('パスワードを変更しました（モック）')">変更する</button>
           </div>
         </div>
-      </div>
+      </div>`,
 
-      <div>
-        <div class="card" style="margin-bottom:24px;">
-          <div class="card-header"><h3>通知設定</h3></div>
-          <div class="card-body">
-            <div class="settings-list">
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">タスク期限通知</div>
-                  <div class="settings-desc">期限の3日前・当日に通知</div>
-                </div>
-                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">タスク割当通知</div>
-                  <div class="settings-desc">新しいタスクが割り当てられた時</div>
-                </div>
-                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">差戻し通知</div>
-                  <div class="settings-desc">タスクが差し戻された時</div>
-                </div>
-                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">報告書通知</div>
-                  <div class="settings-desc">チームの報告書が作成された時</div>
-                </div>
-                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-              </div>
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">メール通知</div>
-                  <div class="settings-desc">重要な通知をメールでも受信</div>
-                </div>
-                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-              </div>
-              <div class="settings-row">
-                <div>
-                  <div class="settings-label">Chatwork通知</div>
-                  <div class="settings-desc">Chatworkにも通知を送信</div>
-                </div>
-                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
+    staff: `
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><h3>スタッフ管理</h3></div>
+        <div class="card-body">
+          <div class="settings-list">
+            <div class="settings-row">
+              <div><div class="settings-label">職員一覧</div><div class="settings-desc">登録済み職員の一覧を表示</div></div>
+              <button class="btn btn-secondary btn-sm" onclick="navigateTo('staff')">職員一覧へ</button>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">ユーザーID発行</div><div class="settings-desc">新しいユーザーIDを発行します</div></div>
+              <button class="btn btn-primary btn-sm" onclick="alert('ユーザーID発行（モック）')">発行</button>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">ログアウト時間設定</div><div class="settings-desc">無操作時の自動ログアウトまでの時間</div></div>
+              <select class="filter-select" style="width:120px;" onchange="MOCK_DATA.office.logoutTime=parseInt(this.value);alert('保存しました（モック）')">${logoutOpts}</select>
             </div>
           </div>
         </div>
+      </div>`,
 
-        <div class="card">
-          <div class="card-header"><h3>表示設定</h3></div>
-          <div class="card-body">
-            <div class="form-group">
-              <label>デフォルト表示ページ</label>
-              <select>
-                <option selected>ダッシュボード</option>
-                <option>タスク一覧</option>
-                <option>進捗管理表</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>1ページあたりの表示件数</label>
-              <select>
-                <option>20件</option>
-                <option selected>50件</option>
-                <option>100件</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" onclick="alert('保存しました（モック）')">保存</button>
-          </div>
+    office: `
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><h3>オフィス情報</h3></div>
+        <div class="card-body">
+          <div class="detail-row"><div class="detail-label">事務所名</div><div class="detail-value">${office.aoName}</div></div>
+          <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${office.address}</div></div>
+          <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${office.tel}</div></div>
+          <div class="detail-row"><div class="detail-label">メール</div><div class="detail-value">${office.email}</div></div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-header"><h3>部署一覧</h3></div>
+        <div class="card-body">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>部署コード</th><th>部署名</th><th>表示順</th><th>状態</th></tr></thead>
+              <tbody>
+                ${depts.map(d => `<tr>
+                  <td>${d.deptCode}</td><td>${d.deptName}</td><td>${d.sortOrder}</td>
+                  <td><span class="status-badge ${d.status === 1 ? 'status-done' : 'status-todo'}">${d.status === 1 ? '有効' : '無効'}</span></td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`,
+
+    security: `
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header"><h3>セキュリティ管理</h3></div>
+        <div class="card-body">
+          <div class="settings-list">
+            <div class="settings-row">
+              <div><div class="settings-label">IPアドレス制限</div><div class="settings-desc">許可するIPアドレスを設定（空欄＝制限なし）</div></div>
+              <input type="text" value="${sec.allowedIpList}" placeholder="未設定（制限なし）" style="width:200px;padding:6px 10px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;">
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">ログイン試行上限</div><div class="settings-desc">上限超過で${sec.lockoutDuration}分間ロック</div></div>
+              <span style="font-weight:600;">${sec.maxLoginAttempts}回</span>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">パスワードポリシー</div><div class="settings-desc">最低文字数・必須条件</div></div>
+              <span style="font-size:13px;">${sec.passwordMinLength}文字以上${sec.passwordRequireNumber ? ' / 数字必須' : ''}${sec.passwordRequireSymbol ? ' / 記号必須' : ''}</span>
+            </div>
+          </div>
+        </div>
+      </div>`,
+
+    crm: `
+      <div class="card">
+        <div class="card-header"><h3>CRM権限設定</h3></div>
+        <div class="card-body">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr><th>機能</th><th>管理者</th><th>TL</th><th>メンバー</th></tr></thead>
+              <tbody>
+                <tr><td>顧客情報 閲覧</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+                <tr><td>顧客情報 編集</td><td>&#10003;</td><td>&#10003;</td><td>-</td></tr>
+                <tr><td>顧客 新規登録</td><td>&#10003;</td><td>&#10003;</td><td>-</td></tr>
+                <tr><td>顧客 削除</td><td>&#10003;</td><td>-</td><td>-</td></tr>
+                <tr><td>報酬情報 閲覧</td><td>&#10003;</td><td>&#10003;</td><td>担当のみ</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>`,
+
+    features: `
+      <div class="card">
+        <div class="card-header"><h3>機能設定</h3></div>
+        <div class="card-body">
+          <div class="settings-list">
+            <div class="settings-row">
+              <div><div class="settings-label">グループウェア</div><div class="settings-desc">社内掲示板・メッセージ機能</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">電子会議室</div><div class="settings-desc">オンライン会議予約・管理</div></div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">共有フォルダ</div><div class="settings-desc">ファイル共有・ドキュメント管理</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">AI機能</div><div class="settings-desc">AIアシスタント・自動分析</div></div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>`,
+  };
+
+  el.innerHTML = `
+    <div class="tab-bar" id="settings-tabs">
+      ${tabs.map((t, i) => `<button class="tab-btn ${i === 0 ? 'active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
     </div>
+    <div id="settings-panel" style="margin-top:24px;">${panels.personal}</div>
   `;
+
+  document.querySelectorAll('#settings-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#settings-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('settings-panel').innerHTML = panels[btn.dataset.tab] || '';
+    });
+  });
 }

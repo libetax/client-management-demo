@@ -25,19 +25,7 @@
       Googleアカウントでログイン
     </button>
 
-    <div class="login-divider"><span>または</span></div>
-
-    <div class="form-group">
-      <label>メールアドレス</label>
-      <input type="email" value="hiro@libetax.jp" placeholder="example@libetax.jp">
-    </div>
-    <div class="form-group">
-      <label>パスワード</label>
-      <input type="password" value="password" placeholder="パスワードを入力">
-    </div>
-    <button class="btn btn-primary btn-lg" onclick="doLogin()">ログイン</button>
-
-    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--gray-400);">
+    <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--gray-400);">
       @libetax.jp のGoogle Workspaceアカウントでログインできます
     </p>
     <p style="text-align:center;margin-top:8px;font-size:12px;color:var(--gray-400)">UIモック - ダミーデータで動作します</p>
@@ -85,11 +73,15 @@
   <!-- メインコンテンツ -->
   <div class="main-content">
     <header class="header">
-      <h1 id="header-title">ダッシュボード</h1>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="hamburger" id="hamburger-btn">&#9776;</button>
+        <h1 id="header-title">ダッシュボード</h1>
+      </div>
       <div class="header-actions">
-        <div class="notification-bell" onclick="navigateTo('dashboard')">
+        <div class="notification-bell" id="notif-bell" style="position:relative;">
           &#x1f514;
-          <span class="badge">3</span>
+          <span class="badge" id="notif-badge">3</span>
+          <div class="notif-dropdown" id="notif-dropdown"></div>
         </div>
       </div>
     </header>
@@ -98,6 +90,425 @@
     </div>
   </div>
 
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+</div>
+
+<!-- タスク作成モーダル -->
+<div class="modal-overlay" id="task-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>新規タスク作成</h3>
+      <button class="btn-icon" onclick="closeTaskModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>顧客</label>
+        <select id="new-task-client"></select>
+      </div>
+      <div class="form-group">
+        <label>タスク名</label>
+        <input type="text" id="new-task-title" placeholder="例: 法人税確定申告書作成">
+      </div>
+      <div class="form-group">
+        <label>担当者</label>
+        <select id="new-task-assignee"></select>
+      </div>
+      <div class="form-group">
+        <label>期限</label>
+        <input type="date" id="new-task-due">
+      </div>
+      <div class="form-group">
+        <label>ステータス</label>
+        <select id="new-task-status">
+          <option value="未着手">未着手</option>
+          <option value="進行中">進行中</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTaskModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewTask()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 顧客追加モーダル -->
+<div class="modal-overlay" id="client-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>新規顧客登録</h3>
+      <button class="btn-icon" onclick="closeClientModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>顧客名</label>
+        <input type="text" id="new-client-name" placeholder="例: 株式会社サンプル">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>種別</label>
+          <select id="new-client-type">
+            <option value="法人">法人</option>
+            <option value="個人">個人</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>決算月</label>
+          <select id="new-client-fiscal"></select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>主担当</label>
+          <select id="new-client-main"></select>
+        </div>
+        <div class="form-group">
+          <label>副担当</label>
+          <select id="new-client-sub"><option value="">なし</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>住所</label>
+        <input type="text" id="new-client-address" placeholder="例: 東京都千代田区大手町1-1-1">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>電話番号</label>
+          <input type="text" id="new-client-tel" placeholder="例: 03-1234-5678">
+        </div>
+        <div class="form-group">
+          <label>業種</label>
+          <input type="text" id="new-client-industry" placeholder="例: 卸売業">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>代表者名</label>
+          <input type="text" id="new-client-representative" placeholder="例: 山本 太郎">
+        </div>
+        <div class="form-group">
+          <label>管轄税務署</label>
+          <input type="text" id="new-client-taxoffice" placeholder="例: 千代田税務署">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>月額報酬（税抜・円）</label>
+        <input type="number" id="new-client-sales" placeholder="50000" min="0" step="1000">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeClientModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewClient()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- 職員追加モーダル -->
+<div class="modal-overlay" id="staff-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>新規職員登録</h3>
+      <button class="btn-icon" onclick="closeStaffModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>姓</label>
+          <input type="text" id="new-staff-lastName" placeholder="例: 山田">
+        </div>
+        <div class="form-group">
+          <label>名</label>
+          <input type="text" id="new-staff-firstName" placeholder="例: 太郎">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>フリガナ（姓）</label>
+          <input type="text" id="new-staff-lastNameKana" placeholder="例: ヤマダ">
+        </div>
+        <div class="form-group">
+          <label>フリガナ（名）</label>
+          <input type="text" id="new-staff-firstNameKana" placeholder="例: タロウ">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>メールアドレス</label>
+        <input type="email" id="new-staff-email" placeholder="yamada@libetax.jp">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>電話番号</label>
+          <input type="tel" id="new-staff-tel" placeholder="06-1234-5678">
+        </div>
+        <div class="form-group">
+          <label>携帯番号</label>
+          <input type="tel" id="new-staff-mobile" placeholder="090-1234-5678">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>部署</label>
+          <select id="new-staff-deptId"></select>
+        </div>
+        <div class="form-group">
+          <label>役職</label>
+          <input type="text" id="new-staff-position" placeholder="例: スタッフ">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>雇用形態</label>
+          <select id="new-staff-employmentType">
+            <option value="正社員">正社員</option>
+            <option value="パート">パート</option>
+            <option value="業務委託">業務委託</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>入社日</label>
+          <input type="date" id="new-staff-joinDate">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>ロール</label>
+          <select id="new-staff-role">
+            <option value="member">メンバー</option>
+            <option value="team_leader">チームリーダー</option>
+            <option value="admin">管理者</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>分類</label>
+          <select id="new-staff-staffFlag">
+            <option value="税務">税務</option>
+            <option value="記帳">記帳</option>
+            <option value="他">他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>備考</label>
+        <textarea id="new-staff-memo" rows="3" placeholder="備考を入力..." style="width:100%;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeStaffModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewStaff()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- タスク編集モーダル -->
+<div class="modal-overlay" id="task-edit-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>タスク編集</h3>
+      <button class="btn-icon" onclick="closeTaskEditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-task-id">
+      <div class="form-group">
+        <label>タスク名</label>
+        <input type="text" id="edit-task-title">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>担当者</label>
+          <select id="edit-task-assignee"></select>
+        </div>
+        <div class="form-group">
+          <label>ステータス</label>
+          <select id="edit-task-status">
+            <option value="未着手">未着手</option>
+            <option value="進行中">進行中</option>
+            <option value="完了">完了</option>
+            <option value="差戻し">差戻し</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>期限</label>
+        <input type="date" id="edit-task-due">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="deleteTask()" style="margin-right:auto">削除</button>
+      <button class="btn btn-secondary" onclick="closeTaskEditModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitEditTask()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 工数入力モーダル -->
+<div class="modal-overlay" id="timesheet-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>工数入力</h3>
+      <button class="btn-icon" onclick="closeTimesheetModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>職員</label>
+          <select id="new-ts-user"></select>
+        </div>
+        <div class="form-group">
+          <label>日付</label>
+          <input type="date" id="new-ts-date">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>顧客</label>
+          <select id="new-ts-client"></select>
+        </div>
+        <div class="form-group">
+          <label>時間（h）</label>
+          <input type="number" id="new-ts-hours" placeholder="3.0" min="0.5" max="24" step="0.5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>作業内容</label>
+        <input type="text" id="new-ts-desc" placeholder="例: 法人税申告書 仕訳確認">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTimesheetModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewTimeEntry()">登録</button>
+    </div>
+  </div>
+</div>
+
+<!-- 報告書作成モーダル -->
+<div class="modal-overlay" id="report-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>新規報告書作成</h3>
+      <button class="btn-icon" onclick="closeReportModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>種別</label>
+          <select id="new-rp-type">
+            <option value="業務報告書">業務報告書</option>
+            <option value="日報">日報</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>業務分類</label>
+          <select id="new-rp-category">
+            <option value="確定申告">確定申告</option>
+            <option value="決算業務">決算業務</option>
+            <option value="月次業務">月次業務</option>
+            <option value="その他">その他</option>
+            <option value="日報">日報</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>顧客名</label>
+        <input type="text" id="new-rp-client" placeholder="例: 株式会社サンプル商事">
+      </div>
+      <div class="form-group">
+        <label>タイトル</label>
+        <input type="text" id="new-rp-title" placeholder="例: 【確定申告】会計帳簿チェック／顧客名／決算業務">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>ランク</label>
+          <select id="new-rp-rank">
+            <option value="A">A</option>
+            <option value="B" selected>B</option>
+            <option value="C">C</option>
+            <option value="日報">日報</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>添付ファイル</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px;cursor:pointer;"><input type="checkbox" id="new-rp-attach"> あり</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeReportModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewReport()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 進捗管理表作成モーダル -->
+<div class="modal-overlay" id="progress-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3 id="pg-modal-title">進捗管理表の作成</h3>
+      <button class="btn-icon" onclick="closeProgressCreateModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>管理表名</label>
+        <input type="text" id="new-pg-name" placeholder="例: 6月決算法人管理表">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>カテゴリ</label>
+          <select id="new-pg-category">
+            <option value="法人決算">法人決算</option>
+            <option value="確定申告">確定申告</option>
+            <option value="年末調整">年末調整</option>
+            <option value="中間申告">中間申告</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>管理者</label>
+          <select id="new-pg-manager"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>工程列（カンマ区切り）</label>
+        <input type="text" id="new-pg-columns" placeholder="資料回収, 記帳確認, 決算整理, 申告書作成, レビュー, 電子申告, 納品">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeProgressCreateModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewProgress()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 進捗管理表 設定変更モーダル -->
+<div class="modal-overlay" id="progress-settings-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>進捗管理表 設定変更</h3>
+      <button class="btn-icon" onclick="closeProgressSettingsModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-pg-id">
+      <div class="form-group">
+        <label>管理表名</label>
+        <input type="text" id="edit-pg-name">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>ステータス</label>
+          <select id="edit-pg-status">
+            <option value="利用中">利用中</option>
+            <option value="終了">終了</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>管理者</label>
+          <select id="edit-pg-manager"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeProgressSettingsModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitEditProgress()">保存</button>
+    </div>
+  </div>
 </div>
 
 <script src="data/mock-data.js"></script>

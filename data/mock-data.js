@@ -8,17 +8,35 @@ const MOCK_DATA = {
     staffCode: 'A001',
   },
 
+  departments: [
+    { deptId: 1, deptName: '税務1課', deptCode: 'TAX1', parentDeptId: null, sortOrder: 1, status: 1 },
+    { deptId: 2, deptName: '税務2課', deptCode: 'TAX2', parentDeptId: null, sortOrder: 2, status: 1 },
+    { deptId: 3, deptName: '記帳代行課', deptCode: 'BK', parentDeptId: null, sortOrder: 3, status: 1 },
+    { deptId: 4, deptName: '管理部', deptCode: 'ADM', parentDeptId: null, sortOrder: 4, status: 1 },
+  ],
+
+  office: {
+    aoId: 1, aoName: 'リベ大税理士法人', aoCode: 'LIBETAX',
+    address: '大阪府大阪市北区梅田1-1-1 リベビル5F', tel: '06-1234-5678', email: 'info@libetax.jp',
+    logoPath: '', logoutTime: 30,
+  },
+
+  securitySettings: {
+    allowedIpList: '', maxLoginAttempts: 5, lockoutDuration: 30,
+    sessionTimeout: 30, passwordMinLength: 8, passwordRequireNumber: 1, passwordRequireSymbol: 0,
+  },
+
   users: [
-    { id: 'u-001', staffCode: 'A001', name: 'ひろ', email: 'hiro@libetax.jp', role: 'admin', team: null, isActive: true, baseRatio: null, staffFlag: '他', fixedReward: 700000 },
-    { id: 'u-002', staffCode: 'A002', name: '岸田 ゆうこ', email: 'kishida@libetax.jp', role: 'team_leader', team: '第1チーム', isActive: true, baseRatio: null, staffFlag: '他', fixedReward: 350000 },
-    { id: 'u-003', staffCode: 'A003', name: '齋藤 太郎', email: 'saito@libetax.jp', role: 'member', team: '第1チーム', isActive: true, baseRatio: 38, staffFlag: '税務' },
-    { id: 'u-004', staffCode: 'A004', name: '柿島 花子', email: 'kakishima@libetax.jp', role: 'member', team: '第1チーム', isActive: true, baseRatio: 38, staffFlag: '税務' },
-    { id: 'u-005', staffCode: 'A005', name: '谷 次郎', email: 'tani@libetax.jp', role: 'member', team: '第2チーム', isActive: true, baseRatio: 35, staffFlag: '税務' },
-    { id: 'u-006', staffCode: 'A006', name: '太田 綾', email: 'ota@libetax.jp', role: 'member', team: '第2チーム', isActive: true, baseRatio: 23, staffFlag: '税務' },
-    { id: 'u-007', staffCode: 'A007', name: '野村 健', email: 'nomura@libetax.jp', role: 'member', team: '第2チーム', isActive: true, baseRatio: 15, staffFlag: '税務' },
-    { id: 'u-008', staffCode: 'A008', name: '加治 美咲', email: 'kaji@libetax.jp', role: 'member', team: '第1チーム', isActive: true, baseRatio: 25, staffFlag: '記帳' },
-    { id: 'u-009', staffCode: 'A009', name: '上野 誠', email: 'ueno@libetax.jp', role: 'team_leader', team: '第2チーム', isActive: true, baseRatio: 32, staffFlag: '税務' },
-    { id: 'u-010', staffCode: 'A010', name: '前田 浩二', email: 'maeda@libetax.jp', role: 'member', team: '第1チーム', isActive: false, baseRatio: 30, staffFlag: '税務' },
+    { id: 'u-001', staffCode: 'A001', lastName: 'ひろ', firstName: '', lastNameKana: 'ヒロ', firstNameKana: '', name: 'ひろ', email: 'hiro@libetax.jp', tel: '06-1234-5678', mobile: '090-1111-0001', role: 'admin', deptId: 4, team: null, position: '代表', employmentType: '正社員', joinDate: '2023-04-01', memo: '', loginId: 'hiro', isActive: true, baseRatio: null, staffFlag: '他', fixedReward: 700000 },
+    { id: 'u-002', staffCode: 'A002', lastName: '岸田', firstName: 'ゆうこ', lastNameKana: 'キシダ', firstNameKana: 'ユウコ', name: '岸田 ゆうこ', email: 'kishida@libetax.jp', tel: '', mobile: '090-1111-0002', role: 'team_leader', deptId: 1, team: '第1チーム', position: 'チームリーダー', employmentType: '正社員', joinDate: '2023-06-01', memo: '', loginId: 'kishida', isActive: true, baseRatio: null, staffFlag: '他', fixedReward: 350000 },
+    { id: 'u-003', staffCode: 'A003', lastName: '齋藤', firstName: '太郎', lastNameKana: 'サイトウ', firstNameKana: 'タロウ', name: '齋藤 太郎', email: 'saito@libetax.jp', tel: '', mobile: '090-1111-0003', role: 'member', deptId: 1, team: '第1チーム', position: '税理士', employmentType: '正社員', joinDate: '2023-08-01', memo: '', loginId: 'saito', isActive: true, baseRatio: 38, staffFlag: '税務' },
+    { id: 'u-004', staffCode: 'A004', lastName: '柿島', firstName: '花子', lastNameKana: 'カキシマ', firstNameKana: 'ハナコ', name: '柿島 花子', email: 'kakishima@libetax.jp', tel: '', mobile: '090-1111-0004', role: 'member', deptId: 1, team: '第1チーム', position: '税理士', employmentType: '正社員', joinDate: '2023-10-01', memo: '', loginId: 'kakishima', isActive: true, baseRatio: 38, staffFlag: '税務' },
+    { id: 'u-005', staffCode: 'A005', lastName: '谷', firstName: '次郎', lastNameKana: 'タニ', firstNameKana: 'ジロウ', name: '谷 次郎', email: 'tani@libetax.jp', tel: '', mobile: '090-1111-0005', role: 'member', deptId: 2, team: '第2チーム', position: '税理士', employmentType: '正社員', joinDate: '2024-01-15', memo: '', loginId: 'tani', isActive: true, baseRatio: 35, staffFlag: '税務' },
+    { id: 'u-006', staffCode: 'A006', lastName: '太田', firstName: '綾', lastNameKana: 'オオタ', firstNameKana: 'アヤ', name: '太田 綾', email: 'ota@libetax.jp', tel: '', mobile: '090-1111-0006', role: 'member', deptId: 2, team: '第2チーム', position: 'スタッフ', employmentType: 'パート', joinDate: '2024-04-01', memo: '週3日勤務', loginId: 'ota', isActive: true, baseRatio: 23, staffFlag: '税務' },
+    { id: 'u-007', staffCode: 'A007', lastName: '野村', firstName: '健', lastNameKana: 'ノムラ', firstNameKana: 'ケン', name: '野村 健', email: 'nomura@libetax.jp', tel: '', mobile: '090-1111-0007', role: 'member', deptId: 2, team: '第2チーム', position: 'スタッフ', employmentType: '正社員', joinDate: '2024-07-01', memo: '', loginId: 'nomura', isActive: true, baseRatio: 15, staffFlag: '税務' },
+    { id: 'u-008', staffCode: 'A008', lastName: '加治', firstName: '美咲', lastNameKana: 'カジ', firstNameKana: 'ミサキ', name: '加治 美咲', email: 'kaji@libetax.jp', tel: '', mobile: '090-1111-0008', role: 'member', deptId: 3, team: '第1チーム', position: 'スタッフ', employmentType: '正社員', joinDate: '2024-09-01', memo: '', loginId: 'kaji', isActive: true, baseRatio: 25, staffFlag: '記帳' },
+    { id: 'u-009', staffCode: 'A009', lastName: '上野', firstName: '誠', lastNameKana: 'ウエノ', firstNameKana: 'マコト', name: '上野 誠', email: 'ueno@libetax.jp', tel: '', mobile: '090-1111-0009', role: 'team_leader', deptId: 2, team: '第2チーム', position: 'チームリーダー', employmentType: '正社員', joinDate: '2023-06-01', memo: '', loginId: 'ueno', isActive: true, baseRatio: 32, staffFlag: '税務' },
+    { id: 'u-010', staffCode: 'A010', lastName: '前田', firstName: '浩二', lastNameKana: 'マエダ', firstNameKana: 'コウジ', name: '前田 浩二', email: 'maeda@libetax.jp', tel: '', mobile: '090-1111-0010', role: 'member', deptId: 1, team: '第1チーム', position: 'スタッフ', employmentType: '正社員', joinDate: '2024-03-01', memo: '2025年12月退職', loginId: 'maeda', isActive: false, baseRatio: 30, staffFlag: '税務' },
   ],
 
   teams: [
@@ -27,16 +45,16 @@ const MOCK_DATA = {
   ],
 
   clients: [
-    { id: 'c-001', clientCode: '030450', name: '株式会社サンプル商事', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-003', subUserId: 'u-007', mgrUserId: 'u-003', monthlySales: 50000 },
-    { id: 'c-002', clientCode: '030451', name: '合同会社テスト工業', clientType: '法人', fiscalMonth: 9, isActive: true, mainUserId: 'u-004', subUserId: null, mgrUserId: 'u-004', monthlySales: 30000 },
-    { id: 'c-003', clientCode: '030452', name: '田中 一郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-005', subUserId: 'u-006', mgrUserId: 'u-005', monthlySales: 20000 },
-    { id: 'c-004', clientCode: '030453', name: '株式会社リベ不動産', clientType: '法人', fiscalMonth: 6, isActive: true, mainUserId: 'u-003', subUserId: null, mgrUserId: 'u-003', monthlySales: 80000 },
-    { id: 'c-005', clientCode: '030454', name: '佐藤 二郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-006', subUserId: null, mgrUserId: 'u-005', monthlySales: 15000 },
-    { id: 'c-006', clientCode: '030455', name: '有限会社グリーンファーム', clientType: '法人', fiscalMonth: 8, isActive: true, mainUserId: 'u-007', subUserId: null, mgrUserId: 'u-003', monthlySales: 25000 },
-    { id: 'c-007', clientCode: '030456', name: '株式会社デジタルソリューション', clientType: '法人', fiscalMonth: 12, isActive: true, mainUserId: 'u-004', subUserId: 'u-006', mgrUserId: 'u-004', monthlySales: 100000 },
-    { id: 'c-008', clientCode: '030457', name: '山田 花子', clientType: '個人', fiscalMonth: 12, isActive: false, mainUserId: 'u-005', subUserId: null, mgrUserId: 'u-005', monthlySales: 10000 },
-    { id: 'c-009', clientCode: '030458', name: '株式会社スカイブルー', clientType: '法人', fiscalMonth: 1, isActive: true, mainUserId: 'u-003', subUserId: 'u-005', mgrUserId: 'u-003', monthlySales: 45000 },
-    { id: 'c-010', clientCode: '030459', name: 'NPO法人サポートネット', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-006', subUserId: null, mgrUserId: 'u-009', monthlySales: 18000 },
+    { id: 'c-001', clientCode: '030450', name: '株式会社サンプル商事', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-003', subUserId: 'u-007', mgrUserId: 'u-003', monthlySales: 50000, address: '東京都千代田区大手町1-1-1', tel: '03-1234-5001', representative: '山本 太郎', establishDate: '2010-05-20', industry: '卸売業', taxOffice: '千代田税務署', memo: '' },
+    { id: 'c-002', clientCode: '030451', name: '合同会社テスト工業', clientType: '法人', fiscalMonth: 9, isActive: true, mainUserId: 'u-004', subUserId: null, mgrUserId: 'u-004', monthlySales: 30000, address: '大阪府大阪市中央区本町2-2-2', tel: '06-1234-5002', representative: '鈴木 一郎', establishDate: '2015-03-10', industry: '製造業', taxOffice: '東税務署', memo: '' },
+    { id: 'c-003', clientCode: '030452', name: '田中 一郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-005', subUserId: 'u-006', mgrUserId: 'u-005', monthlySales: 20000, address: '愛知県名古屋市中区栄3-3-3', tel: '052-1234-5003', representative: '', establishDate: '', industry: '不動産賃貸', taxOffice: '名古屋中税務署', memo: '不動産所得あり' },
+    { id: 'c-004', clientCode: '030453', name: '株式会社リベ不動産', clientType: '法人', fiscalMonth: 6, isActive: true, mainUserId: 'u-003', subUserId: null, mgrUserId: 'u-003', monthlySales: 80000, address: '大阪府大阪市北区梅田1-4-4', tel: '06-1234-5004', representative: '高橋 花子', establishDate: '2018-01-15', industry: '不動産業', taxOffice: '北税務署', memo: '' },
+    { id: 'c-005', clientCode: '030454', name: '佐藤 二郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-006', subUserId: null, mgrUserId: 'u-005', monthlySales: 15000, address: '福岡県福岡市博多区博多駅前5-5-5', tel: '092-1234-5005', representative: '', establishDate: '', industry: 'フリーランス（IT）', taxOffice: '博多税務署', memo: '' },
+    { id: 'c-006', clientCode: '030455', name: '有限会社グリーンファーム', clientType: '法人', fiscalMonth: 8, isActive: true, mainUserId: 'u-007', subUserId: null, mgrUserId: 'u-003', monthlySales: 25000, address: '北海道札幌市中央区北1条6-6-6', tel: '011-1234-5006', representative: '田村 健太', establishDate: '2005-09-01', industry: '農業', taxOffice: '札幌中税務署', memo: '' },
+    { id: 'c-007', clientCode: '030456', name: '株式会社デジタルソリューション', clientType: '法人', fiscalMonth: 12, isActive: true, mainUserId: 'u-004', subUserId: 'u-006', mgrUserId: 'u-004', monthlySales: 100000, address: '東京都渋谷区渋谷2-7-7', tel: '03-1234-5007', representative: '中村 誠', establishDate: '2020-02-14', industry: 'IT・ソフトウェア', taxOffice: '渋谷税務署', memo: '顧問契約プレミアムプラン' },
+    { id: 'c-008', clientCode: '030457', name: '山田 花子', clientType: '個人', fiscalMonth: 12, isActive: false, mainUserId: 'u-005', subUserId: null, mgrUserId: 'u-005', monthlySales: 10000, address: '京都府京都市左京区8-8-8', tel: '075-1234-5008', representative: '', establishDate: '', industry: '小売業', taxOffice: '左京税務署', memo: '2025年解約済み' },
+    { id: 'c-009', clientCode: '030458', name: '株式会社スカイブルー', clientType: '法人', fiscalMonth: 1, isActive: true, mainUserId: 'u-003', subUserId: 'u-005', mgrUserId: 'u-003', monthlySales: 45000, address: '神奈川県横浜市西区みなとみらい9-9-9', tel: '045-1234-5009', representative: '木村 翔', establishDate: '2019-11-01', industry: 'サービス業', taxOffice: '横浜中税務署', memo: '' },
+    { id: 'c-010', clientCode: '030459', name: 'NPO法人サポートネット', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-006', subUserId: null, mgrUserId: 'u-009', monthlySales: 18000, address: '兵庫県神戸市中央区三宮10-10-10', tel: '078-1234-5010', representative: '佐々木 みどり', establishDate: '2012-06-30', industry: 'NPO・福祉', taxOffice: '神戸税務署', memo: '' },
   ],
 
   tasks: [
@@ -118,10 +136,31 @@ const MOCK_DATA = {
 
   // Phase 1: 報告書データ
   reports: [
-    { id: 'rp-001', title: '第1チーム 週次報告（3/7）', teamId: 't-001', authorId: 'u-002', createdAt: '2026-03-07T17:00:00', content: '今週の進捗：サンプル商事の法人税申告書は仕訳確認が完了し、ドラフト作成に着手。テスト工業の月次記帳チェックは完了。デジタルソリューションの年末調整修正対応を来週着手予定。', status: '確定' },
-    { id: 'rp-002', title: '第2チーム 週次報告（3/7）', teamId: 't-002', authorId: 'u-009', createdAt: '2026-03-07T17:30:00', content: '今週の進捗：田中一郎の確定申告書は下書き完了、来週最終確認。佐藤二郎の確定申告書は差戻し対応中。グリーンファームの月次記帳代行は順調。NPO法人サポートネットの決算書作成に着手。', status: '確定' },
-    { id: 'rp-003', title: '第1チーム 週次報告（2/28）', teamId: 't-001', authorId: 'u-002', createdAt: '2026-02-28T17:00:00', content: 'リベ不動産の決算前打ち合わせを完了。サンプル商事の申告書準備を開始。テスト工業の記帳チェックは3月上旬対応予定。', status: '確定' },
-    { id: 'rp-004', title: '第2チーム 週次報告（2/28）', teamId: 't-002', authorId: 'u-009', createdAt: '2026-02-28T17:30:00', content: '田中一郎・佐藤二郎の確定申告書作成に本格着手。グリーンファームの記帳代行は2月分完了。NPO法人の決算書準備を開始。', status: '確定' },
+    { id: 'rp-001', createdAt: '2026-03-10T10:30:00', authorId: 'u-008', type: '業務報告書', category: '月次業務', clientName: '合同会社WANT', title: '月次報告／合同会社WANT／月次業務／1月度', rank: 'B', readStatus: '一時保存中', hasAttachment: false },
+    { id: 'rp-002', createdAt: '2026-03-09T16:00:00', authorId: 'u-004', type: '業務報告書', category: '確定申告', clientName: '角井 仁', title: '角井 仁／【確定申告】会計チェック', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-003', createdAt: '2026-03-09T15:30:00', authorId: 'u-004', type: '業務報告書', category: '確定申告', clientName: '桑原 健介', title: '桑原 健介／【確定申告】会計チェック', rank: 'B', readStatus: '一時保存中', hasAttachment: false },
+    { id: 'rp-004', createdAt: '2026-03-09T15:00:00', authorId: 'u-004', type: '業務報告書', category: '確定申告', clientName: '高見 祐介', title: '高見 祐介／【確定申告】会計チェック', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-005', createdAt: '2026-03-09T14:00:00', authorId: 'u-003', type: '業務報告書', category: 'その他', clientName: '株式会社CRAT', title: '株式会社CRAT／zoom面談', rank: 'A', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-006', createdAt: '2026-03-09T11:00:00', authorId: 'u-005', type: '業務報告書', category: '決算業務', clientName: '小松　和幸', title: '【確定申告】会計帳簿チェック／小松　和幸／決算業務／納先生 確定申告書（スポット）チェック', rank: 'A', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-007', createdAt: '2026-03-09T10:30:00', authorId: 'u-005', type: '業務報告書', category: '決算業務', clientName: '谷口　哲也', title: '【確定申告】会計帳簿チェック／谷口　哲也／決算業務／納先生 会計帳簿チェック', rank: 'A', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-008', createdAt: '2026-03-08T17:00:00', authorId: 'u-003', type: '業務報告書', category: '決算業務', clientName: '豊田奈美　mcストア', title: '【確定申告】会計帳簿チェック／豊田奈美　mcストア／決算業務／むらっち先生に帳簿チェック依頼', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-009', createdAt: '2026-03-08T16:30:00', authorId: 'u-007', type: '業務報告書', category: '決算業務', clientName: '岩井裕之', title: '【確定申告】会計帳簿チェック／岩井裕之／決算業務', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-010', createdAt: '2026-03-08T16:00:00', authorId: 'u-007', type: '業務報告書', category: '決算業務', clientName: '加藤洋一', title: '【確定申告】会計帳簿チェック／加藤洋一／決算業務', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-011', createdAt: '2026-03-08T15:30:00', authorId: 'u-007', type: '業務報告書', category: '決算業務', clientName: '来馬健太', title: '【確定申告】会計帳簿チェック／来馬健太', rank: 'C', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-012', createdAt: '2026-03-08T15:00:00', authorId: 'u-006', type: '業務報告書', category: 'その他', clientName: '足助川合自動車株式会社', title: '足助川合自動車株式会社／その他／ 【照井】川合さま　ミーティング', rank: 'A', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-013', createdAt: '2026-03-08T14:00:00', authorId: 'u-009', type: '業務報告書', category: '確定申告', clientName: '黄　昭然', title: '【確定申告】会計帳簿チェック／黄　昭然', rank: 'B', readStatus: '未読', hasAttachment: true },
+    { id: 'rp-014', createdAt: '2026-03-08T13:30:00', authorId: 'u-009', type: '業務報告書', category: '確定申告', clientName: '山縣雄輔', title: '【確定申告】会計帳簿チェック／山縣雄輔／令和7年分確定申告', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-015', createdAt: '2026-03-08T12:00:00', authorId: 'u-008', type: '業務報告書', category: '決算業務', clientName: 'kurashi-goto合同会社', title: '【新】消費税検討／kurashi-goto合同会社／決算業務／令和９年３月期　消費税検討', rank: 'A', readStatus: '未読', hasAttachment: true },
+    { id: 'rp-016', createdAt: '2026-03-07T17:00:00', authorId: 'u-003', type: '業務報告書', category: '決算業務', clientName: '石橋廣樹', title: '【確定申告】会計帳簿チェック／石橋廣樹／決算業務／決算帳簿チェック、仕訳修正等、納先生にチェック依頼', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-017', createdAt: '2026-03-07T16:30:00', authorId: 'u-003', type: '業務報告書', category: '決算業務', clientName: '安永雅史', title: '【確定申告】会計帳簿チェック／安永雅史／決算業務／納先生に帳簿チェック依頼', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-018', createdAt: '2026-03-07T16:00:00', authorId: 'u-007', type: '業務報告書', category: '決算業務', clientName: '北澤聖士', title: '【確定申告】会計帳簿チェック／北澤聖士／決算業務', rank: 'C', readStatus: '一時保存中', hasAttachment: false },
+    { id: 'rp-019', createdAt: '2026-03-07T15:30:00', authorId: 'u-007', type: '業務報告書', category: '決算業務', clientName: '山本敬之', title: '【確定申告】会計帳簿チェック／山本敬之／決算業務', rank: 'B', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-020', createdAt: '2026-03-07T15:00:00', authorId: 'u-006', type: '業務報告書', category: 'その他', clientName: '庭山 勇気', title: '庭山 勇気／その他／【水谷・照井】庭山さま　ミーティング', rank: 'A', readStatus: '未読', hasAttachment: false },
+    { id: 'rp-021', createdAt: '2026-03-07T10:00:00', authorId: 'u-002', type: '日報', category: '日報', clientName: '', title: '3/7 業務日報', rank: '日報', readStatus: '既読', hasAttachment: false },
+    { id: 'rp-022', createdAt: '2026-03-06T18:00:00', authorId: 'u-004', type: '業務報告書', category: '月次業務', clientName: '株式会社デジタルソリューション', title: '月次報告／株式会社デジタルソリューション／月次業務／2月度', rank: 'A', readStatus: '既読', hasAttachment: true },
+    { id: 'rp-023', createdAt: '2026-03-06T17:00:00', authorId: 'u-005', type: '業務報告書', category: '決算業務', clientName: '田中 一郎', title: '【確定申告】会計帳簿チェック／田中 一郎／決算業務', rank: 'B', readStatus: '既読', hasAttachment: false },
+    { id: 'rp-024', createdAt: '2026-03-06T10:00:00', authorId: 'u-009', type: '日報', category: '日報', clientName: '', title: '3/6 業務日報', rank: '日報', readStatus: '既読', hasAttachment: false },
+    { id: 'rp-025', createdAt: '2026-03-05T16:00:00', authorId: 'u-003', type: '業務報告書', category: '決算業務', clientName: '株式会社サンプル商事', title: '株式会社サンプル商事／決算業務／法人税申告書 仕訳確認着手', rank: 'A', readStatus: '既読', hasAttachment: false },
   ],
 
   // Phase 1: 報酬データ（月次）
