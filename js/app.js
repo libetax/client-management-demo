@@ -865,7 +865,7 @@ function renderClients(el) {
       <div class="spacer"></div>
       <button class="btn btn-csv btn-sm" onclick="exportClientCSV()">CSV出力</button>
       <button class="btn btn-csv btn-sm" onclick="importClientCSV()">CSV取り込み</button>
-      <button class="btn btn-primary" onclick="openClientModal()">+ 新規顧客</button>
+      <button class="btn btn-primary" onclick="navigateTo('client-detail',{id:'new'})">+ 新規顧客</button>
     </div>
     <div class="card">
       <div class="table-wrapper">
@@ -914,91 +914,138 @@ function renderClientTable() {
 // ===========================
 // 顧客詳細
 // ===========================
+let clientEditMode = false;
+
 function renderClientDetail(el, params) {
-  const c = getClientById(params.id);
-  if (!c) { el.innerHTML = '<div class="empty-state"><div class="icon">?</div><p>顧客が見つかりません</p></div>'; return; }
-  const main = getUserById(c.mainUserId);
-  const sub = getUserById(c.subUserId);
-  const mgr = getUserById(c.mgrUserId);
-  const tasks = getTasksByClient(c.id);
-  document.getElementById('header-title').textContent = `顧客詳細 - ${c.name}`;
+  const isNew = params.id === 'new';
+  const editing = isNew || clientEditMode;
+  const c = isNew ? null : getClientById(params.id);
+  if (!isNew && !c) { el.innerHTML = '<div class="empty-state"><div class="icon">?</div><p>顧客が見つかりません</p></div>'; return; }
 
-  // カスタムフィールド表示
+  const staffOptions = MOCK_DATA.users.filter(u => u.isActive && u.role !== 'admin').map(u =>
+    `<option value="${u.id}">${u.name}</option>`
+  ).join('');
+  const fiscalOptions = Array.from({length: 12}, (_, i) =>
+    `<option value="${i + 1}">${i + 1}月</option>`
+  ).join('');
+
   const customFields = (MOCK_DATA.customFields || []).slice().sort((a, b) => a.order - b.order);
-  const cfValues = c.customFieldValues || {};
+  const cfValues = c ? (c.customFieldValues || {}) : {};
 
-  // 関連ルーム取得
-  const rooms = getChatRoomsByClient(c.id);
+  if (isNew) {
+    document.getElementById('header-title').textContent = '新規顧客登録';
+  } else {
+    document.getElementById('header-title').textContent = editing ? `顧客編集 - ${c.name}` : `顧客詳細 - ${c.name}`;
+  }
+
+  // ヘルパー: 閲覧モードの値表示
+  const val = (v, fallback) => v || `<span style="color:var(--gray-400)">${fallback || '-'}</span>`;
+  // ヘルパー: インライン入力
+  const inp = (id, v, type, placeholder) => {
+    if (type === 'select-staff') return `<select id="${id}" class="inline-edit-input">${'<option value="">なし</option>' + staffOptions}</select>`;
+    if (type === 'select-fiscal') return `<select id="${id}" class="inline-edit-input">${fiscalOptions}</select>`;
+    if (type === 'select-type') return `<select id="${id}" class="inline-edit-input"><option value="法人">法人</option><option value="個人">個人</option></select>`;
+    if (type === 'number') return `<input type="number" id="${id}" class="inline-edit-input" value="${v || ''}" placeholder="${placeholder || ''}" min="0" step="1000">`;
+    if (type === 'date') return `<input type="date" id="${id}" class="inline-edit-input" value="${v || ''}">`;
+    if (type === 'textarea') return `<textarea id="${id}" class="inline-edit-input" rows="2" placeholder="${placeholder || ''}">${v || ''}</textarea>`;
+    return `<input type="text" id="${id}" class="inline-edit-input" value="${v || ''}" placeholder="${placeholder || ''}">`;
+  };
+
+  // 関連ルーム（閲覧モード時のみ表示、編集モードでは非表示）
+  const rooms = c ? getChatRoomsByClient(c.id) : [];
   const allRooms = MOCK_DATA.chatRooms || [];
-  const unlinkedRooms = allRooms.filter(r => !r.clientIds.includes(c.id));
+  const unlinkedRooms = c ? allRooms.filter(r => !r.clientIds.includes(c.id)) : [];
+  const tasks = c ? getTasksByClient(c.id) : [];
+
+  // 担当者情報（閲覧モード用）
+  const main = c ? getUserById(c.mainUserId) : null;
+  const sub = c ? getUserById(c.subUserId) : null;
 
   el.innerHTML = `
     <div style="margin-bottom:16px"><a href="#" onclick="event.preventDefault();navigateTo('clients')">&larr; 顧客一覧に戻る</a></div>
 
     <div class="card" style="margin-bottom:16px">
       <div class="card-header">
-        <h3>顧客情報</h3>
+        <h3>${isNew ? '新規顧客登録' : '顧客情報'}</h3>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary btn-sm" onclick="openCustomFieldModal()">項目設定</button>
-          <button class="btn btn-primary btn-sm" onclick="openClientEditModal('${c.id}')">編集</button>
+          ${editing
+            ? `<button class="btn btn-primary btn-sm" onclick="saveClientInline('${isNew ? 'new' : c.id}')">保存</button>
+               <button class="btn btn-secondary btn-sm" onclick="${isNew ? "navigateTo('clients')" : `clientEditMode=false;navigateTo('client-detail',{id:'${c.id}'})`}">キャンセル</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="clientEditMode=true;navigateTo('client-detail',{id:'${c.id}'})">編集</button>`
+          }
         </div>
       </div>
       <div class="card-body">
+
         <div class="detail-section-title">基本情報</div>
-        <div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${c.clientCode}</div></div>
-        <div class="detail-row"><div class="detail-label">顧客名</div><div class="detail-value">${c.name}</div></div>
-        <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value"><span class="type-badge ${c.clientType === '法人' ? 'type-corp' : 'type-individual'}">${c.clientType}</span></div></div>
-        <div class="detail-row"><div class="detail-label">決算月</div><div class="detail-value">${c.fiscalMonth}月</div></div>
-        <div class="detail-row"><div class="detail-label">月額報酬（税抜）</div><div class="detail-value">${c.monthlySales.toLocaleString()}円</div></div>
-        <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${c.address || '-'}</div></div>
-        <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${c.tel || '-'}</div></div>
-        ${c.clientType === '法人' ? `<div class="detail-row"><div class="detail-label">代表者</div><div class="detail-value">${c.representative || '-'}</div></div>` : ''}
-        ${c.clientType === '法人' ? `<div class="detail-row"><div class="detail-label">設立日</div><div class="detail-value">${formatDate(c.establishDate)}</div></div>` : ''}
-        <div class="detail-row"><div class="detail-label">業種</div><div class="detail-value">${c.industry || '-'}</div></div>
-        <div class="detail-row"><div class="detail-label">管轄税務署</div><div class="detail-value">${c.taxOffice || '-'}</div></div>
-        ${c.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${c.memo}</div></div>` : ''}
-        <div class="detail-row"><div class="detail-label">ステータス</div><div class="detail-value">${c.isActive ? '有効' : '無効'}</div></div>
+        ${!isNew ? `<div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${c.clientCode}</div></div>` : ''}
+        <div class="detail-row"><div class="detail-label">顧客名</div><div class="detail-value">${editing ? inp('ed-name', c?.name, 'text', '例: 株式会社サンプル商事') : val(c.name)}</div></div>
+        <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value">${editing ? inp('ed-type', '', 'select-type') : `<span class="type-badge ${c.clientType === '法人' ? 'type-corp' : 'type-individual'}">${c.clientType}</span>`}</div></div>
+        <div class="detail-row"><div class="detail-label">決算月</div><div class="detail-value">${editing ? inp('ed-fiscal', '', 'select-fiscal') : c.fiscalMonth + '月'}</div></div>
+        <div class="detail-row"><div class="detail-label">月額報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-sales', c?.monthlySales, 'number', '50000') : (c.monthlySales || 0).toLocaleString() + '円'}</div></div>
+        <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${editing ? inp('ed-address', c?.address, 'text', '例: 東京都千代田区大手町1-1-1') : val(c.address)}</div></div>
+        <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${editing ? inp('ed-tel', c?.tel, 'text', '例: 03-1234-5678') : val(c.tel)}</div></div>
+        <div class="detail-row"><div class="detail-label">代表者</div><div class="detail-value">${editing ? inp('ed-representative', c?.representative, 'text', '例: 山本 太郎') : val(c?.representative)}</div></div>
+        <div class="detail-row"><div class="detail-label">業種</div><div class="detail-value">${editing ? inp('ed-industry', c?.industry, 'text', '例: 卸売業') : val(c.industry)}</div></div>
+        <div class="detail-row"><div class="detail-label">管轄税務署</div><div class="detail-value">${editing ? inp('ed-taxoffice', c?.taxOffice, 'text', '例: 千代田税務署') : val(c.taxOffice)}</div></div>
+        ${!editing && c.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${c.memo}</div></div>` : ''}
+        ${!isNew ? `<div class="detail-row"><div class="detail-label">ステータス</div><div class="detail-value">${c.isActive ? '有効' : '無効'}</div></div>` : ''}
 
         <div class="detail-section-title">担当者</div>
-        <div class="detail-row"><div class="detail-label">主担当</div><div class="detail-value">${main?.name || '-'}</div></div>
-        <div class="detail-row"><div class="detail-label">副担当</div><div class="detail-value">${sub?.name || '-'}</div></div>
-        <div class="detail-row"><div class="detail-label">担当税理士</div><div class="detail-value">${mgr?.name || '-'}</div></div>
-        <div class="detail-row"><div class="detail-label">外部リンク</div><div class="detail-value"><a href="#" onclick="event.preventDefault();window.open('https://www.dropbox.com','_blank')">Dropboxフォルダを開く</a></div></div>
+        <div class="detail-row"><div class="detail-label">主担当</div><div class="detail-value">${editing ? inp('ed-main', '', 'select-staff') : val(main?.name)}</div></div>
+        <div class="detail-row"><div class="detail-label">副担当</div><div class="detail-value">${editing ? inp('ed-sub', '', 'select-staff') : val(sub?.name)}</div></div>
+        ${!editing ? `<div class="detail-row"><div class="detail-label">外部リンク</div><div class="detail-value"><a href="#" onclick="event.preventDefault();window.open('https://www.dropbox.com','_blank')">Dropboxフォルダを開く</a></div></div>` : ''}
 
         <div class="detail-section-title">Chatwork連携</div>
-        <div class="detail-row"><div class="detail-label">CWアカウントID</div><div class="detail-value">${c.cwAccountId ? c.cwAccountId : '<span style="color:var(--gray-400)">未設定</span>'}</div></div>
-        <div class="detail-row"><div class="detail-label">CW表示名</div><div class="detail-value">${c.cwAccountName || '<span style="color:var(--gray-400)">未設定</span>'}</div></div>
-        <div class="detail-row"><div class="detail-label">メンション</div><div class="detail-value">${c.cwAccountId ? '<code style="background:var(--gray-100);padding:2px 6px;border-radius:3px;font-size:12px;">[To:' + c.cwAccountId + ']' + (c.cwAccountName || c.name) + 'さん</code>' : '<span style="color:var(--gray-400)">-</span>'}</div></div>
-        <div class="detail-row">
-          <div class="detail-label">関連ルーム</div>
-          <div class="detail-value">
-            ${rooms.length === 0 ? '<span style="color:var(--gray-400)">なし</span>' : rooms.map(r =>
-              `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <a href="${r.roomUrl}" target="_blank">${r.roomName}</a>
-                <button class="btn-icon" style="font-size:11px;color:var(--danger);" onclick="unlinkRoomFromClient('${r.id}','${c.id}')" title="紐づけ解除">&times;</button>
-              </div>`
-            ).join('')}
-            ${unlinkedRooms.length > 0 ? `
-              <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
-                <select id="link-room-select" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:4px;font-size:12px;">
-                  <option value="">ルームを選択...</option>
-                  ${unlinkedRooms.map(r => `<option value="${r.id}">${r.roomName}</option>`).join('')}
-                </select>
-                <button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="linkRoomToClient('${c.id}')">紐づけ</button>
-              </div>
-            ` : ''}
+        <div class="detail-row"><div class="detail-label">CWアカウントID</div><div class="detail-value">${editing ? inp('ed-cwid', c?.cwAccountId, 'text', '例: 1234567') : val(c?.cwAccountId, '未設定')}</div></div>
+        <div class="detail-row"><div class="detail-label">CW表示名</div><div class="detail-value">${editing ? inp('ed-cwname', c?.cwAccountName, 'text', '例: 山本太郎') : val(c?.cwAccountName, '未設定')}</div></div>
+        ${!editing ? `
+          <div class="detail-row"><div class="detail-label">メンション</div><div class="detail-value">${c.cwAccountId ? '<code style="background:var(--gray-100);padding:2px 6px;border-radius:3px;font-size:12px;">[To:' + c.cwAccountId + ']' + (c.cwAccountName || c.name) + 'さん</code>' : val('', '-')}</div></div>
+          <div class="detail-row">
+            <div class="detail-label">関連ルーム</div>
+            <div class="detail-value">
+              ${rooms.length === 0 ? '<span style="color:var(--gray-400)">なし</span>' : rooms.map(r =>
+                `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <a href="${r.roomUrl}" target="_blank">${r.roomName}</a>
+                  <button class="btn-icon" style="font-size:11px;color:var(--danger);" onclick="unlinkRoomFromClient('${r.id}','${c.id}')" title="紐づけ解除">&times;</button>
+                </div>`
+              ).join('')}
+              ${unlinkedRooms.length > 0 ? `
+                <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+                  <select id="link-room-select" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:4px;font-size:12px;">
+                    <option value="">ルームを選択...</option>
+                    ${unlinkedRooms.map(r => `<option value="${r.id}">${r.roomName}</option>`).join('')}
+                  </select>
+                  <button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="linkRoomToClient('${c.id}')">紐づけ</button>
+                </div>
+              ` : ''}
+            </div>
           </div>
-        </div>
+        ` : ''}
 
-        ${customFields.length > 0 ? `
-          <div class="detail-section-title">カスタム項目</div>
-          ${customFields.map(cf => `
-            <div class="detail-row"><div class="detail-label">${cf.name}</div><div class="detail-value">${cfValues[cf.id] || '<span style="color:var(--gray-400)">-</span>'}</div></div>
-          `).join('')}
+        ${customFields.length > 0 || editing ? `
+          <div class="detail-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            カスタム項目
+            ${editing ? '<button class="btn btn-secondary btn-sm" style="font-size:11px;" onclick="openCustomFieldModal()">項目設定</button>' : ''}
+          </div>
+          ${customFields.map(cf => {
+            if (editing) {
+              let cfInp = '';
+              const cfId = 'cf-val-' + cf.id;
+              const cfVal = cfValues[cf.id] || '';
+              if (cf.type === 'textarea') cfInp = `<textarea id="${cfId}" class="inline-edit-input" rows="2">${cfVal}</textarea>`;
+              else if (cf.type === 'date') cfInp = `<input type="date" id="${cfId}" class="inline-edit-input" value="${cfVal}">`;
+              else if (cf.type === 'number') cfInp = `<input type="number" id="${cfId}" class="inline-edit-input" value="${cfVal}">`;
+              else cfInp = `<input type="text" id="${cfId}" class="inline-edit-input" value="${cfVal}">`;
+              return `<div class="detail-row"><div class="detail-label">${cf.name}</div><div class="detail-value">${cfInp}</div></div>`;
+            }
+            return `<div class="detail-row"><div class="detail-label">${cf.name}</div><div class="detail-value">${val(cfValues[cf.id])}</div></div>`;
+          }).join('')}
         ` : ''}
       </div>
     </div>
 
+    ${!isNew ? `
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><h3>関連タスク</h3><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ タスク追加</button></div>
       <div class="card-body">
@@ -1023,7 +1070,69 @@ function renderClientDetail(el, params) {
     <div style="text-align:right;">
       <button class="btn btn-danger" onclick="deleteClient('${c.id}')" style="background:var(--danger);color:#fff;border:none;">顧客を削除</button>
     </div>
+    ` : ''}
   `;
+
+  // 編集モード: selectの値をセット（innerHTML後でないと反映されない）
+  if (editing) {
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+    setVal('ed-type', c?.clientType || '法人');
+    setVal('ed-fiscal', c?.fiscalMonth || 3);
+    setVal('ed-main', c?.mainUserId || '');
+    setVal('ed-sub', c?.subUserId || '');
+  }
+}
+
+function saveClientInline(id) {
+  const isNew = id === 'new';
+  const name = (document.getElementById('ed-name')?.value || '').trim();
+  const clientType = document.getElementById('ed-type')?.value || '法人';
+  const fiscalMonth = parseInt(document.getElementById('ed-fiscal')?.value) || 3;
+  const monthlySales = parseInt(document.getElementById('ed-sales')?.value) || 0;
+  const address = (document.getElementById('ed-address')?.value || '').trim();
+  const tel = (document.getElementById('ed-tel')?.value || '').trim();
+  const representative = (document.getElementById('ed-representative')?.value || '').trim();
+  const industry = (document.getElementById('ed-industry')?.value || '').trim();
+  const taxOffice = (document.getElementById('ed-taxoffice')?.value || '').trim();
+  const mainUserId = document.getElementById('ed-main')?.value || '';
+  const subUserId = document.getElementById('ed-sub')?.value || null;
+  const cwAccountId = (document.getElementById('ed-cwid')?.value || '').trim();
+  const cwAccountName = (document.getElementById('ed-cwname')?.value || '').trim();
+
+  // カスタムフィールド値
+  const customFieldValues = {};
+  (MOCK_DATA.customFields || []).forEach(cf => {
+    const el = document.getElementById('cf-val-' + cf.id);
+    if (el && el.value.trim()) customFieldValues[cf.id] = el.value.trim();
+  });
+
+  if (!name) { alert('顧客名を入力してください'); return; }
+
+  if (isNew) {
+    const lastCode = MOCK_DATA.clients.length > 0 ? MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode : '030449';
+    const nextCode = String(parseInt(lastCode) + 1).padStart(6, '0');
+    const newId = 'c-' + String(MOCK_DATA.clients.length + 1).padStart(3, '0');
+    MOCK_DATA.clients.push({
+      id: newId, clientCode: nextCode, name, clientType, fiscalMonth,
+      isActive: true, mainUserId, subUserId, mgrUserId: mainUserId,
+      monthlySales, address, tel, industry, representative, taxOffice,
+      memo: '', establishDate: '', cwAccountId, cwAccountName, customFieldValues,
+    });
+    clientEditMode = false;
+    navigateTo('client-detail', { id: newId });
+  } else {
+    const c = getClientById(id);
+    if (c) {
+      c.name = name; c.clientType = clientType; c.fiscalMonth = fiscalMonth;
+      c.mainUserId = mainUserId; c.subUserId = subUserId; c.mgrUserId = mainUserId;
+      c.monthlySales = monthlySales; c.address = address; c.tel = tel;
+      c.industry = industry; c.representative = representative; c.taxOffice = taxOffice;
+      c.cwAccountId = cwAccountId; c.cwAccountName = cwAccountName;
+      c.customFieldValues = customFieldValues;
+    }
+    clientEditMode = false;
+    navigateTo('client-detail', { id });
+  }
 }
 
 // ===========================
