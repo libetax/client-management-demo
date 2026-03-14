@@ -303,11 +303,29 @@ function deleteTask() {
 }
 
 // ── 工数入力モーダル ──
-function openTimesheetModal() {
+let editingTimesheetId = null;
+
+function openTimesheetModal(entryId) {
+  editingTimesheetId = entryId || null;
   document.getElementById('new-ts-user').innerHTML = buildUserOptions();
   document.getElementById('new-ts-client').innerHTML = buildClientOptions(true);
-  setFormValues({ 'new-ts-date': new Date().toISOString().slice(0, 10) });
-  resetForm(['new-ts-hours', 'new-ts-desc']);
+
+  const modal = document.getElementById('timesheet-create-modal');
+  const title = modal.querySelector('.modal-header h3');
+
+  if (editingTimesheetId) {
+    const entry = MOCK_DATA.timeEntries.find(e => e.id === editingTimesheetId);
+    if (entry) {
+      setFormValues({ 'new-ts-user': entry.userId, 'new-ts-client': entry.clientId,
+                       'new-ts-date': entry.date, 'new-ts-hours': entry.hours,
+                       'new-ts-desc': entry.description });
+    }
+    if (title) title.textContent = '工数編集';
+  } else {
+    setFormValues({ 'new-ts-date': new Date().toISOString().slice(0, 10) });
+    resetForm(['new-ts-hours', 'new-ts-desc']);
+    if (title) title.textContent = '工数入力';
+  }
   showModal('timesheet-create-modal');
 }
 
@@ -323,13 +341,23 @@ function submitNewTimeEntry() {
   if (!hours || hours <= 0) { alert('時間を入力してください'); return; }
   if (!description) { alert('作業内容を入力してください'); return; }
 
-  MOCK_DATA.timeEntries.push({
-    id: generateId('te-', MOCK_DATA.timeEntries),
-    userId, clientId, taskId: null, date, hours, description,
-  });
-  closeTimesheetModal();
-  if (currentPage === 'timesheet') navigateTo('timesheet');
-  else alert('工数を登録しました');
+  if (editingTimesheetId) {
+    const entry = MOCK_DATA.timeEntries.find(e => e.id === editingTimesheetId);
+    if (entry) {
+      Object.assign(entry, { userId, clientId, date, hours, description });
+    }
+    editingTimesheetId = null;
+    closeTimesheetModal();
+    if (currentPage === 'timesheet') navigateTo('timesheet');
+  } else {
+    MOCK_DATA.timeEntries.push({
+      id: generateId('te-', MOCK_DATA.timeEntries),
+      userId, clientId, taskId: null, date, hours, description,
+    });
+    closeTimesheetModal();
+    if (currentPage === 'timesheet') navigateTo('timesheet');
+    else alert('工数を登録しました');
+  }
 }
 
 // ── 報告書作成モーダル ──

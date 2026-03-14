@@ -20,7 +20,7 @@ function renderTimesheet(el) {
       <div class="card-body">
         <div class="table-wrapper">
           <table>
-            <thead><tr><th>日付</th><th>職員</th><th>顧客</th><th>作業内容</th><th>時間</th></tr></thead>
+            <thead><tr><th>日付</th><th>職員</th><th>顧客</th><th>作業内容</th><th>時間</th><th>操作</th></tr></thead>
             <tbody id="ts-table-body"></tbody>
           </table>
         </div>
@@ -79,8 +79,22 @@ function renderTimesheetData() {
       <td>${client?.name || '-'}</td>
       <td>${e.description}</td>
       <td><strong>${e.hours.toFixed(1)}h</strong></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="editTimeEntry('${e.id}')" style="font-size:11px;">編集</button>
+        <button class="btn-icon" onclick="deleteTimeEntry('${e.id}')" style="color:var(--danger);">&times;</button>
+      </td>
     </tr>`;
-  }, 5);
+  }, 6);
+}
+
+function editTimeEntry(id) {
+  openTimesheetModal(id);
+}
+
+function deleteTimeEntry(id) {
+  if (!confirm('この工数エントリを削除しますか？')) return;
+  MOCK_DATA.timeEntries = MOCK_DATA.timeEntries.filter(e => e.id !== id);
+  renderTimesheetData();
 }
 
 registerPage('timesheet', renderTimesheet);
