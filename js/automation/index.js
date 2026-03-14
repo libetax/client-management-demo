@@ -44,10 +44,31 @@ function runAutomationRule(ruleId) {
   }, 50);
 }
 
-function openAutomationModal() {
-  setFormValues({ 'new-auto-type': 'reminder' });
-  resetForm(['new-auto-name', 'new-auto-trigger', 'new-auto-action', 'new-auto-target']);
+let editingAutomationId = null;
+
+function openAutomationModal(ruleId) {
+  editingAutomationId = ruleId || null;
+  const modal = document.getElementById('automation-create-modal');
+  const title = modal.querySelector('.modal-header h3');
+
+  if (editingAutomationId) {
+    const rule = MOCK_DATA.automationRules.find(r => r.id === editingAutomationId);
+    if (rule) {
+      setFormValues({ 'new-auto-name': rule.name, 'new-auto-type': rule.type,
+                       'new-auto-trigger': rule.trigger, 'new-auto-action': rule.action,
+                       'new-auto-target': rule.target });
+    }
+    if (title) title.textContent = '自動化ルール編集';
+  } else {
+    setFormValues({ 'new-auto-type': 'reminder' });
+    resetForm(['new-auto-name', 'new-auto-trigger', 'new-auto-action', 'new-auto-target']);
+    if (title) title.textContent = '自動化ルール追加';
+  }
   showModal('automation-create-modal');
+}
+
+function editAutomationRule(id) {
+  openAutomationModal(id);
 }
 
 function closeAutomationModal() {
@@ -63,12 +84,28 @@ function submitNewAutomationRule() {
   if (!name) { alert('ルール名を入力してください'); return; }
   if (!trigger) { alert('トリガーを入力してください'); return; }
   if (!action) { alert('アクションを入力してください'); return; }
-  const newRule = {
-    id: 'ar-' + String(MOCK_DATA.automationRules.length + 1).padStart(3, '0'),
-    name, type, enabled: true, trigger, action, target, lastRun: null,
-  };
-  MOCK_DATA.automationRules.push(newRule);
+
+  if (editingAutomationId) {
+    const rule = MOCK_DATA.automationRules.find(r => r.id === editingAutomationId);
+    if (rule) {
+      Object.assign(rule, { name, type, trigger, action, target });
+    }
+    editingAutomationId = null;
+  } else {
+    const newRule = {
+      id: 'ar-' + String(MOCK_DATA.automationRules.length + 1).padStart(3, '0'),
+      name, type, enabled: true, trigger, action, target, lastRun: null,
+    };
+    MOCK_DATA.automationRules.push(newRule);
+  }
   closeAutomationModal();
+  const content = document.getElementById('page-content');
+  if (content) renderAutomation(content);
+}
+
+function deleteAutomationRule(id) {
+  if (!confirm('このルールを削除しますか？')) return;
+  MOCK_DATA.automationRules = MOCK_DATA.automationRules.filter(r => r.id !== id);
   const content = document.getElementById('page-content');
   if (content) renderAutomation(content);
 }
@@ -135,7 +172,9 @@ function renderAutomation(el) {
                 <td style="font-size:12px;color:var(--gray-600);">${r.target}</td>
                 <td style="font-size:12px;color:var(--gray-400);">${r.lastRun ? formatDateTime(r.lastRun) : '-'}</td>
                 <td>
+                  <button class="btn btn-secondary btn-sm" onclick="editAutomationRule('${r.id}')" style="font-size:11px;">編集</button>
                   <button class="btn btn-secondary btn-sm" onclick="runAutomationRule('${r.id}')" ${!r.enabled ? 'disabled style="opacity:0.5"' : ''}>今すぐ実行</button>
+                  <button class="btn-icon" onclick="deleteAutomationRule('${r.id}')" style="color:var(--danger);">&times;</button>
                   <div id="auto-flash-${r.id}"></div>
                 </td>
               </tr>

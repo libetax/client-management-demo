@@ -650,6 +650,68 @@
   </div>
 </div>
 
+<!-- イベント追加モーダル -->
+<div class="modal-overlay" id="event-create-modal">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h3>イベント追加</h3>
+      <button class="btn-icon" onclick="closeEventModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>タイトル</label>
+        <input type="text" id="new-ev-title" placeholder="例: 株式会社サンプル 決算打ち合わせ">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>日付</label>
+          <input type="date" id="new-ev-date">
+        </div>
+        <div class="form-group">
+          <label>時間</label>
+          <input type="time" id="new-ev-time">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>種別</label>
+          <select id="new-ev-type">
+            <option value="meeting">面談</option>
+            <option value="internal">社内</option>
+            <option value="deadline">期限</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>時間（分）</label>
+          <input type="number" id="new-ev-duration" placeholder="60" min="0" step="15">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label>担当者</label>
+          <select id="new-ev-user">
+            <option value="">なし</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>顧客</label>
+          <select id="new-ev-client">
+            <option value="">なし</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>場所</label>
+        <input type="text" id="new-ev-location" placeholder="例: Zoom / 来所 / 会議室A">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEventModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitNewEvent()">作成</button>
+    </div>
+  </div>
+</div>
+
 <!-- CSV取り込み用の非表示input -->
 <input type="file" id="csv-import-input" accept=".csv" style="display:none">
 

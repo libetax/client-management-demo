@@ -21,6 +21,7 @@ function renderCalendar(el) {
         <option value="">全担当者</option>
         ${buildUserOptions()}
       </select>
+      <button class="btn btn-primary" id="cal-add-event">+ イベント追加</button>
     </div>
     <div class="card">
       <div class="card-body" style="padding:0;">
@@ -155,7 +156,38 @@ function renderCalendar(el) {
   document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } draw(); });
   document.getElementById('cal-user-filter').addEventListener('change', draw);
   document.getElementById('cal-type-filter').addEventListener('change', draw);
+  document.getElementById('cal-add-event').addEventListener('click', openEventModal);
   draw();
+}
+
+function openEventModal() {
+  document.getElementById('new-ev-user').innerHTML = '<option value="">なし</option>' + buildUserOptions();
+  document.getElementById('new-ev-client').innerHTML = '<option value="">なし</option>' + buildClientOptions(true);
+  resetForm(['new-ev-title', 'new-ev-date', 'new-ev-time', 'new-ev-duration', 'new-ev-location']);
+  setFormValues({ 'new-ev-type': 'meeting' });
+  showModal('event-create-modal');
+}
+
+function closeEventModal() { hideModal('event-create-modal'); }
+
+function submitNewEvent() {
+  const title = getValTrim('new-ev-title');
+  const date = getVal('new-ev-date');
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!date) { alert('日付を入力してください'); return; }
+
+  MOCK_DATA.calendarEvents.push({
+    id: generateId('ev-', MOCK_DATA.calendarEvents),
+    title, date,
+    time: getVal('new-ev-time') || null,
+    duration: getValInt('new-ev-duration') || null,
+    type: getVal('new-ev-type'),
+    userId: getVal('new-ev-user') || null,
+    clientId: getVal('new-ev-client') || null,
+    location: getValTrim('new-ev-location') || null,
+  });
+  closeEventModal();
+  navigateTo('calendar');
 }
 
 registerPage('calendar', renderCalendar);

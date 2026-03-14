@@ -8,7 +8,7 @@ let integrationStates = {
   dropbox: { connected: true, account: 'libetax@dropbox.com', date: '2025-08-15', rootPath: '/リベ大税理士法人/顧客資料', usedStorage: '45.2 GB', totalStorage: '2 TB', autoCreateFolder: true, namingRule: '{顧客コード}_{顧客名}', lastSync: '2026-03-11T06:00:00' },
   zoom: { connected: false, account: '', date: '', lastSync: null },
   freee: { connected: true, account: 'リベ大税理士法人', date: '2025-06-01', lastSync: '2026-03-10T22:00:00' },
-  slack: { connected: false },
+  slack: { connected: false, workspaceUrl: '', channel: '', notifyTaskDue: true, notifyReportCreated: true, notifyEscalation: true },
   eltax: { connected: true, account: '利用者識別番号: 1234567890', date: '2025-09-01', lastSync: '2026-03-10T18:00:00' },
   etax: { connected: true, account: '利用者識別番号: 0987654321', date: '2025-09-01', lastSync: '2026-03-10T18:00:00' },
 };
@@ -179,6 +179,7 @@ function renderIntegrationDetails(key, st) {
   if (key === 'google') return renderGoogleDetails(st);
   if (key === 'dropbox') return renderDropboxDetails(st);
   if (key === 'zoom') return renderZoomDetails(st);
+  if (key === 'slack') return renderSlackDetails(st);
   // fallback for other integrations
   if (!st.connected) {
     return `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleIntegration('${key}')">接続する</button>`;
@@ -347,6 +348,46 @@ function renderZoomDetails(st) {
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();toggleIntegration('zoom')">切断</button>
       </div>
       <div id="int-flash-zoom"></div>
+    </div>`;
+}
+
+function renderSlackDetails(st) {
+  if (!st.connected) {
+    return `
+      <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();toggleIntegration('slack')">接続する</button>`;
+  }
+  return `
+    <div class="int-detail-section">
+      <div class="form-group">
+        <label>Workspace URL</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="int-slack-workspace" value="${st.workspaceUrl || ''}" placeholder="libetax.slack.com" style="font-size:12px;padding:6px 8px;flex:1;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>通知チャンネル</label>
+        <input type="text" id="int-slack-channel" value="${st.channel || ''}" placeholder="#tax-notifications" style="font-size:12px;padding:6px 8px;">
+      </div>
+      <div class="form-group">
+        <label>通知設定</label>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" ${st.notifyTaskDue !== false ? 'checked' : ''}> タスク期限通知
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" ${st.notifyReportCreated !== false ? 'checked' : ''}> 報告書作成通知
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" ${st.notifyEscalation !== false ? 'checked' : ''}> エスカレーション通知
+          </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();alert('テスト通知を送信しました（モック）')">テスト送信</button>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();alert('Slack設定を保存しました（モック）')">設定保存</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();toggleIntegration('slack')">切断</button>
+      </div>
+      <div id="int-flash-slack"></div>
     </div>`;
 }
 
