@@ -152,10 +152,10 @@ function closeChatRoomModal() {
 }
 
 function submitChatRoom() {
-  const roomName = document.getElementById('new-cr-name').value.trim();
-  const roomId = document.getElementById('new-cr-roomid').value.trim();
-  const roomUrl = document.getElementById('new-cr-url').value.trim();
-  const memo = document.getElementById('new-cr-memo').value.trim();
+  const roomName = getValTrim('new-cr-name');
+  const roomId = getValTrim('new-cr-roomid');
+  const roomUrl = getValTrim('new-cr-url');
+  const memo = getValTrim('new-cr-memo');
   const clientIds = [...document.querySelectorAll('.cr-client-cb:checked')].map(cb => cb.value);
 
   if (!roomName) { alert('ルーム名を入力してください'); return; }
@@ -171,7 +171,7 @@ function submitChatRoom() {
       r.memo = memo;
     }
   } else {
-    const newId = 'cr-' + String(MOCK_DATA.chatRooms.length + 1).padStart(3, '0');
+    const newId = generateId('cr-', MOCK_DATA.chatRooms);
     MOCK_DATA.chatRooms.push({
       id: newId,
       roomId,

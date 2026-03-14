@@ -58,11 +58,11 @@ function closeAutomationModal() {
 }
 
 function submitNewAutomationRule() {
-  const name = document.getElementById('new-auto-name').value.trim();
-  const type = document.getElementById('new-auto-type').value;
-  const trigger = document.getElementById('new-auto-trigger').value.trim();
-  const action = document.getElementById('new-auto-action').value.trim();
-  const target = document.getElementById('new-auto-target').value.trim();
+  const name = getValTrim('new-auto-name');
+  const type = getVal('new-auto-type');
+  const trigger = getValTrim('new-auto-trigger');
+  const action = getValTrim('new-auto-action');
+  const target = getValTrim('new-auto-target');
   if (!name) { alert('ルール名を入力してください'); return; }
   if (!trigger) { alert('トリガーを入力してください'); return; }
   if (!action) { alert('アクションを入力してください'); return; }

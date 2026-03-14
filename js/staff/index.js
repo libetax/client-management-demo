@@ -106,7 +106,7 @@ function toggleStaffActive(userId) {
 // ===========================
 function renderStaffDetail(el, params) {
   const u = getUserById(params.id);
-  if (!u) { el.innerHTML = '<div class="empty-state"><div class="icon">?</div><p>職員が見つかりません</p></div>'; return; }
+  if (!u) { el.innerHTML = renderEmptyState('職員が見つかりません'); return; }
   document.getElementById('header-title').textContent = `職員詳細 - ${u.name}`;
   const displayKana = (u.lastNameKana || '') + (u.firstNameKana ? ' ' + u.firstNameKana : '');
   const clients = MOCK_DATA.clients.filter(c => c.mainUserId === u.id || c.subUserId === u.id);
@@ -154,7 +154,7 @@ function renderStaffDetail(el, params) {
                 return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${c.id}'})">
                   <td>${c.clientCode}</td>
                   <td><strong>${c.name}</strong></td>
-                  <td><span class="type-badge ${c.clientType === '法人' ? 'type-corp' : 'type-individual'}">${c.clientType}</span></td>
+                  <td>${renderTypeBadge(c.clientType)}</td>
                   <td>${c.fiscalMonth}月</td>
                   <td>${role}</td>
                   <td>${c.monthlySales.toLocaleString()}円</td>
@@ -234,7 +234,7 @@ function importStaffCSV() {
           if (obj.memo !== undefined) existing.memo = obj.memo;
           updated++;
         } else {
-          const newId = 'u-' + String(MOCK_DATA.users.length + 1).padStart(3, '0');
+          const newId = generateId('u-', MOCK_DATA.users);
           const code = obj.staffCode || 'A' + String(MOCK_DATA.users.length + 1).padStart(3, '0');
           const lastName = obj.lastName || '名称未設定';
           const firstName = obj.firstName || '';

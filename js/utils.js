@@ -93,3 +93,65 @@ function formatDateTime(iso) {
   const d = new Date(iso);
   return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
+
+// ── UI共通ヘルパー ──
+
+// ID生成
+function generateId(prefix, collection) {
+  return prefix + String(collection.length + 1).padStart(3, '0');
+}
+
+// 空状態表示
+function renderEmptyState(message, icon) {
+  return `<div class="empty-state"><div class="icon">${icon || '?'}</div><p>${message}</p></div>`;
+}
+
+// テーブル空行
+function renderEmptyRow(colspan, message) {
+  return `<tr><td colspan="${colspan}" style="text-align:center;color:var(--gray-400);padding:24px;">${message || '該当するデータがありません'}</td></tr>`;
+}
+
+// ステータスバッジHTML
+function renderStatusBadge(status) {
+  return `<span class="status-badge ${getStatusClass(status)}">${status}</span>`;
+}
+
+// 種別バッジHTML
+function renderTypeBadge(clientType) {
+  return `<span class="type-badge ${clientType === '法人' ? 'type-corp' : 'type-individual'}">${clientType}</span>`;
+}
+
+// selectのoptions生成
+function buildUserOptions(filter) {
+  let users = MOCK_DATA.users.filter(u => u.isActive);
+  if (filter === 'staff') users = users.filter(u => u.role !== 'admin');
+  if (filter === 'leaders') users = users.filter(u => u.role === 'admin' || u.role === 'team_leader');
+  return users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+}
+
+function buildClientOptions(activeOnly) {
+  const clients = activeOnly ? MOCK_DATA.clients.filter(c => c.isActive) : MOCK_DATA.clients;
+  return clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// フォーム値取得ヘルパー
+function getVal(id, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return fallback !== undefined ? fallback : '';
+  return el.value;
+}
+
+function getValTrim(id) {
+  return (getVal(id) || '').trim();
+}
+
+function getValInt(id, fallback) {
+  return parseInt(getVal(id)) || (fallback !== undefined ? fallback : 0);
+}
+
+// バリデーション
+function requireField(id, message) {
+  const val = getValTrim(id);
+  if (!val) { alert(message); return null; }
+  return val;
+}
