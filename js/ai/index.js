@@ -142,7 +142,7 @@ function renderAIDraft(panel) {
   panel.innerHTML = `
     <div class="card">
       <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="grid-2">
           <div class="form-group">
             <label>顧客</label>
             <select id="ai-draft-client">
@@ -407,15 +407,15 @@ function renderAISuggestionResults() {
     <div class="stats-grid">
       <div class="stat-card accent-blue">
         <div class="stat-label">提案数</div>
-        <div class="stat-value">${aiSuggestions.length}<span style="font-size:14px;font-weight:400;color:var(--gray-500);">件</span></div>
+        <div class="stat-value">${aiSuggestions.length}<span class="stat-unit">件</span></div>
       </div>
       <div class="stat-card accent-red">
         <div class="stat-label">期限超過タスク</div>
-        <div class="stat-value">${overdueTasks}<span style="font-size:14px;font-weight:400;color:var(--gray-500);">件</span></div>
+        <div class="stat-value">${overdueTasks}<span class="stat-unit">件</span></div>
       </div>
       <div class="stat-card accent-yellow">
         <div class="stat-label">来月決算の顧客</div>
-        <div class="stat-value">${nextMonthClients}<span style="font-size:14px;font-weight:400;color:var(--gray-500);">社</span></div>
+        <div class="stat-value">${nextMonthClients}<span class="stat-unit">社</span></div>
       </div>
     </div>
   `;

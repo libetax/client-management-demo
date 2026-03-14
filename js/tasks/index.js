@@ -127,7 +127,7 @@ function renderTaskComments(taskId) {
   }
   container.innerHTML = comments.map(c => {
     const author = getUserById(c.authorId);
-    return `<div style="padding:12px;background:var(--gray-50);border-radius:6px;margin-bottom:8px;">
+    return `<div class="info-box" style="margin-bottom:8px;">
       <div style="font-size:12px;color:var(--gray-500);margin-bottom:4px;">${author?.name || '-'} - ${formatDate(c.createdAt)}</div>
       <div style="font-size:13px;">${escapeHtml(c.body)}</div>
     </div>`;

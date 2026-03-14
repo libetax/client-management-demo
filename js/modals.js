@@ -60,8 +60,8 @@ function openClientModal(clientId) {
   const customFields = (MOCK_DATA.customFields || []).slice().sort((a, b) => a.order - b.order);
   if (customFields.length > 0) {
     cfArea.innerHTML = `
-      <div style="border-top:1px solid var(--gray-200);padding-top:16px;margin-top:8px;">
-        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:12px;">カスタム項目</div>
+      <div class="section-divider">
+        <div class="section-title-sm">カスタム項目</div>
         ${customFields.map(cf => {
           let input = '';
           const inputId = 'cf-val-' + cf.id;

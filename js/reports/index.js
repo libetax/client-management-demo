@@ -227,8 +227,8 @@ function renderReportDetail(el, params) {
           </div>
         </div>
         <div class="card-body">
-          <div style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--gray-700);">${escapeHtml(mockBody)}</div>
-          ${r.hasAttachment ? '<div style="margin-top:16px;padding:12px;background:var(--gray-50);border-radius:6px;"><span style="font-size:13px;">&#128206; 添付ファイル: <a href="#" onclick="event.preventDefault();alert(\'ファイルを開きます（モック）\')">' + r.title.slice(0, 20) + '_資料.pdf</a></span></div>' : ''}
+          <div class="pre-wrap">${escapeHtml(mockBody)}</div>
+          ${r.hasAttachment ? '<div class="info-box" style="margin-top:16px;"><span style="font-size:13px;">&#128206; 添付ファイル: <a href="#" onclick="event.preventDefault();alert(\'ファイルを開きます（モック）\')">' + r.title.slice(0, 20) + '_資料.pdf</a></span></div>' : ''}
         </div>
       </div>
       <div>
