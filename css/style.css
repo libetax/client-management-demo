@@ -423,6 +423,20 @@ textarea.inline-edit-input { resize: vertical; font-family: inherit; }
 .ai-sg-desc { font-size: 13px; color: var(--gray-600); line-height: 1.6; margin-bottom: 10px; }
 .ai-sg-actions { display: flex; gap: 8px; }
 
+/* ── ユーティリティクラス ── */
+.text-muted { color: var(--gray-400); font-size: 13px; }
+.text-hint { color: var(--gray-500); font-size: 13px; }
+.text-label { font-size: 12px; font-weight: 600; color: var(--gray-500); margin-bottom: 8px; }
+.flex-row { display: flex; align-items: center; gap: 12px; }
+.flex-col { display: flex; flex-direction: column; gap: 8px; }
+.info-box { padding: 12px; background: var(--gray-50); border-radius: 6px; }
+.pre-wrap { white-space: pre-wrap; font-size: 13px; line-height: 1.8; color: var(--gray-700); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.list-item-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--gray-100); }
+.section-divider { border-top: 1px solid var(--gray-200); padding-top: 16px; margin-top: 8px; }
+.section-title-sm { font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 12px; }
+.stat-unit { font-size: 14px; font-weight: 400; color: var(--gray-500); }
+
 @media (max-width: 768px) {
   .hamburger { display: block; }
   .sidebar { transform: translateX(-100%); transition: transform .25s; }

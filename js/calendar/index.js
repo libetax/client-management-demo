@@ -114,12 +114,12 @@ function renderCalendar(el) {
       <div class="card-body">`;
 
     if (dayEvents.length > 0) {
-      html += '<div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px;">イベント</div>';
+      html += '<div style="margin-bottom:12px;"><div class="text-label">イベント</div>';
       html += dayEvents.map(e => {
         const user = e.userId ? getUserById(e.userId) : null;
         const client = e.clientId ? getClientById(e.clientId) : null;
         const typeLabel = { meeting: '面談', internal: '社内', deadline: '期限' }[e.type] || e.type;
-        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--gray-100);">
+        return `<div class="list-item-row">
           <span class="cal-event-type-badge cal-event-${e.type}" style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;">${typeLabel}</span>
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:500;">${e.time ? e.time + ' ' : ''}${e.title}</div>
@@ -131,11 +131,11 @@ function renderCalendar(el) {
     }
 
     if (dayTasks.length > 0) {
-      html += '<div><div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px;">タスク期限</div>';
+      html += '<div><div class="text-label">タスク期限</div>';
       html += dayTasks.map(t => {
         const client = getClientById(t.clientId);
         const assignee = getUserById(t.assigneeUserId);
-        return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer;" onclick="navigateTo('task-detail',{id:'${t.id}'})">
+        return `<div class="list-item-row" style="cursor:pointer;" onclick="navigateTo('task-detail',{id:'${t.id}'})">
           ${renderStatusBadge(t.status)}
           <div style="flex:1;">
             <div style="font-size:13px;font-weight:500;">${t.title}</div>
