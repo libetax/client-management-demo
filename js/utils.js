@@ -177,6 +177,30 @@ function bindFilters(ids, handler) {
   });
 }
 
+// モーダル表示・非表示
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// フォーム値一括セット { elementId: value, ... }
+function setFormValues(map) {
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!val;
+    else el.value = val != null ? val : '';
+  });
+}
+
+// フォーム値一括リセット（指定IDの値を空にする）
+function resetForm(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+}
+
 // CSV取り込み共通フレームワーク
 function runCSVImport(processRow, onComplete) {
   const input = document.getElementById('csv-import-input');

@@ -142,11 +142,11 @@ function openChatRoomModal(roomId) {
     document.querySelectorAll('.cr-client-cb').forEach(cb => { cb.checked = false; });
   }
 
-  modal.classList.add('show');
+  showModal('chatroom-create-modal');
 }
 
 function closeChatRoomModal() {
-  document.getElementById('chatroom-create-modal').classList.remove('show');
+  hideModal('chatroom-create-modal');
   editingChatRoomId = null;
 }
 

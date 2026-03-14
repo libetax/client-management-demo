@@ -45,16 +45,13 @@ function runAutomationRule(ruleId) {
 }
 
 function openAutomationModal() {
-  document.getElementById('new-auto-name').value = '';
-  document.getElementById('new-auto-type').value = 'reminder';
-  document.getElementById('new-auto-trigger').value = '';
-  document.getElementById('new-auto-action').value = '';
-  document.getElementById('new-auto-target').value = '';
-  document.getElementById('automation-create-modal').classList.add('show');
+  setFormValues({ 'new-auto-type': 'reminder' });
+  resetForm(['new-auto-name', 'new-auto-trigger', 'new-auto-action', 'new-auto-target']);
+  showModal('automation-create-modal');
 }
 
 function closeAutomationModal() {
-  document.getElementById('automation-create-modal').classList.remove('show');
+  hideModal('automation-create-modal');
 }
 
 function submitNewAutomationRule() {
