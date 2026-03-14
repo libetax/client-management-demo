@@ -155,3 +155,24 @@ function requireField(id, message) {
   if (!val) { alert(message); return null; }
   return val;
 }
+
+// テーブル本体レンダリング
+function renderTableBody(tbodyId, items, rowRenderer, emptyColspan, emptyMessage) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  if (items.length === 0) {
+    tbody.innerHTML = renderEmptyRow(emptyColspan, emptyMessage);
+    return;
+  }
+  tbody.innerHTML = items.map(rowRenderer).join('');
+}
+
+// フィルタ要素へのイベントバインド
+function bindFilters(ids, handler) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const event = el.tagName === 'SELECT' ? 'change' : el.type === 'checkbox' ? 'change' : 'input';
+    el.addEventListener(event, handler);
+  });
+}

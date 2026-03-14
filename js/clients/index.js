@@ -30,10 +30,7 @@ function renderClients(el) {
     </div>
   `;
   renderClientTable();
-
-  document.getElementById('client-search').addEventListener('input', renderClientTable);
-  document.getElementById('client-type-filter').addEventListener('change', renderClientTable);
-  document.getElementById('client-status-filter').addEventListener('change', renderClientTable);
+  bindFilters(['client-search', 'client-type-filter', 'client-status-filter'], renderClientTable);
 }
 
 function renderClientTable() {
@@ -49,8 +46,7 @@ function renderClientTable() {
     return true;
   });
 
-  const tbody = document.getElementById('client-table-body');
-  tbody.innerHTML = clients.map(c => {
+  renderTableBody('client-table-body', clients, c => {
     const main = getUserById(c.mainUserId);
     return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${c.id}'})">
       <td>${c.clientCode}</td>
@@ -61,7 +57,7 @@ function renderClientTable() {
       <td>${c.monthlySales.toLocaleString()}円</td>
       <td>${c.isActive ? '<span style="color:var(--success)">有効</span>' : '<span style="color:var(--gray-400)">無効</span>'}</td>
     </tr>`;
-  }).join('');
+  }, 7);
 }
 
 // ===========================

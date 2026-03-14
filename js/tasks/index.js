@@ -29,10 +29,7 @@ function renderTasks(el) {
     </div>
   `;
   renderTaskTable();
-
-  document.getElementById('task-search').addEventListener('input', renderTaskTable);
-  document.getElementById('task-status-filter').addEventListener('change', renderTaskTable);
-  document.getElementById('task-assignee-filter').addEventListener('change', renderTaskTable);
+  bindFilters(['task-search', 'task-status-filter', 'task-assignee-filter'], renderTaskTable);
 }
 
 function renderTaskTable() {
@@ -50,8 +47,7 @@ function renderTaskTable() {
 
   tasks.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
-  const tbody = document.getElementById('task-table-body');
-  tbody.innerHTML = tasks.map(t => {
+  renderTableBody('task-table-body', tasks, t => {
     const client = getClientById(t.clientId);
     const assignee = getUserById(t.assigneeUserId);
     return `<tr class="clickable" onclick="navigateTo('task-detail',{id:'${t.id}'})">
@@ -61,7 +57,7 @@ function renderTaskTable() {
       <td>${formatDate(t.dueDate)}</td>
       <td>${renderStatusBadge(t.status)}</td>
     </tr>`;
-  }).join('');
+  }, 5);
 }
 
 // ===========================

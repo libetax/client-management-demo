@@ -35,7 +35,7 @@ function renderChatRooms(el) {
     </div>
   `;
   renderChatRoomTable();
-  document.getElementById('cr-search').addEventListener('input', renderChatRoomTable);
+  bindFilters(['cr-search'], renderChatRoomTable);
   document.getElementById('cr-mention-room').addEventListener('change', previewMentions);
 }
 
@@ -52,8 +52,7 @@ function renderChatRoomTable() {
     });
   }
 
-  const tbody = document.getElementById('cr-table-body');
-  tbody.innerHTML = rooms.map(r => {
+  renderTableBody('cr-table-body', rooms, r => {
     const clientNames = r.clientIds.map(cid => {
       const c = getClientById(cid);
       return c ? `<a href="#" onclick="event.preventDefault();navigateTo('client-detail',{id:'${cid}'})">${c.name}</a>` : cid;
@@ -65,7 +64,7 @@ function renderChatRoomTable() {
       <td style="color:var(--gray-500);font-size:12px;">${r.memo || '-'}</td>
       <td><button class="btn btn-secondary btn-sm" onclick="openChatRoomModal('${r.id}')">編集</button></td>
     </tr>`;
-  }).join('');
+  }, 5);
 }
 
 function previewMentions() {

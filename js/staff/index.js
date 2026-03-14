@@ -45,11 +45,7 @@ function renderStaff(el) {
     </div>
   `;
   renderStaffTable();
-
-  document.getElementById('staff-search').addEventListener('input', renderStaffTable);
-  document.getElementById('staff-role-filter').addEventListener('change', renderStaffTable);
-  document.getElementById('staff-dept-filter').addEventListener('change', renderStaffTable);
-  document.getElementById('staff-emptype-filter').addEventListener('change', renderStaffTable);
+  bindFilters(['staff-search', 'staff-role-filter', 'staff-dept-filter', 'staff-emptype-filter'], renderStaffTable);
 }
 
 function renderStaffTable() {
@@ -70,8 +66,7 @@ function renderStaffTable() {
     return true;
   });
 
-  const tbody = document.getElementById('staff-table-body');
-  tbody.innerHTML = users.map(u => {
+  renderTableBody('staff-table-body', users, u => {
     const displayName = (u.lastName || '') + (u.firstName ? ' ' + u.firstName : '');
     const displayKana = (u.lastNameKana || '') + (u.firstNameKana ? ' ' + u.firstNameKana : '');
     return `
@@ -89,7 +84,7 @@ function renderStaffTable() {
         </button>
       </td>
     </tr>`;
-  }).join('');
+  }, 8);
 }
 
 function toggleStaffActive(userId) {
