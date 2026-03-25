@@ -106,6 +106,7 @@ function renderSettings(el) {
     { key: 'crm', label: 'CRM設定' },
     { key: 'features', label: '機能設定' },
     { key: 'reportTemplates', label: '報告書テンプレート' },
+    { key: 'taxAlert', label: '納付アラート' },
   ];
 
   const logoutOpts = [5,10,15,30,60,120].map(m =>
@@ -285,6 +286,55 @@ function renderSettings(el) {
         </div>
       </div>`,
 
+    taxAlert: (() => {
+      const tas = MOCK_DATA.taxAlertSettings || { enabled: true, leadMonths: 1, types: { settlement: true, interim1: true, interimPayment: true, interim2: true } };
+      const leadOpts = [
+        { value: 0, label: '当月のみ' },
+        { value: 1, label: '1ヶ月前から' },
+        { value: 2, label: '2ヶ月前から' },
+      ].map(o => `<option value="${o.value}" ${tas.leadMonths === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
+
+      return `
+      <div class="card">
+        <div class="card-header"><h3>納付アラート設定</h3></div>
+        <div class="card-body">
+          <div id="tax-alert-flash"></div>
+          <div class="settings-list">
+            <div class="settings-row">
+              <div><div class="settings-label">アラート有効</div><div class="settings-desc">ダッシュボードと顧客詳細に納付期限アラートを表示</div></div>
+              <label class="toggle"><input type="checkbox" id="set-tax-enabled" ${tas.enabled ? 'checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">事前通知期間</div><div class="settings-desc">期限月の何ヶ月前からアラートを表示するか</div></div>
+              <select class="filter-select" id="set-tax-lead" style="width:160px;">${leadOpts}</select>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:12px;">アラート種別</div>
+            <div class="settings-list">
+              <div class="settings-row">
+                <div><div class="settings-label">決算申告</div><div class="settings-desc">決算月+2ヶ月</div></div>
+                <label class="toggle"><input type="checkbox" id="set-tax-settlement" ${tas.types.settlement ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+              <div class="settings-row">
+                <div><div class="settings-label">中間申告(1回目)</div><div class="settings-desc">決算月+5ヶ月</div></div>
+                <label class="toggle"><input type="checkbox" id="set-tax-interim1" ${tas.types.interim1 ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+              <div class="settings-row">
+                <div><div class="settings-label">中間予定納付</div><div class="settings-desc">決算月+8ヶ月</div></div>
+                <label class="toggle"><input type="checkbox" id="set-tax-interimPayment" ${tas.types.interimPayment ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+              <div class="settings-row">
+                <div><div class="settings-label">中間申告(2回目)</div><div class="settings-desc">決算月+11ヶ月</div></div>
+                <label class="toggle"><input type="checkbox" id="set-tax-interim2" ${tas.types.interim2 ? 'checked' : ''}><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:20px;" onclick="saveTaxAlertSettings()">保存</button>
+        </div>
+      </div>`;
+    })(),
+
     reportTemplates: (() => {
       const templates = MOCK_DATA.reportTemplates || [];
       return `
@@ -388,6 +438,25 @@ function deleteReportTemplate(id) {
   settingsActiveTab = 6;
   settingsRerender();
   setTimeout(() => settingsFlash('rt-flash', 'テンプレートを削除しました'), 50);
+}
+
+// ── 納付アラート設定保存 ──
+function saveTaxAlertSettings() {
+  if (!MOCK_DATA.taxAlertSettings) {
+    MOCK_DATA.taxAlertSettings = { enabled: true, leadMonths: 1, types: { settlement: true, interim1: true, interimPayment: true, interim2: true } };
+  }
+  const s = MOCK_DATA.taxAlertSettings;
+  s.enabled = document.getElementById('set-tax-enabled')?.checked ?? true;
+  s.leadMonths = parseInt(document.getElementById('set-tax-lead')?.value) || 0;
+  s.types.settlement = document.getElementById('set-tax-settlement')?.checked ?? true;
+  s.types.interim1 = document.getElementById('set-tax-interim1')?.checked ?? true;
+  s.types.interimPayment = document.getElementById('set-tax-interimPayment')?.checked ?? true;
+  s.types.interim2 = document.getElementById('set-tax-interim2')?.checked ?? true;
+
+  // タブインデックスを保持して再描画
+  settingsActiveTab = 7;
+  settingsRerender();
+  setTimeout(function() { settingsFlash('tax-alert-flash', '保存しました'); }, 50);
 }
 
 registerPage('settings', renderSettings);

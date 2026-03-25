@@ -3,11 +3,41 @@
 // ===========================
 function renderDashboard(el) {
   const tasks = MOCK_DATA.tasks;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
   const overdue = tasks.filter(t => t.status !== '完了' && t.dueDate < today).length;
   const inProgress = tasks.filter(t => t.status === '進行中').length;
   const todo = tasks.filter(t => t.status === '未着手').length;
   const returned = tasks.filter(t => t.status === '差戻し').length;
+
+  // 納付アラート
+  const taxAlerts = getTaxAlerts();
+  const taxAlertHtml = taxAlerts.length === 0 ? '' : `
+    <div class="card tax-alert-card" style="margin-bottom:24px;">
+      <div class="card-header" style="background:var(--danger-light);border-bottom:1px solid #fecaca;">
+        <h3 style="color:var(--danger);display:flex;align-items:center;gap:8px;">&#x1f514; 納付期限アラート <span style="font-size:12px;font-weight:400;color:var(--gray-500);">${taxAlerts.length}件</span></h3>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>顧客名</th><th>種別</th><th>期限月</th><th>タイミング</th></tr></thead>
+            <tbody>
+              ${taxAlerts.map(a => {
+                const timingLabel = a.isCurrentMonth ? '今月' : '来月';
+                const timingClass = a.isCurrentMonth ? 'status-returned' : 'status-todo';
+                const typeColor = a.type === 'settlement' ? 'var(--primary)' : (a.type === 'interimPayment' ? 'var(--danger)' : 'var(--warning)');
+                return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${escapeHtml(a.clientId)}'})">
+                  <td><strong>${escapeHtml(a.clientName)}</strong> <span style="font-size:11px;color:var(--gray-400);">${escapeHtml(a.clientCode)}</span></td>
+                  <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;background:${typeColor};color:#fff;">${escapeHtml(a.label)}</span></td>
+                  <td>${a.deadlineMonth}月</td>
+                  <td><span class="status-badge ${timingClass}">${timingLabel}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
 
   el.innerHTML = `
     <div class="stats-grid">
@@ -32,6 +62,8 @@ function renderDashboard(el) {
         <div class="stat-sub">件 要対応</div>
       </div>
     </div>
+
+    ${taxAlertHtml}
 
     <div class="detail-grid">
       <div class="card">

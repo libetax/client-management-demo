@@ -341,6 +341,17 @@ const MOCK_DATA = {
     { id: 'rt-005', name: '面談記録', body: '■ 作業内容\n{タイトル}\n\n■ 面談日時\n{日付}\n\n■ 参加者\n・{顧客名}\n・\n\n■ 議題・内容\n・\n\n■ 決定事項\n・\n\n■ 次のアクション\n・' },
   ],
 
+  taxAlertSettings: {
+    enabled: true,
+    leadMonths: 1,
+    types: {
+      settlement: true,
+      interim1: true,
+      interimPayment: true,
+      interim2: true,
+    }
+  },
+
   notifications: [
     { id: 'n-001', type: 'task_due', message: '株式会社サンプル商事「法人税確定申告書作成」の期限が3日後です', isRead: false, createdAt: '2026-03-10T09:00:00' },
     { id: 'n-002', type: 'task_assigned', message: '新しいタスク「決算報告書レビュー」が割り当てられました', isRead: false, createdAt: '2026-03-10T08:30:00' },

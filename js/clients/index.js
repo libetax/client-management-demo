@@ -265,6 +265,8 @@ function renderClientDetail(el, params) {
       </div>
     </div>
 
+    ${(!isNew && !editing) ? renderTaxScheduleCard(c) : ''}
+
     ${!isNew ? `
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><h3>関連タスク</h3><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ タスク追加</button></div>
@@ -533,6 +535,62 @@ function renderReportSummaryCard(c) {
       </div>
     </div>
     <div style="font-size:12px;color:var(--gray-400);">関連報告書: ${clientReports.length}件（直近: ${formatDate(sorted[0]?.createdAt)}）</div>
+  `;
+}
+
+// ── 顧客詳細: 納付スケジュールカード ──
+function renderTaxScheduleCard(client) {
+  if (!client || !client.fiscalMonth) return '';
+
+  const settings = MOCK_DATA.taxAlertSettings;
+  if (!settings || !settings.enabled) return '';
+
+  const now = new Date();
+  const currentMonth = parseInt(now.toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'numeric' }));
+  const leadMonths = settings.leadMonths || 0;
+
+  const deadlines = getTaxDeadlines(client.fiscalMonth);
+
+  const rows = deadlines.map(function(d) {
+    if (!settings.types[d.type]) return '';
+
+    let statusLabel = '対応不要';
+    let rowStyle = '';
+    for (var i = 0; i <= leadMonths; i++) {
+      const checkMonth = ((currentMonth - 1 + i) % 12) + 1;
+      if (d.deadlineMonth === checkMonth) {
+        if (i === 0) {
+          statusLabel = '今月対応';
+          rowStyle = 'background:var(--danger-light);';
+        } else {
+          statusLabel = '来月対応';
+          rowStyle = 'background:var(--warning-light);';
+        }
+        break;
+      }
+    }
+
+    const typeColor = d.type === 'settlement' ? 'var(--primary)' : (d.type === 'interimPayment' ? 'var(--danger)' : 'var(--warning)');
+
+    return `<tr style="${rowStyle}">
+      <td><span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;background:${typeColor};color:#fff;">${escapeHtml(d.label)}</span></td>
+      <td>${d.deadlineMonth}月</td>
+      <td>${escapeHtml(statusLabel)}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><h3>納付スケジュール</h3><span style="font-size:11px;color:var(--gray-400);margin-left:8px;">決算月: ${client.fiscalMonth}月</span></div>
+      <div class="card-body">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>種別</th><th>期限月</th><th>ステータス</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   `;
 }
 

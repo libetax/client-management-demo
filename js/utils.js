@@ -201,6 +201,68 @@ function resetForm(ids) {
   });
 }
 
+// ── 納付期限計算ヘルパー ──
+
+// 顧客の決算月から税務イベント一覧を返す
+function getTaxDeadlines(fiscalMonth) {
+  const deadlines = [];
+  const addMonth = (base, offset) => ((base - 1 + offset) % 12) + 1;
+
+  deadlines.push({ type: 'settlement', label: '決算申告', deadlineMonth: addMonth(fiscalMonth, 2) });
+  deadlines.push({ type: 'interim1', label: '中間申告(1回目)', deadlineMonth: addMonth(fiscalMonth, 5) });
+  deadlines.push({ type: 'interimPayment', label: '中間予定納付', deadlineMonth: addMonth(fiscalMonth, 8) });
+  deadlines.push({ type: 'interim2', label: '中間申告(2回目)', deadlineMonth: addMonth(fiscalMonth, 11) });
+
+  return deadlines;
+}
+
+// 今月対応が必要な税務アラートを全顧客分返す
+function getTaxAlerts() {
+  const settings = MOCK_DATA.taxAlertSettings;
+  if (!settings || !settings.enabled) return [];
+
+  const now = new Date();
+  // JST基準で現在月を取得
+  const currentMonth = parseInt(now.toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'numeric' }));
+
+  const alerts = [];
+  MOCK_DATA.clients.filter(function(c) { return c.isActive; }).forEach(function(client) {
+    const deadlines = getTaxDeadlines(client.fiscalMonth);
+    deadlines.forEach(function(d) {
+      if (!settings.types[d.type]) return;
+      // leadMonths分の前月も含めてチェック
+      for (var i = 0; i <= settings.leadMonths; i++) {
+        const checkMonth = ((currentMonth - 1 + i) % 12) + 1;
+        if (d.deadlineMonth === checkMonth) {
+          alerts.push({
+            clientId: client.id,
+            clientName: client.name,
+            clientCode: client.clientCode,
+            fiscalMonth: client.fiscalMonth,
+            type: d.type,
+            label: d.label,
+            deadlineMonth: d.deadlineMonth,
+            isCurrentMonth: i === 0,
+            monthsUntil: i,
+          });
+        }
+      }
+    });
+  });
+
+  // 当月を先に、その後来月の順
+  alerts.sort(function(a, b) { return a.monthsUntil - b.monthsUntil || a.clientName.localeCompare(b.clientName); });
+  return alerts;
+}
+
+// 税務イベント種別の色クラスを返す
+function getTaxAlertColorClass(type) {
+  if (type === 'settlement') return 'accent-blue';
+  if (type === 'interim1' || type === 'interim2') return 'accent-yellow';
+  if (type === 'interimPayment') return 'accent-red';
+  return '';
+}
+
 // CSV取り込み共通フレームワーク
 function runCSVImport(processRow, onComplete) {
   const input = document.getElementById('csv-import-input');
