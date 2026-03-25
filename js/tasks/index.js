@@ -86,13 +86,21 @@ function renderTaskDetail(el, params) {
       </div>
       <div>
         <div class="card" style="margin-bottom:16px">
-          <div class="card-header"><h3>チェックリスト</h3></div>
+          <div class="card-header">
+            <h3>チェックリスト <span id="checklist-count" style="font-size:12px;font-weight:400;color:var(--gray-500);"></span></h3>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <select id="checklist-template-select" class="filter-select" style="font-size:12px;padding:4px 8px;width:auto;">
+                <option value="">テンプレート選択...</option>
+                ${MOCK_DATA.checklistTemplates.map(tpl => '<option value="' + tpl.id + '">' + escapeHtml(tpl.name) + '</option>').join('')}
+              </select>
+              <button class="btn btn-secondary btn-sm" id="checklist-template-add">追加</button>
+            </div>
+          </div>
           <div class="card-body">
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" checked> 必要書類の確認</label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" checked> 仕訳データの確認</label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox"> 申告書ドラフト作成</label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox"> レビュー依頼</label>
+            <div id="checklist-items"></div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <input type="text" class="search-input" id="checklist-new-item" style="flex:1;width:auto;font-size:13px;" placeholder="+ 項目を追加...">
+              <button class="btn btn-primary btn-sm" id="checklist-add-btn">追加</button>
             </div>
           </div>
         </div>
@@ -111,10 +119,33 @@ function renderTaskDetail(el, params) {
   `;
 
   renderTaskComments(t.id);
+  renderChecklist(t);
 
   document.getElementById('task-comment-send').addEventListener('click', () => submitTaskComment(t.id));
   document.getElementById('task-comment-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitTaskComment(t.id); }
+  });
+
+  // チェックリスト: テンプレートから追加
+  document.getElementById('checklist-template-add').addEventListener('click', () => {
+    const select = document.getElementById('checklist-template-select');
+    const tplId = select.value;
+    if (!tplId) { alert('テンプレートを選択してください'); return; }
+    const tpl = MOCK_DATA.checklistTemplates.find(x => x.id === tplId);
+    if (!tpl) return;
+    if (!t.checklist) t.checklist = [];
+    tpl.items.forEach(text => {
+      const newId = 'cl-' + String(Date.now()) + '-' + String(Math.random()).slice(2, 6);
+      t.checklist.push({ id: newId, text: text, checked: false });
+    });
+    select.value = '';
+    renderChecklist(t);
+  });
+
+  // チェックリスト: 新規項目追加
+  document.getElementById('checklist-add-btn').addEventListener('click', () => addChecklistItem(t));
+  document.getElementById('checklist-new-item').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addChecklistItem(t); }
   });
 }
 
@@ -132,6 +163,89 @@ function renderTaskComments(taskId) {
       <div style="font-size:13px;">${escapeHtml(c.body)}</div>
     </div>`;
   }).join('');
+}
+
+// ===========================
+// チェックリスト
+// ===========================
+function renderChecklist(task) {
+  const items = task.checklist || [];
+  const container = document.getElementById('checklist-items');
+  const countEl = document.getElementById('checklist-count');
+  const checked = items.filter(i => i.checked).length;
+  countEl.textContent = items.length > 0 ? '(' + checked + ' / ' + items.length + ')' : '';
+
+  if (items.length === 0) {
+    container.innerHTML = '<div style="padding:8px 0;color:var(--gray-400);font-size:13px;">チェックリスト項目はありません</div>';
+    return;
+  }
+
+  container.innerHTML = items.map((item, idx) => {
+    return '<div class="checklist-item" data-idx="' + idx + '" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);">'
+      + '<input type="checkbox" class="checklist-check" data-idx="' + idx + '"' + (item.checked ? ' checked' : '') + '>'
+      + '<span class="checklist-text" data-idx="' + idx + '" style="flex:1;font-size:13px;cursor:pointer;' + (item.checked ? 'text-decoration:line-through;color:var(--gray-400);' : '') + '">' + escapeHtml(item.text) + '</span>'
+      + '<button class="btn-icon checklist-delete" data-idx="' + idx + '" title="削除" style="font-size:14px;color:var(--gray-400);">×</button>'
+      + '</div>';
+  }).join('');
+
+  // チェックボックスイベント
+  container.querySelectorAll('.checklist-check').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      items[i].checked = e.target.checked;
+      renderChecklist(task);
+    });
+  });
+
+  // テキストクリック → 編集モード
+  container.querySelectorAll('.checklist-text').forEach(span => {
+    span.addEventListener('click', (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      const item = items[i];
+      const parent = e.target.parentElement;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = item.text;
+      input.className = 'search-input';
+      input.style.cssText = 'flex:1;width:auto;font-size:13px;padding:4px 8px;';
+      e.target.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const finishEdit = () => {
+        const newText = input.value.trim();
+        if (newText && newText !== item.text) {
+          item.text = newText;
+        }
+        renderChecklist(task);
+      };
+      input.addEventListener('blur', finishEdit);
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+        if (ev.key === 'Escape') { input.value = item.text; input.blur(); }
+      });
+    });
+  });
+
+  // 削除ボタン
+  container.querySelectorAll('.checklist-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      items.splice(i, 1);
+      renderChecklist(task);
+    });
+  });
+}
+
+function addChecklistItem(task) {
+  const input = document.getElementById('checklist-new-item');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!task.checklist) task.checklist = [];
+  const newId = 'cl-' + String(Date.now()) + '-' + String(Math.random()).slice(2, 6);
+  task.checklist.push({ id: newId, text: text, checked: false });
+  input.value = '';
+  renderChecklist(task);
 }
 
 function submitTaskComment(taskId) {
