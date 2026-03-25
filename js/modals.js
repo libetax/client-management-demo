@@ -440,6 +440,9 @@ function openProgressCreateModal() {
   resetForm(['new-pg-name', 'pg-new-column-input', 'pg-template-save-name']);
   document.getElementById('new-pg-category').value = '法人決算';
 
+  // 報告書リンク列チェックボックスの初期値
+  document.getElementById('pg-show-report-link').checked = true;
+
   // 決算月フィルタ
   const fiscalSel = document.getElementById('pg-filter-fiscal');
   fiscalSel.innerHTML = '<option value="">全決算月</option>' +
@@ -505,6 +508,7 @@ function pgSelectTemplate(templateId) {
     if (tpl) {
       pgSelectedColumns = tpl.columns.slice();
       document.getElementById('new-pg-category').value = tpl.category;
+      document.getElementById('pg-show-report-link').checked = tpl.showReportLink !== false;
     }
   } else {
     pgSelectedColumns = [];
@@ -549,6 +553,7 @@ function pgStepNext() {
     // サマリー描画
     var selectedClients = pgGetSelectedClientIds();
     var mgr = getUserById(getVal('new-pg-manager'));
+    var showReportLink = document.getElementById('pg-show-report-link').checked;
     document.getElementById('pg-confirm-summary').innerHTML =
       '<div class="card"><div class="card-body">' +
       '<div class="detail-grid" style="grid-template-columns:120px 1fr;gap:8px 16px;">' +
@@ -557,6 +562,7 @@ function pgStepNext() {
       '<div style="font-size:12px;color:var(--gray-500);">管理者</div><div style="font-size:13px;">' + (mgr ? escapeHtml(mgr.name) : '-') + '</div>' +
       '<div style="font-size:12px;color:var(--gray-500);">工程数</div><div style="font-size:13px;">' + pgSelectedColumns.length + '工程（' + pgSelectedColumns.map(function(c) { return escapeHtml(c); }).join(' → ') + '）</div>' +
       '<div style="font-size:12px;color:var(--gray-500);">対象顧客数</div><div style="font-size:13px;">' + selectedClients.length + '件</div>' +
+      '<div style="font-size:12px;color:var(--gray-500);">報告書リンク</div><div style="font-size:13px;">' + (showReportLink ? 'あり' : 'なし') + '</div>' +
       '</div></div></div>';
 
     pgShowStep(3);
@@ -688,6 +694,8 @@ function submitNewProgress() {
   if (!name) { alert('管理表名を入力してください'); return; }
   if (columns.length === 0) { alert('工程を1つ以上追加してください'); return; }
 
+  var showReportLink = document.getElementById('pg-show-report-link').checked;
+
   // マイテンプレート保存
   if (document.getElementById('pg-save-template').checked) {
     var tplName = getValTrim('pg-template-save-name');
@@ -698,6 +706,7 @@ function submitNewProgress() {
       category: category,
       columns: columns.slice(),
       isCustom: true,
+      showReportLink: showReportLink,
     });
   }
 
@@ -717,6 +726,7 @@ function submitNewProgress() {
     createdAt: new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }),
     columns: columns,
     targets: targets,
+    showReportLink: showReportLink,
   });
 
   closeProgressCreateModal();

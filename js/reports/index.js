@@ -7,12 +7,24 @@ let rpReadFilter = '全て';      // 全て / 未読
 let rpTypeFilter = '両方';      // 両方 / 業務報告書 / 日報
 let rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
 const rpExpandedSet = new Set();
+let rpInitialClient = '';
+
+function navigateToReportsWithClient(clientName) {
+  rpInitialClient = clientName;
+  navigateTo('reports');
+}
 
 function renderReports(el) {
   rpPage = 1;
   rpReadFilter = '全て';
   rpTypeFilter = '両方';
   rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
+
+  // 進捗管理表からの顧客フィルタ遷移
+  if (rpInitialClient) {
+    rpSearchState.client = rpInitialClient;
+    rpInitialClient = '';
+  }
 
   el.innerHTML = `
     <div class="rp-header-bar">
@@ -105,6 +117,12 @@ function renderReports(el) {
       </div>
     </div>
   `;
+  // 顧客フィルタが設定されている場合、検索欄に反映して期間を「全て」に
+  if (rpSearchState.client) {
+    document.getElementById('rp-s-client').value = rpSearchState.client;
+    rpSearchState.period = '全て';
+    document.querySelectorAll('.rp-period-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.p === '全て'); });
+  }
   rpRenderList();
 }
 

@@ -221,16 +221,30 @@ function renderProgressDetail(el, params) {
     document.getElementById('pd-thead').innerHTML = `<tr>
       <th>コード</th><th>顧客名</th><th>主担当</th><th>担当税理士</th>
       ${sheet.columns.map(c => `<th class="pg-step-col">${c}</th>`).join('')}
+      ${sheet.showReportLink ? '<th>報告書</th>' : ''}
       <th>備考</th>
     </tr>`;
 
     // Table body
+    const colCount = 4 + sheet.columns.length + (sheet.showReportLink ? 1 : 0) + 1;
     document.getElementById('pd-tbody').innerHTML = targets.length === 0
-      ? renderEmptyRow(4 + sheet.columns.length + 1)
+      ? renderEmptyRow(colCount)
       : targets.map(t => {
         const client = getClientById(t.clientId);
         const main = getUserById(client?.mainUserId);
         const mgr = getUserById(client?.mgrUserId);
+        // 報告書件数
+        let reportCell = '';
+        if (sheet.showReportLink) {
+          const clientName = client?.name || '';
+          const reportCount = MOCK_DATA.reports.filter(r => r.clientName === clientName).length;
+          if (reportCount > 0) {
+            const safeClientName = clientName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            reportCell = `<td style="text-align:center;"><span class="count-badge" style="background:var(--primary-light,#e0e7ff);color:var(--primary);cursor:pointer;" onclick="event.stopPropagation();navigateToReportsWithClient('${safeClientName}')" title="報告書一覧を表示">${reportCount}</span></td>`;
+          } else {
+            reportCell = '<td style="text-align:center;color:var(--gray-400);font-size:12px;">0</td>';
+          }
+        }
         return `<tr>
           <td>${client?.clientCode || '-'}</td>
           <td><strong>${client?.name || '-'}</strong></td>
@@ -244,6 +258,7 @@ function renderProgressDetail(el, params) {
               ${doneDate ? `<div style="font-size:10px;color:var(--gray-400);margin-top:2px;">${escapeHtml(doneDate)}</div>` : ''}
             </td>`;
           }).join('')}
+          ${reportCell}
           <td class="pg-note-cell" style="font-size:12px;color:var(--gray-500);max-width:200px;min-width:120px;cursor:pointer;white-space:pre-wrap;" onclick="event.stopPropagation();editProgressNote('${sheet.id}','${t.clientId}',this)" title="クリックでメモ編集">${t.note ? escapeHtml(t.note) : '<span style="color:var(--gray-300)">メモを追加...</span>'}</td>
         </tr>`;
       }).join('');

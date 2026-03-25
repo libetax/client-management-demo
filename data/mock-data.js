@@ -150,18 +150,18 @@ const MOCK_DATA = {
 
   // 進捗管理表テンプレート
   progressTemplates: [
-    { id: 'pt-001', name: '法人決算（標準）', category: '法人決算', columns: ['資料回収', '記帳確認', '決算整理', '申告書作成', 'レビュー', '電子申告', '納品'], isCustom: false },
-    { id: 'pt-002', name: '確定申告（標準）', category: '確定申告', columns: ['資料回収', '記帳確認', '所得計算', '申告書作成', 'レビュー', '電子申告', '納品'], isCustom: false },
-    { id: 'pt-003', name: '年末調整（標準）', category: '年末調整', columns: ['年末調整', '源泉所得税', '総括表（給与支払報告書）', '法定調書', '償却資産'], isCustom: false },
-    { id: 'pt-004', name: '中間申告・予定納付', category: '中間申告', columns: ['資料回収', '中間計算', '申告書作成', 'レビュー', '電子申告'], isCustom: false },
-    { id: 'pt-005', name: '新規契約セットアップ', category: 'その他', columns: ['契約書回収', '口座作成', 'ダイレクト納付設定', 'CWルーム作成', 'Dropboxフォルダ作成', '顧客情報登録'], isCustom: false },
+    { id: 'pt-001', name: '法人決算（標準）', category: '法人決算', columns: ['資料回収', '記帳確認', '決算整理', '申告書作成', 'レビュー', '電子申告', '納品'], isCustom: false, showReportLink: true },
+    { id: 'pt-002', name: '確定申告（標準）', category: '確定申告', columns: ['資料回収', '記帳確認', '所得計算', '申告書作成', 'レビュー', '電子申告', '納品'], isCustom: false, showReportLink: true },
+    { id: 'pt-003', name: '年末調整（標準）', category: '年末調整', columns: ['年末調整', '源泉所得税', '総括表（給与支払報告書）', '法定調書', '償却資産'], isCustom: false, showReportLink: true },
+    { id: 'pt-004', name: '中間申告・予定納付', category: '中間申告', columns: ['資料回収', '中間計算', '申告書作成', 'レビュー', '電子申告'], isCustom: false, showReportLink: true },
+    { id: 'pt-005', name: '新規契約セットアップ', category: 'その他', columns: ['契約書回収', '口座作成', 'ダイレクト納付設定', 'CWルーム作成', 'Dropboxフォルダ作成', '顧客情報登録'], isCustom: false, showReportLink: true },
   ],
 
   // Phase 1: 進捗管理表
   progressSheets: [
     {
       id: 'ps-001', name: '年末調整管理表', category: '年末調整', status: '利用中',
-      managerId: 'u-002', createdAt: '2025-11-01',
+      managerId: 'u-002', createdAt: '2025-11-01', showReportLink: true,
       columns: ['年末調整', '源泉所得税', '総括表（給与支払報告書）', '法定調書', '償却資産'],
       targets: [
         { clientId: 'c-001', steps: { '年末調整': '完了', '源泉所得税': '完了', '総括表（給与支払報告書）': '完了', '法定調書': '完了', '償却資産': '完了' }, note: '' },
@@ -175,7 +175,7 @@ const MOCK_DATA = {
     },
     {
       id: 'ps-002', name: '確定申告管理表（R7）', category: '確定申告', status: '利用中',
-      managerId: 'u-009', createdAt: '2026-01-10',
+      managerId: 'u-009', createdAt: '2026-01-10', showReportLink: true,
       columns: ['資料回収', '記帳確認', '申告書作成', 'レビュー', '電子申告', '納品'],
       targets: [
         { clientId: 'c-003', steps: { '資料回収': '完了', '記帳確認': '完了', '申告書作成': '進行中', 'レビュー': '未着手', '電子申告': '未着手', '納品': '未着手' }, note: '3/15期限' },
@@ -185,7 +185,7 @@ const MOCK_DATA = {
     },
     {
       id: 'ps-003', name: '3月決算法人管理表', category: '法人決算', status: '利用中',
-      managerId: 'u-002', createdAt: '2026-02-01',
+      managerId: 'u-002', createdAt: '2026-02-01', showReportLink: true,
       columns: ['資料回収', '記帳確認', '決算整理', '申告書作成', 'レビュー', '電子申告', '納品'],
       targets: [
         { clientId: 'c-001', steps: { '資料回収': '進行中', '記帳確認': '未着手', '決算整理': '未着手', '申告書作成': '未着手', 'レビュー': '未着手', '電子申告': '未着手', '納品': '未着手' }, note: '5月末期限' },
@@ -194,7 +194,7 @@ const MOCK_DATA = {
     },
     {
       id: 'ps-004', name: '年末調整管理表（R6）', category: '年末調整', status: '終了',
-      managerId: 'u-002', createdAt: '2024-11-01',
+      managerId: 'u-002', createdAt: '2024-11-01', showReportLink: false,
       columns: ['年末調整', '源泉所得税', '総括表', '法定調書', '償却資産'],
       targets: [],
     },
