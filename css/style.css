@@ -342,6 +342,19 @@ tbody tr.clickable { cursor: pointer; }
 /* ── タスク作成モーダル ── */
 .modal-wide { width: 560px; }
 
+/* ── 進捗管理表作成ステップ ── */
+.pg-step-dot { font-size: 12px; padding: 4px 12px; border-radius: 16px; background: var(--gray-100); color: var(--gray-400); transition: all .2s; }
+.pg-step-dot.pg-step-active { background: var(--primary); color: #fff; font-weight: 600; }
+.pg-step-dot.pg-step-done { background: var(--green-100, #dcfce7); color: var(--green-700, #15803d); }
+.pg-tpl-card { border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px; cursor: pointer; transition: all .15s; }
+.pg-tpl-card:hover { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,.15); }
+.pg-tpl-card.pg-tpl-custom { border-style: dashed; }
+.pg-col-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 6px; }
+.pg-col-item .pg-col-name { flex: 1; font-size: 13px; cursor: text; }
+.pg-col-item .pg-col-name:focus { outline: none; background: #fff; border-bottom: 1px solid var(--primary); }
+.pg-col-item .pg-col-remove { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
+.pg-col-item .pg-col-remove:hover { color: var(--red-500, #ef4444); }
+
 /* ── レスポンシブ ── */
 /* ── カスタムフィールド設定 ── */
 .cf-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 4px; background: #fff; border: 1px solid var(--gray-200); border-radius: 6px; cursor: grab; transition: opacity .2s, box-shadow .2s; }

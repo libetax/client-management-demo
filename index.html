@@ -494,41 +494,112 @@
   </div>
 </div>
 
-<!-- 進捗管理表作成モーダル -->
+<!-- 進捗管理表作成モーダル（ステップ式） -->
 <div class="modal-overlay" id="progress-create-modal">
-  <div class="modal modal-wide">
+  <div class="modal" style="width:720px;max-width:95vw;">
     <div class="modal-header">
       <h3 id="pg-modal-title">進捗管理表の作成</h3>
       <button class="btn-icon" onclick="closeProgressCreateModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>管理表名</label>
-        <input type="text" id="new-pg-name" placeholder="例: 6月決算法人管理表">
+      <!-- ステップインジケーター -->
+      <div id="pg-step-indicator" style="display:flex;justify-content:center;gap:8px;margin-bottom:20px;">
+        <span class="pg-step-dot pg-step-active" data-step="1">1. テンプレート選択</span>
+        <span class="pg-step-dot" data-step="2">2. 基本情報・工程・顧客</span>
+        <span class="pg-step-dot" data-step="3">3. 確認</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- Step 1: テンプレート選択 -->
+      <div id="pg-step-1">
+        <div style="font-size:14px;font-weight:600;color:var(--gray-700);margin-bottom:12px;">テンプレートを選択してください</div>
+        <div id="pg-template-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+      </div>
+
+      <!-- Step 2: 基本情報 + カラム編集 + 対象顧客 -->
+      <div id="pg-step-2" style="display:none;">
         <div class="form-group">
-          <label>カテゴリ</label>
-          <select id="new-pg-category">
-            <option value="法人決算">法人決算</option>
-            <option value="確定申告">確定申告</option>
-            <option value="年末調整">年末調整</option>
-            <option value="中間申告">中間申告</option>
-          </select>
+          <label>管理表名</label>
+          <input type="text" id="new-pg-name" placeholder="例: 6月決算法人管理表">
         </div>
-        <div class="form-group">
-          <label>管理者</label>
-          <select id="new-pg-manager"></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group">
+            <label>カテゴリ</label>
+            <select id="new-pg-category">
+              <option value="法人決算">法人決算</option>
+              <option value="確定申告">確定申告</option>
+              <option value="年末調整">年末調整</option>
+              <option value="中間申告">中間申告</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>管理者</label>
+            <select id="new-pg-manager"></select>
+          </div>
+        </div>
+
+        <!-- カラム編集エリア -->
+        <div style="border:1px solid var(--gray-200);border-radius:8px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px;">工程列</div>
+          <div id="pg-columns-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="pg-new-column-input" placeholder="工程名を入力..." style="flex:1;">
+            <button class="btn btn-secondary btn-sm" onclick="addProgressColumn()">+ 工程を追加</button>
+          </div>
+        </div>
+
+        <!-- 対象顧客選択エリア -->
+        <div style="border:1px solid var(--gray-200);border-radius:8px;padding:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px;">対象顧客の選択</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <select class="filter-select" id="pg-filter-fiscal" style="font-size:12px;">
+              <option value="">全決算月</option>
+            </select>
+            <select class="filter-select" id="pg-filter-type" style="font-size:12px;">
+              <option value="">法人/個人</option>
+              <option value="法人">法人</option>
+              <option value="個人">個人</option>
+            </select>
+            <select class="filter-select" id="pg-filter-main" style="font-size:12px;">
+              <option value="">全担当者</option>
+            </select>
+            <select class="filter-select" id="pg-filter-active" style="font-size:12px;">
+              <option value="active">契約中のみ</option>
+              <option value="all">全て</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="pgSelectAllClients(true)">全選択</button>
+            <button class="btn btn-secondary btn-sm" onclick="pgSelectAllClients(false)">全解除</button>
+            <span id="pg-selected-count" style="font-size:12px;color:var(--gray-500);margin-left:auto;">0件選択中</span>
+          </div>
+          <div id="pg-client-list" style="max-height:200px;overflow-y:auto;border:1px solid var(--gray-200);border-radius:6px;padding:8px;"></div>
         </div>
       </div>
-      <div class="form-group">
-        <label>工程列（カンマ区切り）</label>
-        <input type="text" id="new-pg-columns" placeholder="資料回収, 記帳確認, 決算整理, 申告書作成, レビュー, 電子申告, 納品">
+
+      <!-- Step 3: 確認 -->
+      <div id="pg-step-3" style="display:none;">
+        <div id="pg-confirm-summary" style="margin-bottom:16px;"></div>
+        <div style="border:1px solid var(--gray-200);border-radius:8px;padding:16px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" id="pg-save-template">
+            この設定をマイテンプレートとして保存する
+          </label>
+          <div id="pg-template-name-area" style="display:none;margin-top:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label>テンプレート名</label>
+              <input type="text" id="pg-template-save-name" placeholder="例: 法人決算（カスタム）">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" id="pg-btn-back" onclick="pgStepBack()" style="display:none;">戻る</button>
+      <div style="flex:1;"></div>
       <button class="btn btn-secondary" onclick="closeProgressCreateModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="submitNewProgress()">作成</button>
+      <button class="btn btn-primary" id="pg-btn-next" onclick="pgStepNext()">次へ</button>
+      <button class="btn btn-primary" id="pg-btn-create" onclick="submitNewProgress()" style="display:none;">作成</button>
     </div>
   </div>
 </div>
@@ -561,6 +632,7 @@
       </div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="saveAsProgressTemplate()" style="margin-right:auto;">テンプレートとして保存</button>
       <button class="btn btn-secondary" onclick="closeProgressSettingsModal()">キャンセル</button>
       <button class="btn btn-primary" onclick="submitEditProgress()">保存</button>
     </div>

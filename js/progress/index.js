@@ -4,14 +4,7 @@
 function renderProgress(el) {
   el.innerHTML = `
     <div class="toolbar">
-      <div class="dropdown" style="position:relative;">
-        <button class="btn btn-primary" id="pg-create-btn">+ 作成</button>
-        <div class="dropdown-menu" id="pg-create-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid var(--gray-200);border-radius:6px;box-shadow:var(--shadow-lg);z-index:10;min-width:240px;">
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('通常')">進捗管理表の作成（通常版）</a>
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('中間申告・予定納付')">進捗管理表の作成（中間申告・予定納付）</a>
-          <a href="#" class="dropdown-item" onclick="event.preventDefault();openProgressCreateModal('サンプル')">サンプルから作成</a>
-        </div>
-      </div>
+      <button class="btn btn-primary" id="pg-create-btn">+ 作成</button>
       <div class="spacer"></div>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);cursor:pointer;">
         <input type="checkbox" id="pg-show-hidden"> 公開範囲外の進捗管理表を表示
@@ -114,8 +107,7 @@ function renderProgress(el) {
   }
 
   document.getElementById('pg-create-btn').addEventListener('click', () => {
-    const menu = document.getElementById('pg-create-menu');
-    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    openProgressCreateModal();
   });
 
   document.getElementById('pg-tabs').addEventListener('click', e => {

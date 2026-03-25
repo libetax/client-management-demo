@@ -26,7 +26,7 @@ function submitNewTask() {
   MOCK_DATA.tasks.push({
     id: generateId('tk-', MOCK_DATA.tasks),
     clientId, assigneeUserId: assigneeId, title, status, dueDate,
-    createdAt: new Date().toISOString().slice(0, 10),
+    createdAt: new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }),
   });
 
   closeTaskModal();
@@ -322,7 +322,7 @@ function openTimesheetModal(entryId) {
     }
     if (title) title.textContent = '工数編集';
   } else {
-    setFormValues({ 'new-ts-date': new Date().toISOString().slice(0, 10) });
+    setFormValues({ 'new-ts-date': new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }) });
     resetForm(['new-ts-hours', 'new-ts-desc']);
     if (title) title.textContent = '工数入力';
   }
@@ -425,48 +425,303 @@ function submitNewReport() {
   else alert(`報告書「${title}」を作成しました`);
 }
 
-// ── 進捗管理表 作成モーダル ──
-function openProgressCreateModal(type) {
-  document.getElementById('pg-modal-title').textContent = `進捗管理表の作成（${type}）`;
+// ── 進捗管理表 作成モーダル（ステップ式） ──
+let pgCurrentStep = 1;
+let pgSelectedColumns = [];
+let pgSelectedTemplateId = null;
+
+function openProgressCreateModal() {
+  pgCurrentStep = 1;
+  pgSelectedColumns = [];
+  pgSelectedTemplateId = null;
+
+  // Step 2 の初期化
   document.getElementById('new-pg-manager').innerHTML = buildUserOptions('leaders');
-  resetForm(['new-pg-name']);
+  resetForm(['new-pg-name', 'pg-new-column-input', 'pg-template-save-name']);
   document.getElementById('new-pg-category').value = '法人決算';
 
-  if (type === '中間申告・予定納付') {
-    setFormValues({ 'new-pg-category': '中間申告', 'new-pg-columns': '資料回収, 中間計算, 申告書作成, レビュー, 電子申告' });
-  } else if (type === 'サンプル') {
-    document.getElementById('new-pg-columns').value = '資料回収, 記帳確認, 決算整理, 申告書作成, レビュー, 電子申告, 納品';
-  } else {
-    document.getElementById('new-pg-columns').value = '';
-  }
+  // 決算月フィルタ
+  const fiscalSel = document.getElementById('pg-filter-fiscal');
+  fiscalSel.innerHTML = '<option value="">全決算月</option>' +
+    Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}月</option>`).join('');
 
-  const menu = document.getElementById('pg-create-menu');
-  if (menu) menu.style.display = 'none';
+  // 主担当フィルタ
+  document.getElementById('pg-filter-main').innerHTML = '<option value="">全担当者</option>' + buildUserOptions();
+
+  // テンプレート保存チェック
+  document.getElementById('pg-save-template').checked = false;
+  document.getElementById('pg-template-name-area').style.display = 'none';
+
+  // テンプレート一覧を描画
+  renderProgressTemplateList();
+
+  // ステップ表示を初期化
+  pgShowStep(1);
   showModal('progress-create-modal');
 }
 
 function closeProgressCreateModal() { hideModal('progress-create-modal'); }
 
+function renderProgressTemplateList() {
+  const templates = MOCK_DATA.progressTemplates || [];
+  const presets = templates.filter(t => !t.isCustom);
+  const customs = templates.filter(t => t.isCustom);
+
+  let html = '';
+
+  // 「空から作成」カード
+  html += '<div class="pg-tpl-card" onclick="pgSelectTemplate(null)" style="display:flex;align-items:center;justify-content:center;min-height:80px;border-style:dashed;">';
+  html += '<div style="text-align:center;"><div style="font-size:24px;color:var(--gray-400);margin-bottom:4px;">+</div><div style="font-size:13px;color:var(--gray-500);">空から作成</div></div>';
+  html += '</div>';
+
+  // プリセット
+  presets.forEach(function(t) {
+    html += '<div class="pg-tpl-card" onclick="pgSelectTemplate(\'' + t.id + '\')">';
+    html += '<div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px;">' + escapeHtml(t.name) + '</div>';
+    html += '<div style="font-size:11px;color:var(--gray-500);">' + escapeHtml(t.category) + ' / ' + t.columns.length + '工程</div>';
+    html += '<div style="font-size:11px;color:var(--gray-400);margin-top:4px;">' + t.columns.map(function(c) { return escapeHtml(c); }).join(', ') + '</div>';
+    html += '</div>';
+  });
+
+  // マイテンプレート
+  if (customs.length > 0) {
+    html += '<div style="grid-column:1/-1;font-size:12px;font-weight:600;color:var(--gray-500);margin-top:8px;">マイテンプレート</div>';
+    customs.forEach(function(t) {
+      html += '<div class="pg-tpl-card pg-tpl-custom" onclick="pgSelectTemplate(\'' + t.id + '\')">';
+      html += '<div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px;">' + escapeHtml(t.name) + '</div>';
+      html += '<div style="font-size:11px;color:var(--gray-500);">' + escapeHtml(t.category) + ' / ' + t.columns.length + '工程</div>';
+      html += '<div style="font-size:11px;color:var(--gray-400);margin-top:4px;">' + t.columns.map(function(c) { return escapeHtml(c); }).join(', ') + '</div>';
+      html += '</div>';
+    });
+  }
+
+  document.getElementById('pg-template-list').innerHTML = html;
+}
+
+function pgSelectTemplate(templateId) {
+  pgSelectedTemplateId = templateId;
+  if (templateId) {
+    var tpl = (MOCK_DATA.progressTemplates || []).find(function(t) { return t.id === templateId; });
+    if (tpl) {
+      pgSelectedColumns = tpl.columns.slice();
+      document.getElementById('new-pg-category').value = tpl.category;
+    }
+  } else {
+    pgSelectedColumns = [];
+  }
+  pgCurrentStep = 2;
+  pgShowStep(2);
+  renderPgColumnsList();
+  pgFilterClients();
+  pgBindClientFilters();
+}
+
+function pgShowStep(step) {
+  pgCurrentStep = step;
+  document.getElementById('pg-step-1').style.display = step === 1 ? '' : 'none';
+  document.getElementById('pg-step-2').style.display = step === 2 ? '' : 'none';
+  document.getElementById('pg-step-3').style.display = step === 3 ? '' : 'none';
+
+  // ステップインジケーター更新
+  document.querySelectorAll('#pg-step-indicator .pg-step-dot').forEach(function(dot) {
+    var s = parseInt(dot.dataset.step);
+    dot.classList.remove('pg-step-active', 'pg-step-done');
+    if (s === step) dot.classList.add('pg-step-active');
+    else if (s < step) dot.classList.add('pg-step-done');
+  });
+
+  // ボタン表示切り替え
+  document.getElementById('pg-btn-back').style.display = step > 1 ? '' : 'none';
+  document.getElementById('pg-btn-next').style.display = step < 3 ? '' : 'none';
+  document.getElementById('pg-btn-create').style.display = step === 3 ? '' : 'none';
+}
+
+function pgStepNext() {
+  if (pgCurrentStep === 1) {
+    // Step 1 → 空から作成として進む
+    pgSelectTemplate(null);
+  } else if (pgCurrentStep === 2) {
+    // バリデーション
+    var name = getValTrim('new-pg-name');
+    if (!name) { alert('管理表名を入力してください'); return; }
+    if (pgSelectedColumns.length === 0) { alert('工程を1つ以上追加してください'); return; }
+
+    // サマリー描画
+    var selectedClients = pgGetSelectedClientIds();
+    var mgr = getUserById(getVal('new-pg-manager'));
+    document.getElementById('pg-confirm-summary').innerHTML =
+      '<div class="card"><div class="card-body">' +
+      '<div class="detail-grid" style="grid-template-columns:120px 1fr;gap:8px 16px;">' +
+      '<div style="font-size:12px;color:var(--gray-500);">管理表名</div><div style="font-size:13px;font-weight:600;">' + escapeHtml(name) + '</div>' +
+      '<div style="font-size:12px;color:var(--gray-500);">カテゴリ</div><div style="font-size:13px;">' + escapeHtml(getVal('new-pg-category')) + '</div>' +
+      '<div style="font-size:12px;color:var(--gray-500);">管理者</div><div style="font-size:13px;">' + (mgr ? escapeHtml(mgr.name) : '-') + '</div>' +
+      '<div style="font-size:12px;color:var(--gray-500);">工程数</div><div style="font-size:13px;">' + pgSelectedColumns.length + '工程（' + pgSelectedColumns.map(function(c) { return escapeHtml(c); }).join(' → ') + '）</div>' +
+      '<div style="font-size:12px;color:var(--gray-500);">対象顧客数</div><div style="font-size:13px;">' + selectedClients.length + '件</div>' +
+      '</div></div></div>';
+
+    pgShowStep(3);
+  }
+}
+
+function pgStepBack() {
+  if (pgCurrentStep === 2) {
+    pgShowStep(1);
+    renderProgressTemplateList();
+  } else if (pgCurrentStep === 3) {
+    pgShowStep(2);
+  }
+}
+
+// カラム一覧レンダリング
+function renderPgColumnsList() {
+  var container = document.getElementById('pg-columns-list');
+  if (pgSelectedColumns.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--gray-400);padding:8px;">工程が設定されていません</div>';
+    return;
+  }
+  container.innerHTML = pgSelectedColumns.map(function(col, idx) {
+    return '<div class="pg-col-item">' +
+      '<span style="font-size:11px;color:var(--gray-400);min-width:20px;">' + (idx + 1) + '</span>' +
+      '<span class="pg-col-name" contenteditable="true" data-idx="' + idx + '" onblur="pgRenameColumn(' + idx + ', this.textContent)">' + escapeHtml(col) + '</span>' +
+      '<button class="pg-col-remove" onclick="pgRemoveColumn(' + idx + ')" title="削除">&times;</button>' +
+      '</div>';
+  }).join('');
+}
+
+function addProgressColumn() {
+  var input = document.getElementById('pg-new-column-input');
+  var name = input.value.trim();
+  if (!name) return;
+  pgSelectedColumns.push(name);
+  input.value = '';
+  renderPgColumnsList();
+}
+
+function pgRemoveColumn(idx) {
+  pgSelectedColumns.splice(idx, 1);
+  renderPgColumnsList();
+}
+
+function pgRenameColumn(idx, newName) {
+  var trimmed = newName.trim();
+  if (trimmed && idx >= 0 && idx < pgSelectedColumns.length) {
+    pgSelectedColumns[idx] = trimmed;
+  }
+  renderPgColumnsList();
+}
+
+// 顧客フィルタ + チェックボックス
+function pgBindClientFilters() {
+  ['pg-filter-fiscal', 'pg-filter-type', 'pg-filter-main', 'pg-filter-active'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', pgFilterClients);
+  });
+
+  // テンプレート保存チェックボックス
+  document.getElementById('pg-save-template').addEventListener('change', function() {
+    document.getElementById('pg-template-name-area').style.display = this.checked ? '' : 'none';
+  });
+}
+
+function pgFilterClients() {
+  var fiscal = getVal('pg-filter-fiscal');
+  var cType = getVal('pg-filter-type');
+  var mainUser = getVal('pg-filter-main');
+  var activeOnly = getVal('pg-filter-active') === 'active';
+
+  var clients = MOCK_DATA.clients.filter(function(c) {
+    if (activeOnly && !c.isActive) return false;
+    if (fiscal && c.fiscalMonth !== parseInt(fiscal)) return false;
+    if (cType && c.clientType !== cType) return false;
+    if (mainUser && c.mainUserId !== mainUser) return false;
+    return true;
+  });
+
+  var container = document.getElementById('pg-client-list');
+  if (clients.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--gray-400);padding:8px;">該当する顧客がありません</div>';
+  } else {
+    container.innerHTML = clients.map(function(c) {
+      var main = getUserById(c.mainUserId);
+      return '<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;cursor:pointer;">' +
+        '<input type="checkbox" class="pg-client-cb" value="' + c.id + '">' +
+        '<span>' + escapeHtml(c.name) + '</span>' +
+        '<span style="font-size:11px;color:var(--gray-400);margin-left:auto;">' + escapeHtml(c.clientType) + ' / ' + c.fiscalMonth + '月決算' + (main ? ' / ' + escapeHtml(main.name) : '') + '</span>' +
+        '</label>';
+    }).join('');
+  }
+
+  // チェック変更時のカウント更新
+  container.querySelectorAll('.pg-client-cb').forEach(function(cb) {
+    cb.addEventListener('change', pgUpdateSelectedCount);
+  });
+  pgUpdateSelectedCount();
+}
+
+function pgSelectAllClients(select) {
+  document.querySelectorAll('#pg-client-list .pg-client-cb').forEach(function(cb) {
+    cb.checked = select;
+  });
+  pgUpdateSelectedCount();
+}
+
+function pgUpdateSelectedCount() {
+  var count = document.querySelectorAll('#pg-client-list .pg-client-cb:checked').length;
+  document.getElementById('pg-selected-count').textContent = count + '件選択中';
+}
+
+function pgGetSelectedClientIds() {
+  var ids = [];
+  document.querySelectorAll('#pg-client-list .pg-client-cb:checked').forEach(function(cb) {
+    ids.push(cb.value);
+  });
+  return ids;
+}
+
 function submitNewProgress() {
-  const name = getValTrim('new-pg-name');
-  const category = getVal('new-pg-category');
-  const managerId = getVal('new-pg-manager');
-  const columnsText = getValTrim('new-pg-columns');
+  var name = getValTrim('new-pg-name');
+  var category = getVal('new-pg-category');
+  var managerId = getVal('new-pg-manager');
+  var columns = pgSelectedColumns.slice();
+  var selectedClientIds = pgGetSelectedClientIds();
 
   if (!name) { alert('管理表名を入力してください'); return; }
-  if (!columnsText) { alert('工程列を入力してください'); return; }
+  if (columns.length === 0) { alert('工程を1つ以上追加してください'); return; }
 
-  const columns = columnsText.split(',').map(c => c.trim()).filter(Boolean);
+  // マイテンプレート保存
+  if (document.getElementById('pg-save-template').checked) {
+    var tplName = getValTrim('pg-template-save-name');
+    if (!tplName) { alert('テンプレート名を入力してください'); return; }
+    MOCK_DATA.progressTemplates.push({
+      id: generateId('pt-', MOCK_DATA.progressTemplates),
+      name: tplName,
+      category: category,
+      columns: columns.slice(),
+      isCustom: true,
+    });
+  }
+
+  // 対象顧客の targets を構築
+  var targets = selectedClientIds.map(function(clientId) {
+    var steps = {};
+    columns.forEach(function(col) { steps[col] = '未着手'; });
+    return { clientId: clientId, steps: steps, note: '' };
+  });
 
   MOCK_DATA.progressSheets.push({
     id: generateId('ps-', MOCK_DATA.progressSheets),
-    name, category, status: '利用中', managerId,
-    createdAt: new Date().toISOString().slice(0, 10),
-    columns, targets: [],
+    name: name,
+    category: category,
+    status: '利用中',
+    managerId: managerId,
+    createdAt: new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }),
+    columns: columns,
+    targets: targets,
   });
+
   closeProgressCreateModal();
   if (currentPage === 'progress') navigateTo('progress');
-  else alert(`進捗管理表「${name}」を作成しました`);
+  else alert('進捗管理表「' + name + '」を作成しました');
 }
 
 // ── 進捗管理表 設定変更モーダル ──
@@ -493,4 +748,20 @@ function submitEditProgress() {
   s.managerId = getVal('edit-pg-manager');
   closeProgressSettingsModal();
   if (currentPage === 'progress') navigateTo('progress');
+}
+
+function saveAsProgressTemplate() {
+  const id = getVal('edit-pg-id');
+  const s = MOCK_DATA.progressSheets.find(x => x.id === id);
+  if (!s) return;
+  const tplName = prompt('テンプレート名を入力してください:', s.name + '（テンプレート）');
+  if (!tplName || !tplName.trim()) return;
+  MOCK_DATA.progressTemplates.push({
+    id: generateId('pt-', MOCK_DATA.progressTemplates),
+    name: tplName.trim(),
+    category: s.category,
+    columns: s.columns.slice(),
+    isCustom: true,
+  });
+  alert('マイテンプレート「' + tplName.trim() + '」として保存しました');
 }
