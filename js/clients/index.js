@@ -378,6 +378,30 @@ function renderClientDetail(el, params) {
 
     ${(!isNew && !editing) ? renderTaxScheduleCard(c) : ''}
 
+    ${(!isNew && !editing) ? `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><h3>契約書PDF取込</h3></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px;">契約書PDFをアップロードすると、AIが内容を解析して顧客情報を自動入力します。</p>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <input type="file" id="contract-pdf-input-${c.id}" accept=".pdf" style="font-size:13px;">
+          <button class="btn btn-primary btn-sm" onclick="analyzeContractPdf('${c.id}')">解析して反映</button>
+        </div>
+        <div id="contract-pdf-result-${c.id}" style="margin-top:12px;"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>CW資料→Dropbox転送</h3>
+        <button class="btn btn-secondary btn-sm" onclick="fetchCwFiles('${c.id}')">CWファイル取得</button>
+      </div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--gray-500);margin-bottom:12px;">Chatworkルームの共有ファイルを取得し、Dropboxに転送します。</p>
+        <div id="cw-files-list-${c.id}"></div>
+      </div>
+    </div>
+    ` : ''}
+
     ${!isNew ? `
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><h3>関連タスク</h3><button class="btn btn-primary btn-sm" onclick="openTaskModal()">+ タスク追加</button></div>
@@ -781,6 +805,169 @@ function renderTaxScheduleCard(client) {
       </div>
     </div>
   `;
+}
+
+// FB#31: 契約書PDF取込→自動入力
+function analyzeContractPdf(clientId) {
+  const input = document.getElementById('contract-pdf-input-' + clientId);
+  const resultEl = document.getElementById('contract-pdf-result-' + clientId);
+  if (!input || !input.files || input.files.length === 0) {
+    alert('PDFファイルを選択してください');
+    return;
+  }
+  const file = input.files[0];
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    alert('PDFファイルのみ対応しています');
+    return;
+  }
+
+  resultEl.innerHTML = '<div style="padding:12px;background:var(--gray-50);border-radius:6px;font-size:13px;color:var(--gray-500);">解析中...</div>';
+
+  // PDFからテキスト抽出してAI解析（デモではFileReader + 簡易パース）
+  const reader = new FileReader();
+  reader.onload = function() {
+    // PDFバイナリからテキスト部分を簡易抽出
+    const bytes = new Uint8Array(reader.result);
+    let text = '';
+    for (let i = 0; i < bytes.length; i++) {
+      const ch = bytes[i];
+      if (ch >= 0x20 && ch < 0x7f) text += String.fromCharCode(ch);
+    }
+
+    // 簡易パターンマッチで情報抽出（デモ用）
+    const extracted = {};
+    const nameMatch = text.match(/(?:甲|委任者|委託者)[^A-Za-z]{0,20}?([\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]+(?:株式会社|合同会社|有限会社|[^\s]{2,10}))/);
+    const addrMatch = text.match(/((?:東京都|大阪府|北海道|(?:京都|神奈川|埼玉|千葉|[^\s]{2,3})(?:都|府|県))[^\n\r]{5,30})/);
+    const telMatch = text.match(/(\d{2,4}[-\s]\d{2,4}[-\s]\d{3,4})/);
+    const repMatch = text.match(/(?:代表|代表者|代表取締役)[^\S\n]*[：:]?\s*([\u4e00-\u9fff]{1,4}\s*[\u4e00-\u9fff]{1,4})/);
+    const amountMatch = text.match(/(?:月額|顧問料|報酬)[^\d]{0,10}([\d,]+)\s*円/);
+
+    if (nameMatch) extracted.name = nameMatch[1];
+    if (addrMatch) extracted.address = addrMatch[1];
+    if (telMatch) extracted.tel = telMatch[1];
+    if (repMatch) extracted.representative = repMatch[1].trim();
+    if (amountMatch) extracted.monthlySales = parseInt(amountMatch[1].replace(/,/g, ''));
+
+    const keys = Object.keys(extracted);
+    if (keys.length === 0) {
+      resultEl.innerHTML = `
+        <div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;">
+          <div style="font-weight:600;color:var(--danger);margin-bottom:4px;">自動抽出できませんでした</div>
+          <div style="font-size:12px;color:var(--gray-500);">PDFの形式によっては抽出できない場合があります。手動で入力してください。</div>
+        </div>`;
+      return;
+    }
+
+    const labels = { name: '顧客名', address: '住所', tel: '電話番号', representative: '代表者', monthlySales: '月額報酬' };
+    const previewRows = keys.map(k => `
+      <tr>
+        <td style="font-weight:500;">${labels[k] || k}</td>
+        <td>${k === 'monthlySales' ? extracted[k].toLocaleString() + '円' : escapeHtml(String(extracted[k]))}</td>
+        <td><label><input type="checkbox" class="pdf-apply-check" data-key="${k}" checked> 反映</label></td>
+      </tr>
+    `).join('');
+
+    resultEl.innerHTML = `
+      <div style="padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;">
+        <div style="font-weight:600;color:var(--success);margin-bottom:8px;">解析結果（${keys.length}項目を抽出）</div>
+        <table style="width:100%;font-size:13px;"><thead><tr><th>項目</th><th>抽出値</th><th>適用</th></tr></thead><tbody>${previewRows}</tbody></table>
+        <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="applyContractPdfData('${clientId}')">チェック項目を反映</button>
+      </div>`;
+
+    // 抽出データを一時保存
+    window._pdfExtracted = extracted;
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function applyContractPdfData(clientId) {
+  const c = getClientById(clientId);
+  if (!c || !window._pdfExtracted) return;
+  const checks = document.querySelectorAll('.pdf-apply-check:checked');
+  let applied = 0;
+  checks.forEach(cb => {
+    const key = cb.dataset.key;
+    if (window._pdfExtracted[key] !== undefined) {
+      c[key] = window._pdfExtracted[key];
+      applied++;
+    }
+  });
+  window._pdfExtracted = null;
+  alert(`${applied}項目を反映しました`);
+  navigateTo('client-detail', { id: clientId });
+}
+
+// FB#32: CW資料→Dropbox転送
+function fetchCwFiles(clientId) {
+  const c = getClientById(clientId);
+  if (!c) return;
+  const listEl = document.getElementById('cw-files-list-' + clientId);
+  if (!listEl) return;
+
+  // CWルームURLからルームIDを取得
+  const rooms = c.cwRoomUrls || [];
+  if (rooms.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--gray-400);font-size:13px;">CWルームが設定されていません。</div>';
+    return;
+  }
+
+  listEl.innerHTML = '<div style="padding:8px;color:var(--gray-500);font-size:13px;">ファイル取得中...</div>';
+
+  // CWルームURLからroom_idを抽出
+  const roomIds = rooms.map(r => {
+    const match = r.url.match(/rid(\d+)/);
+    return match ? match[1] : null;
+  }).filter(Boolean);
+
+  if (roomIds.length === 0) {
+    listEl.innerHTML = '<div style="color:var(--gray-400);font-size:13px;">ルームIDを取得できませんでした。</div>';
+    return;
+  }
+
+  // デモデータ: 実環境ではCW API（MCP）経由で取得
+  const demoFiles = [
+    { id: 'f1', name: '決算資料_2025.pdf', uploadedBy: '山本 太郎', uploadedAt: '2026-03-15', size: '2.4MB' },
+    { id: 'f2', name: '領収書_202603.zip', uploadedBy: '山本 太郎', uploadedAt: '2026-03-10', size: '15.8MB' },
+    { id: 'f3', name: '給与台帳_2025.xlsx', uploadedBy: '鈴木 一郎', uploadedAt: '2026-02-28', size: '340KB' },
+  ];
+
+  const dropboxPath = c.dropboxPath || `/リベ税/顧客/${c.name}`;
+  listEl.innerHTML = `
+    <div style="margin-bottom:8px;font-size:12px;color:var(--gray-500);">転送先: <code style="background:var(--gray-100);padding:2px 6px;border-radius:3px;">${escapeHtml(dropboxPath)}</code></div>
+    <div class="table-wrapper">
+      <table style="font-size:13px;">
+        <thead><tr><th><input type="checkbox" id="cw-file-all-${clientId}" onclick="toggleCwFileAll('${clientId}',this.checked)" checked></th><th>ファイル名</th><th>アップロード者</th><th>日付</th><th>サイズ</th></tr></thead>
+        <tbody>
+          ${demoFiles.map(f => `<tr>
+            <td><input type="checkbox" class="cw-file-check-${clientId}" value="${f.id}" checked></td>
+            <td>${escapeHtml(f.name)}</td>
+            <td>${escapeHtml(f.uploadedBy)}</td>
+            <td>${f.uploadedAt}</td>
+            <td>${f.size}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="transferToDropbox('${clientId}')">選択ファイルをDropboxに転送</button>
+    </div>
+  `;
+}
+
+function toggleCwFileAll(clientId, checked) {
+  document.querySelectorAll('.cw-file-check-' + clientId).forEach(cb => { cb.checked = checked; });
+}
+
+function transferToDropbox(clientId) {
+  const c = getClientById(clientId);
+  if (!c) return;
+  const checked = document.querySelectorAll('.cw-file-check-' + clientId + ':checked');
+  if (checked.length === 0) { alert('転送するファイルを選択してください'); return; }
+
+  const dropboxPath = c.dropboxPath || `/リベ税/顧客/${c.name}`;
+
+  // デモ: 実環境ではDropbox API経由でアップロード
+  alert(`${checked.length}件のファイルを「${dropboxPath}」に転送しました（デモ）\n\n※ 実環境ではDropbox API連携が必要です`);
 }
 
 registerPage('clients', renderClients);
