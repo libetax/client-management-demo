@@ -13,8 +13,9 @@ function renderDashboard(el) {
   const taxAlerts = getTaxAlerts();
   const taxAlertHtml = taxAlerts.length === 0 ? '' : `
     <div class="card tax-alert-card" style="margin-bottom:24px;">
-      <div class="card-header" style="background:var(--danger-light);border-bottom:1px solid #fecaca;">
+      <div class="card-header" style="background:var(--danger-light);border-bottom:1px solid #fecaca;display:flex;justify-content:space-between;align-items:center;">
         <h3 style="color:var(--danger);display:flex;align-items:center;gap:8px;">&#x1f514; 納付期限アラート <span style="font-size:12px;font-weight:400;color:var(--gray-500);">${taxAlerts.length}件</span></h3>
+        <button class="btn btn-primary btn-sm" onclick="createTasksFromAlerts()">タスク一括登録</button>
       </div>
       <div class="card-body" style="padding:0;">
         <div class="table-wrapper">
@@ -123,6 +124,45 @@ function dashNotifClick(notifId) {
   if (!n) return;
   n.isRead = true;
   if (n.linkPage) navigateTo(n.linkPage, n.linkParams || {});
+}
+
+function createTasksFromAlerts() {
+  const alerts = getTaxAlerts();
+  if (alerts.length === 0) { alert('登録対象のアラートがありません'); return; }
+
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+  const year = parseInt(today.slice(0, 4));
+  let created = 0;
+  let skipped = 0;
+
+  alerts.forEach(a => {
+    const client = getClientById(a.clientId);
+    if (!client) return;
+    const title = `【${a.label}】${a.clientName}`;
+    // 既に同名タスクが存在する場合はスキップ
+    const exists = MOCK_DATA.tasks.some(t => t.title === title && t.status !== '完了');
+    if (exists) { skipped++; return; }
+
+    // 期限日: 該当月の末日
+    const deadlineYear = a.deadlineMonth < parseInt(today.slice(5, 7)) ? year + 1 : year;
+    const lastDay = new Date(deadlineYear, a.deadlineMonth, 0).getDate();
+    const dueDate = `${deadlineYear}-${String(a.deadlineMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    MOCK_DATA.tasks.push({
+      id: generateId('t-', MOCK_DATA.tasks),
+      title,
+      status: '未着手',
+      dueDate,
+      clientId: a.clientId,
+      assigneeUserId: client.mainUserId,
+      checklist: [],
+      tags: ['納付'],
+    });
+    created++;
+  });
+
+  alert(`${created}件のタスクを登録しました${skipped > 0 ? `（${skipped}件は既存のためスキップ）` : ''}`);
+  navigateTo('dashboard');
 }
 
 registerPage('dashboard', renderDashboard);

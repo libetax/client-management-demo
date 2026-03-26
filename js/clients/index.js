@@ -48,6 +48,7 @@ function renderClients(el) {
         </div>
       </div>
       <button class="btn btn-csv btn-sm" onclick="exportClientCSV()">CSV出力</button>
+      <button class="btn btn-csv btn-sm" onclick="exportTatsujinCSV()">達人形式</button>
       <button class="btn btn-csv btn-sm" onclick="importClientCSV()">CSV取り込み</button>
       <button class="btn btn-primary" onclick="navigateTo('client-detail',{id:'new'})">+ 新規顧客</button>
     </div>
@@ -620,6 +621,39 @@ function exportClientCSV() {
   });
 
   downloadCSV('顧客一覧.csv', header, rows);
+}
+
+// FB#41: 達人取込用CSVフォーマット出力
+function exportTatsujinCSV() {
+  const clients = MOCK_DATA.clients.filter(c => c.isActive);
+  const header = [
+    '顧客コード', '顧客名', '顧客名フリガナ', '法人個人区分',
+    '代表者名', '郵便番号', '住所', '電話番号',
+    '決算月', '業種', '管轄税務署',
+    'e-Tax利用者識別番号', 'eLTAX利用者ID',
+    '日税コード', '管理表No', 'メールアドレス',
+  ];
+
+  const rows = clients.map(c => [
+    c.clientCode,
+    c.name,
+    '', // フリガナ（データなし）
+    c.clientType === '法人' ? '1' : '2',
+    c.representative || '',
+    '', // 郵便番号（データなし）
+    c.address || '',
+    c.tel || '',
+    c.fiscalMonth === 'personal' ? '12' : String(c.fiscalMonth || ''),
+    c.industry || '',
+    c.taxOffice || '',
+    c.etaxId || '',
+    c.eltaxId || '',
+    c.nichizeiCode || '',
+    c.managementNo || '',
+    c.email || '',
+  ]);
+
+  downloadCSV('顧客_達人取込.csv', header, rows);
 }
 
 function importClientCSV() {

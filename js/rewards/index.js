@@ -10,6 +10,8 @@ function renderRewards(el) {
         <option value="2026-01">2026年1月</option>
       </select>
       <div class="spacer"></div>
+      <button class="btn btn-csv btn-sm" onclick="exportRewardCSV()">CSV出力</button>
+      <button class="btn btn-secondary btn-sm" onclick="openRewardAdjustModal()">+ 報酬調整</button>
     </div>
 
     <div class="view-tabs" id="rw-tabs">
@@ -120,6 +122,116 @@ function renderRewardData(month, viewType) {
     });
     tbody.innerHTML = rows;
   }
+}
+
+// FB#33: 報酬CSV出力
+function exportRewardCSV() {
+  const month = document.getElementById('rw-month-filter')?.value || '2026-03';
+  const rewards = MOCK_DATA.rewards.filter(r => r.month === month);
+  const adjustments = (MOCK_DATA.rewardAdjustments || []).filter(a => a.month === month);
+
+  const header = ['月度', '職員名', '顧客名', '種別', '金額', '区分'];
+  const rows = [];
+
+  rewards.forEach(r => {
+    const user = getUserById(r.userId);
+    const client = getClientById(r.clientId);
+    rows.push([month, user?.name || '-', client?.name || '-', r.type || '税務顧問', r.amount, '報酬']);
+  });
+
+  adjustments.forEach(a => {
+    const user = getUserById(a.userId);
+    const client = a.clientId ? getClientById(a.clientId) : null;
+    rows.push([month, user?.name || '-', client?.name || '-', a.reason, a.amount, '調整']);
+  });
+
+  downloadCSV(`報酬明細_${month}.csv`, header, rows);
+}
+
+// FB#34: 報酬調整
+function openRewardAdjustModal() {
+  const month = document.getElementById('rw-month-filter')?.value || '2026-03';
+  const userOpts = MOCK_DATA.users.filter(u => u.isActive).map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('');
+  const clientOpts = MOCK_DATA.clients.filter(c => c.isActive).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+
+  const adjustments = (MOCK_DATA.rewardAdjustments || []).filter(a => a.month === month);
+  const existingRows = adjustments.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);">調整データなし</td></tr>' :
+    adjustments.map(a => {
+      const user = getUserById(a.userId);
+      const client = a.clientId ? getClientById(a.clientId) : null;
+      return `<tr>
+        <td>${user?.name || '-'}</td>
+        <td>${client?.name || '（全般）'}</td>
+        <td>${escapeHtml(a.reason)}</td>
+        <td style="text-align:right;${a.amount < 0 ? 'color:var(--danger);' : ''}">${a.amount.toLocaleString()}円</td>
+        <td><button class="btn btn-secondary btn-sm" style="color:var(--danger);font-size:11px;" onclick="deleteRewardAdjust('${a.id}')">削除</button></td>
+      </tr>`;
+    }).join('');
+
+  const content = document.getElementById('page-content');
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay show';
+  modal.id = 'reward-adjust-modal';
+  modal.innerHTML = `
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3>報酬調整（${month}）</h3>
+        <button class="btn-icon" onclick="closeRewardAdjustModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrapper" style="margin-bottom:20px;">
+          <table>
+            <thead><tr><th>職員</th><th>顧客</th><th>理由</th><th>金額</th><th>操作</th></tr></thead>
+            <tbody id="rw-adj-list">${existingRows}</tbody>
+          </table>
+        </div>
+        <div style="border-top:1px solid var(--gray-200);padding-top:16px;">
+          <div style="font-weight:600;margin-bottom:12px;">新規調整を追加</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>職員</label><select id="adj-userId">${userOpts}</select></div>
+            <div class="form-group"><label>顧客（任意）</label><select id="adj-clientId"><option value="">（全般）</option>${clientOpts}</select></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group"><label>理由</label><select id="adj-reason"><option>未収入金</option><option>過入金返金</option><option>報酬減額</option><option>賞与加算</option><option>その他</option></select></div>
+            <div class="form-group"><label>金額（マイナスは控除）</label><input type="number" id="adj-amount" placeholder="-10000"></div>
+          </div>
+          <button class="btn btn-primary" onclick="submitRewardAdjust('${month}')">追加</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeRewardAdjustModal() {
+  const modal = document.getElementById('reward-adjust-modal');
+  if (modal) modal.remove();
+}
+
+function submitRewardAdjust(month) {
+  const userId = document.getElementById('adj-userId')?.value;
+  const clientId = document.getElementById('adj-clientId')?.value || null;
+  const reason = document.getElementById('adj-reason')?.value;
+  const amount = parseInt(document.getElementById('adj-amount')?.value);
+  if (!userId || !reason || isNaN(amount)) { alert('全項目を入力してください'); return; }
+
+  if (!MOCK_DATA.rewardAdjustments) MOCK_DATA.rewardAdjustments = [];
+  MOCK_DATA.rewardAdjustments.push({
+    id: generateId('ra-', MOCK_DATA.rewardAdjustments),
+    month, userId, clientId, reason, amount,
+  });
+
+  closeRewardAdjustModal();
+  const content = document.getElementById('page-content');
+  if (content) renderRewards(content);
+}
+
+function deleteRewardAdjust(id) {
+  if (!confirm('この調整を削除しますか？')) return;
+  MOCK_DATA.rewardAdjustments = (MOCK_DATA.rewardAdjustments || []).filter(a => a.id !== id);
+  closeRewardAdjustModal();
+  const content = document.getElementById('page-content');
+  if (content) renderRewards(content);
 }
 
 registerPage('rewards', renderRewards);
