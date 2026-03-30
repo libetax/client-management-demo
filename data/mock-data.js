@@ -40,13 +40,13 @@ const MOCK_DATA = {
   ],
 
   teams: [
-    { id: 't-001', name: '第1チーム', leaderId: 'u-002' },
-    { id: 't-002', name: '第2チーム', leaderId: 'u-009' },
+    { id: 'team-001', name: '第1チーム', leaderId: 'u-002' },
+    { id: 'team-002', name: '第2チーム', leaderId: 'u-009' },
   ],
 
   clients: [
-    { id: 'c-001', clientCode: '030450', name: '株式会社サンプル商事', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-003', subUserId: 'u-007', mgrUserId: 'u-003', monthlySales: 50000, annualFee: 150000, spotFees: [{id:'sf-001', timing:'2026-05', amount:100000, description:'株価算定'}], address: '東京都千代田区大手町1-1-1', tel: '03-1234-5001', representative: '山本 太郎', establishDate: '2010-05-20', industry: '卸売業', taxOffice: '千代田税務署', memo: '', cwAccountId: '1234001', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000001', name:'【リベ税】株式会社サンプル商事'}], relatedClientIds: ['c-003'], customFieldValues: { 'cf-001': 'MK-12345', 'cf-002': '2023-04-01', 'cf-003': '優良顧客。毎月定例ミーティングあり。' }, contractStatus: '契約中', nichizeiCode: 'NT-001234', managementNo: 'M-0450', cityName: 'やまもとたろう', cityUrl: 'https://libecity.com/user/yamamoto', email: 'yamamoto@sample.co.jp', directDebitStatus: '設定済み', etaxId: '0012345678901234', eltaxId: 'LT001234', dropboxPath: '/リベ税/顧客/株式会社サンプル商事', contractEndDate: '', paymentInfo: { directDebit: true, transferAccount: '三井住友銀行 大手町支店', remarks: '法人税・消費税ともにダイレクト納付' } },
-    { id: 'c-002', clientCode: '030451', name: '合同会社テスト工業', clientType: '法人', fiscalMonth: 9, isActive: true, mainUserId: 'u-004', subUserId: null, mgrUserId: 'u-004', monthlySales: 30000, annualFee: 0, spotFees: [{id:'sf-010', timing:'2026-03', amount:55000, description:'年末調整追加作業'}], address: '大阪府大阪市中央区本町2-2-2', tel: '06-1234-5002', representative: '鈴木 一郎', establishDate: '2015-03-10', industry: '製造業', taxOffice: '東税務署', memo: '', cwAccountId: '1234002', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000002', name:'【リベ税】合同会社テスト工業'}], relatedClientIds: [], customFieldValues: { 'cf-001': 'MK-67890', 'cf-002': '2024-01-15' } },
+    { id: 'c-001', clientCode: '030450', name: '株式会社サンプル商事', clientType: '法人', fiscalMonth: 3, isActive: true, mainUserId: 'u-003', subUserId: 'u-007', mgrUserId: 'u-003', monthlySales: 50000, annualFee: 150000, spotFees: [{id:'sf-001', timing:'2026-05', amount:100000, description:'株価算定'}], address: '東京都千代田区大手町1-1-1', tel: '03-1234-5001', representative: '山本 太郎', establishDate: '2010-05-20', industry: '卸売業', taxOffice: '千代田税務署', memo: '', cwAccountId: '1234001', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000001', name:'【リベ税】株式会社サンプル商事'}], relatedClientIds: ['c-003'], customFieldValues: { 'cf-001': 'MK-12345', 'cf-002': '2023-04-01', 'cf-003': '優良顧客。毎月定例ミーティングあり。' }, contractStatus: '契約中', nichizeiCode: 'NT-001234', managementNo: 'M-0450', cityName: 'やまもとたろう', cityUrl: 'https://libecity.com/user/yamamoto', email: 'yamamoto@sample.co.jp', directDebitStatus: '設定済み', etaxId: '0012345678901234', eltaxId: 'LT001234', dropboxPath: '/リベ税/顧客/株式会社サンプル商事', contractEndDate: '', consumptionTaxFee: 50000, consumptionTaxFreq: '年1回', contractStartDate: '2023-04-01', etaxPassword: 'etax1234', eltaxPassword: 'eltax5678', paymentInfo: { directDebit: true, transferAccount: '三井住友銀行 大手町支店', remarks: '法人税・消費税ともにダイレクト納付' } },
+    { id: 'c-002', clientCode: '030451', name: '合同会社テスト工業', clientType: '法人', fiscalMonth: 9, isActive: true, mainUserId: 'u-004', subUserId: null, mgrUserId: 'u-004', monthlySales: 30000, annualFee: 0, spotFees: [{id:'sf-010', timing:'2026-03', amount:55000, description:'年末調整追加作業'}], address: '大阪府大阪市中央区本町2-2-2', tel: '06-1234-5002', representative: '鈴木 一郎', establishDate: '2015-03-10', industry: '製造業', taxOffice: '東税務署', memo: '', cwAccountId: '1234002', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000002', name:'【リベ税】合同会社テスト工業'}], relatedClientIds: [], customFieldValues: { 'cf-001': 'MK-67890', 'cf-002': '2024-01-15' }, consumptionTaxFee: 0, consumptionTaxFreq: 'なし', contractStartDate: '2024-01-15' },
     { id: 'c-003', clientCode: '030452', name: '田中 一郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-005', subUserId: 'u-006', mgrUserId: 'u-005', monthlySales: 20000, annualFee: 0, spotFees: [], address: '愛知県名古屋市中区栄3-3-3', tel: '052-1234-5003', representative: '', establishDate: '', industry: '不動産賃貸', taxOffice: '名古屋中税務署', memo: '不動産所得あり', cwAccountId: '1234003', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000003', name:'【リベ税】田中一郎'}], relatedClientIds: ['c-001'] },
     { id: 'c-004', clientCode: '030453', name: '株式会社リベ不動産', clientType: '法人', fiscalMonth: 6, isActive: true, mainUserId: 'u-003', subUserId: null, mgrUserId: 'u-003', monthlySales: 80000, annualFee: 200000, spotFees: [{id:'sf-002', timing:'2026-08', amount:150000, description:'相続税申告'}, {id:'sf-003', timing:'2026-04-15', amount:50000, description:'議事録作成'}], address: '大阪府大阪市北区梅田1-4-4', tel: '06-1234-5004', representative: '高橋 花子', establishDate: '2018-01-15', industry: '不動産業', taxOffice: '北税務署', memo: '', cwAccountId: '1234004', cwRoomUrls: [{url:'https://www.chatwork.com/#!rid300000004', name:'【リベ税】株式会社リベ不動産'}], relatedClientIds: [], customFieldValues: { 'cf-001': 'MK-11111', 'cf-002': '2023-06-01', 'cf-003': '不動産管理メイン。決算前にヒアリング必要。' } },
     { id: 'c-005', clientCode: '030454', name: '佐藤 二郎', clientType: '個人', fiscalMonth: 12, isActive: true, mainUserId: 'u-006', subUserId: null, mgrUserId: 'u-005', monthlySales: 15000, annualFee: 0, spotFees: [], address: '福岡県福岡市博多区博多駅前5-5-5', tel: '092-1234-5005', representative: '', establishDate: '', industry: 'フリーランス（IT）', taxOffice: '博多税務署', memo: '', cwAccountId: '', cwRoomUrls: [], relatedClientIds: [] },
@@ -58,7 +58,7 @@ const MOCK_DATA = {
   ],
 
   tasks: [
-    { id: 'tk-001', clientId: 'c-001', assigneeUserId: 'u-003', title: '法人税確定申告書作成', status: '進行中', dueDate: '2026-03-31', createdAt: '2026-02-15', checklist: [
+    { id: 'tk-001', clientId: 'c-001', assigneeUserId: 'u-003', title: '法人税確定申告書作成', description: '株式会社サンプル商事の3月決算に伴う法人税確定申告書の作成', status: '進行中', dueDate: '2026-03-31', createdAt: '2026-02-15', completedAt: null, templateRunId: null, checklist: [
       { id: 'cl-001', text: '必要書類の確認', checked: true },
       { id: 'cl-002', text: '仕訳データの確認', checked: true },
       { id: 'cl-003', text: '申告書ドラフト作成', checked: false },
@@ -74,7 +74,7 @@ const MOCK_DATA = {
       { id: 'cl-011', text: '電子申告', checked: false },
       { id: 'cl-012', text: '納品', checked: false },
     ] },
-    { id: 'tk-003', clientId: 'c-002', assigneeUserId: 'u-004', title: '月次記帳チェック（3月）', status: '完了', dueDate: '2026-03-15', createdAt: '2026-03-01', checklist: [
+    { id: 'tk-003', clientId: 'c-002', assigneeUserId: 'u-004', title: '月次記帳チェック（3月）', description: '', status: '完了', dueDate: '2026-03-15', createdAt: '2026-03-01', completedAt: '2026-03-14T17:00:00', templateRunId: null, checklist: [
       { id: 'cl-013', text: '資料受領', checked: true },
       { id: 'cl-014', text: '仕訳入力', checked: true },
       { id: 'cl-015', text: '残高確認', checked: true },
@@ -360,6 +360,50 @@ const MOCK_DATA = {
     { id: 'el-006', title: 'eLTAX (地方税)', url: 'https://www.eltax.lta.go.jp/', category: 'ツール', description: '地方税電子申告システム' },
   ],
 
+  // テンプレート
+  templates: [
+    { id: 'tmpl-001', name: '月次顧問テンプレート', description: '毎月の顧問業務タスクを一括生成', category: '月次', createdBy: 'u-001', isActive: true, createdAt: '2026-03-01' },
+    { id: 'tmpl-002', name: '決算・申告テンプレート', description: '決算期のタスクを一括生成', category: '決算', createdBy: 'u-001', isActive: true, createdAt: '2026-03-01' },
+  ],
+
+  templateTaskDefinitions: [
+    { id: 'ttd-001', templateId: 'tmpl-001', title: '記帳確認', relativeDueDays: 10, sortOrder: 1, checklistItems: ['仕訳確認', '残高確認'] },
+    { id: 'ttd-002', templateId: 'tmpl-001', title: '月次報告書作成', relativeDueDays: 15, sortOrder: 2, checklistItems: ['試算表確認', '報告書作成'] },
+    { id: 'ttd-003', templateId: 'tmpl-002', title: '決算整理仕訳', relativeDueDays: 30, sortOrder: 1, checklistItems: [] },
+    { id: 'ttd-004', templateId: 'tmpl-002', title: '申告書作成', relativeDueDays: 45, sortOrder: 2, checklistItems: [] },
+  ],
+
+  templateRuns: [],
+
+  // アーカイブ
+  clientArchives: [
+    { id: 'arch-001', clientId: 'c-001', title: 'MyKomon 顧客データ（2026年3月エクスポート）', url: 'https://dropbox.com/example/archive1', description: '解約前の全データバックアップ', createdAt: '2026-03-15' },
+  ],
+
+  // チームメンバー
+  teamMembers: [
+    { id: 'tm-001', teamId: 'team-001', userId: 'u-001', role: 'leader' },
+    { id: 'tm-002', teamId: 'team-001', userId: 'u-003', role: 'member' },
+    { id: 'tm-003', teamId: 'team-001', userId: 'u-006', role: 'member' },
+    { id: 'tm-004', teamId: 'team-002', userId: 'u-002', role: 'leader' },
+    { id: 'tm-005', teamId: 'team-002', userId: 'u-004', role: 'member' },
+  ],
+
+  // 監査ログ
+  auditLogs: [
+    { id: 'al-001', userId: 'u-001', eventType: 'client_created', tableName: 'clients', recordId: 'c-001', createdAt: '2026-03-10T09:00:00' },
+    { id: 'al-002', userId: 'u-001', eventType: 'task_created', tableName: 'tasks', recordId: 'tk-001', createdAt: '2026-03-10T10:00:00' },
+    { id: 'al-003', userId: 'u-002', eventType: 'login_success', tableName: null, recordId: null, createdAt: '2026-03-11T08:30:00' },
+    { id: 'al-004', userId: 'u-003', eventType: 'task_updated', tableName: 'tasks', recordId: 'tk-001', createdAt: '2026-03-11T14:00:00' },
+    { id: 'al-005', userId: 'u-001', eventType: 'client_updated', tableName: 'clients', recordId: 'c-002', createdAt: '2026-03-12T09:30:00' },
+    { id: 'al-006', userId: 'u-004', eventType: 'login_success', tableName: null, recordId: null, createdAt: '2026-03-12T08:00:00' },
+  ],
+
+  // タスクファイル
+  taskFiles: [
+    { id: 'tf-001', taskId: 'tk-001', fileName: '月次報告書_3月.pdf', fileUrl: 'https://dropbox.com/example/report.pdf', uploadedBy: 'u-001', createdAt: '2026-03-12T10:00:00' },
+  ],
+
   notifications: [
     { id: 'n-001', type: 'task_due', message: '株式会社サンプル商事「法人税確定申告書作成」の期限が3日後です', isRead: false, createdAt: '2026-03-10T09:00:00', linkPage: 'task-detail', linkParams: { id: 'tk-001' } },
     { id: 'n-002', type: 'task_assigned', message: '新しいタスク「決算報告書レビュー」が割り当てられました', isRead: false, createdAt: '2026-03-10T08:30:00', linkPage: 'task-detail', linkParams: { id: 'tk-011' } },
@@ -378,6 +422,11 @@ function getChatRoomsByClient(clientId) { return MOCK_DATA.chatRooms.filter(r =>
 function getChatRoomById(id) { return MOCK_DATA.chatRooms.find(r => r.id === id); }
 function getTaskComments(taskId) { return MOCK_DATA.taskComments.filter(c => c.taskId === taskId).sort((a, b) => a.createdAt.localeCompare(b.createdAt)); }
 function getCalendarEvents(dateStr) { return MOCK_DATA.calendarEvents.filter(e => e.date === dateStr); }
+function getTeamById(id) { return MOCK_DATA.teams.find(t => t.id === id); }
+function getTeamMembers(teamId) { return MOCK_DATA.teamMembers.filter(m => m.teamId === teamId); }
+function getTaskFiles(taskId) { return MOCK_DATA.taskFiles.filter(f => f.taskId === taskId); }
+function getTemplateDefinitions(templateId) { return MOCK_DATA.templateTaskDefinitions.filter(d => d.templateId === templateId).sort((a, b) => a.sortOrder - b.sortOrder); }
+function getArchivesByClient(clientId) { return MOCK_DATA.clientArchives.filter(a => a.clientId === clientId); }
 
 function getRoleBadge(role) {
   const map = { superadmin: 'SA', admin: '管理者', team_leader: 'TL', member: 'メンバー' };

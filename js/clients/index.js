@@ -2,6 +2,9 @@
 // 顧客一覧
 // ===========================
 // 顧客一覧の列定義
+let clientPage = 1;
+const clientPerPage = 20;
+
 const CLIENT_COLUMNS = [
   { key: 'code', label: 'コード', visible: true },
   { key: 'name', label: '顧客名', visible: true, required: true },
@@ -59,10 +62,12 @@ function renderClients(el) {
           <tbody id="client-table-body"></tbody>
         </table>
       </div>
+      <div id="client-pagination" class="rp-pagination"></div>
     </div>
   `;
+  clientPage = 1;
   renderClientTable();
-  bindFilters(['client-search', 'client-type-filter', 'client-status-filter', 'client-main-filter', 'client-fiscal-filter'], renderClientTable);
+  bindFilters(['client-search', 'client-type-filter', 'client-status-filter', 'client-main-filter', 'client-fiscal-filter'], () => { clientPage = 1; renderClientTable(); });
 
   // 列表示トグル
   const toggleBtn = document.getElementById('client-col-toggle-btn');
@@ -121,10 +126,27 @@ function renderClientTable() {
     status: c => `<td>${c.isActive ? '<span style="color:var(--success)">有効</span>' : '<span style="color:var(--gray-400)">無効</span>'}</td>`,
   };
 
-  renderTableBody('client-table-body', clients, c => {
+  const total = clients.length;
+  const totalPages = Math.max(1, Math.ceil(total / clientPerPage));
+  const start = (clientPage - 1) * clientPerPage;
+  const pageItems = clients.slice(start, start + clientPerPage);
+
+  renderTableBody('client-table-body', pageItems, c => {
     const cells = visibleCols.map(col => colMap[col.key](c)).join('');
     return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${c.id}'})">${cells}</tr>`;
   }, visibleCols.length);
+
+  const pag = document.getElementById('client-pagination');
+  if (pag && total > clientPerPage) {
+    pag.innerHTML = `
+      <button onclick="clientPage=Math.max(1,clientPage-1);renderClientTable()" ${clientPage <= 1 ? 'disabled' : ''}>← 前</button>
+      <span class="page-info">${clientPage} / ${totalPages}</span>
+      <button onclick="clientPage=Math.min(${totalPages},clientPage+1);renderClientTable()" ${clientPage >= totalPages ? 'disabled' : ''}>次 →</button>
+      <span style="margin-left:8px;font-size:11px;">(全${total}件)</span>
+    `;
+  } else if (pag) {
+    pag.innerHTML = '';
+  }
 }
 
 // ===========================

@@ -1,6 +1,9 @@
 // ===========================
 // 職員一覧
 // ===========================
+let staffPage = 1;
+const staffPerPage = 20;
+
 function getDeptName(deptId) {
   if (!deptId) return '-';
   const dept = MOCK_DATA.departments.find(d => d.deptId === deptId);
@@ -42,10 +45,12 @@ function renderStaff(el) {
           <tbody id="staff-table-body"></tbody>
         </table>
       </div>
+      <div id="staff-pagination" class="rp-pagination"></div>
     </div>
   `;
+  staffPage = 1;
   renderStaffTable();
-  bindFilters(['staff-search', 'staff-role-filter', 'staff-dept-filter', 'staff-emptype-filter'], renderStaffTable);
+  bindFilters(['staff-search', 'staff-role-filter', 'staff-dept-filter', 'staff-emptype-filter'], () => { staffPage = 1; renderStaffTable(); });
 }
 
 function getFilteredStaff() {
@@ -70,7 +75,12 @@ function getFilteredStaff() {
 function renderStaffTable() {
   let users = getFilteredStaff();
 
-  renderTableBody('staff-table-body', users, u => {
+  const total = users.length;
+  const totalPages = Math.max(1, Math.ceil(total / staffPerPage));
+  const start = (staffPage - 1) * staffPerPage;
+  const pageItems = users.slice(start, start + staffPerPage);
+
+  renderTableBody('staff-table-body', pageItems, u => {
     const displayName = (u.lastName || '') + (u.firstName ? ' ' + u.firstName : '');
     const displayKana = (u.lastNameKana || '') + (u.firstNameKana ? ' ' + u.firstNameKana : '');
     return `
@@ -90,6 +100,18 @@ function renderStaffTable() {
       </td>
     </tr>`;
   }, 9);
+
+  const pag = document.getElementById('staff-pagination');
+  if (pag && total > staffPerPage) {
+    pag.innerHTML = `
+      <button onclick="staffPage=Math.max(1,staffPage-1);renderStaffTable()" ${staffPage <= 1 ? 'disabled' : ''}>← 前</button>
+      <span class="page-info">${staffPage} / ${totalPages}</span>
+      <button onclick="staffPage=Math.min(${totalPages},staffPage+1);renderStaffTable()" ${staffPage >= totalPages ? 'disabled' : ''}>次 →</button>
+      <span style="margin-left:8px;font-size:11px;">(全${total}件)</span>
+    `;
+  } else if (pag) {
+    pag.innerHTML = '';
+  }
 }
 
 function toggleStaffActive(userId) {

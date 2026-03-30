@@ -11,9 +11,10 @@ const PAGE_TITLES = {
   tasks: 'タスク一覧', 'task-detail': 'タスク詳細', progress: '進捗管理表',
   'progress-detail': '進捗管理表 詳細', staff: '職員一覧', 'staff-detail': '職員詳細',
   timesheet: '工数管理', reports: '報告書', 'report-detail': '報告書詳細',
-  calendar: 'カレンダー', rewards: '報酬管理', chatrooms: 'チャットマスタ',
-  integrations: '外部連携', automation: '自動化設定', ai: 'AIアシスタント',
-  links: 'リンク集', summary: '集計', settings: 'マイ設定',
+  calendar: 'カレンダー', rewards: '報酬管理',
+  templates: 'テンプレート', 'template-detail': 'テンプレート詳細',
+  archive: 'アーカイブ', teams: 'チーム管理',
+  audit: '監査ログ', 'import-export': 'インポート/エクスポート',
 };
 
 function registerPage(name, initFn) { pages[name] = initFn; }
