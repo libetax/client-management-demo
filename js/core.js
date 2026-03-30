@@ -15,6 +15,9 @@ const PAGE_TITLES = {
   templates: 'テンプレート', 'template-detail': 'テンプレート詳細',
   archive: 'アーカイブ', teams: 'チーム管理',
   audit: '監査ログ', 'import-export': 'インポート/エクスポート',
+  chatrooms: 'チャットマスタ', integrations: '外部連携',
+  ai: 'AIアシスタント', automation: '自動化設定',
+  links: 'リンク集', summary: '集計', settings: 'マイ設定',
 };
 
 function registerPage(name, initFn) { pages[name] = initFn; }
