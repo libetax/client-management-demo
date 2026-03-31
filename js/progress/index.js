@@ -211,10 +211,13 @@ function renderProgressDetail(el, params) {
 
     // Table header
     document.getElementById('pd-thead').innerHTML = `<tr>
-      <th>コード</th><th>顧客名</th><th>主担当</th><th>担当税理士</th>
+      <th class="pg-fixed pg-col-code">コード</th>
+      <th class="pg-fixed pg-col-name">顧客名</th>
+      <th class="pg-fixed pg-col-main">主担当</th>
+      <th class="pg-fixed pg-col-sub">副担当</th>
       ${sheet.columns.map(c => `<th class="pg-step-col">${c}</th>`).join('')}
-      ${sheet.showReportLink ? '<th>報告書</th>' : ''}
-      <th>備考</th>
+      ${sheet.showReportLink ? '<th class="pg-step-col">報告書</th>' : ''}
+      <th style="min-width:120px;">備考</th>
     </tr>`;
 
     // Table body
@@ -224,7 +227,7 @@ function renderProgressDetail(el, params) {
       : targets.map(t => {
         const client = getClientById(t.clientId);
         const main = getUserById(client?.mainUserId);
-        const mgr = getUserById(client?.mgrUserId);
+        const sub = getUserById(client?.subUserId);
         // 報告書件数
         let reportCell = '';
         if (sheet.showReportLink) {
@@ -234,24 +237,34 @@ function renderProgressDetail(el, params) {
             const safeClientName = clientName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             reportCell = `<td style="text-align:center;"><span class="count-badge" style="background:var(--primary-light,#e0e7ff);color:var(--primary);cursor:pointer;" onclick="event.stopPropagation();navigateToReportsWithClient('${safeClientName}')" title="報告書一覧を表示">${reportCount}</span></td>`;
           } else {
-            reportCell = '<td style="text-align:center;color:var(--gray-400);font-size:12px;">0</td>';
+            reportCell = '<td style="text-align:center;color:var(--gray-400);font-size:12px;">-</td>';
           }
         }
         return `<tr>
-          <td>${client?.clientCode || '-'}</td>
-          <td><strong>${client?.name || '-'}</strong></td>
-          <td>${main?.name || '-'}</td>
-          <td>${mgr?.name || '-'}</td>
+          <td class="pg-fixed pg-col-code" style="font-size:11px;color:var(--gray-500);">${client?.clientCode || '-'}</td>
+          <td class="pg-fixed pg-col-name"><strong style="font-size:12px;">${client?.name || '-'}</strong></td>
+          <td class="pg-fixed pg-col-main" style="font-size:12px;">${main?.name || '-'}</td>
+          <td class="pg-fixed pg-col-sub" style="font-size:12px;">${sub?.name || '-'}</td>
           ${sheet.columns.map(c => {
             const val = t.steps[c] || '未着手';
             const doneDate = t.completedDates && t.completedDates[c] ? t.completedDates[c] : '';
-            return `<td class="pg-step-cell" style="text-align:center;">
-              <span class="status-badge ${getStatusClass(val)}" style="cursor:pointer;" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">${val}</span>
-              ${doneDate ? `<div style="font-size:10px;color:var(--gray-400);margin-top:2px;">${escapeHtml(doneDate)}</div>` : ''}
-            </td>`;
+            let cellContent = '';
+            if (val === '完了') {
+              cellContent = doneDate
+                ? `<span class="pg-date-done" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">${escapeHtml(doneDate)}</span>`
+                : `<span class="pg-date-done" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">&#10003;</span>`;
+            } else if (val === '進行中') {
+              cellContent = `<span class="pg-status-wip" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">進行中</span>`;
+            } else if (val === '差戻し') {
+              cellContent = `<span class="pg-status-returned" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">差戻し</span>`;
+            } else {
+              // 未着手: 空白表示、クリックで変更可能
+              cellContent = `<span class="pg-status-empty" onclick="event.stopPropagation();openStatusSelect('${sheet.id}','${t.clientId}','${c}',this)">&nbsp;</span>`;
+            }
+            return `<td class="pg-step-cell">${cellContent}</td>`;
           }).join('')}
           ${reportCell}
-          <td class="pg-note-cell" style="font-size:12px;color:var(--gray-500);max-width:200px;min-width:120px;cursor:pointer;white-space:pre-wrap;" onclick="event.stopPropagation();editProgressNote('${sheet.id}','${t.clientId}',this)" title="クリックでメモ編集">${t.note ? escapeHtml(t.note) : '<span style="color:var(--gray-300)">メモを追加...</span>'}</td>
+          <td class="pg-note-cell" style="font-size:12px;color:var(--gray-500);max-width:200px;min-width:120px;cursor:pointer;white-space:pre-wrap;text-align:left;" onclick="event.stopPropagation();editProgressNote('${sheet.id}','${t.clientId}',this)" title="クリックでメモ編集">${t.note ? escapeHtml(t.note) : '<span style="color:var(--gray-300)">メモを追加...</span>'}</td>
         </tr>`;
       }).join('');
 
@@ -270,8 +283,8 @@ function renderProgressDetail(el, params) {
   draw();
 }
 
-function openStatusSelect(sheetId, clientId, colName, badge) {
-  const td = badge.closest('td');
+function openStatusSelect(sheetId, clientId, colName, span) {
+  const td = span.closest('td');
   if (td.querySelector('select')) return; // 二重起動防止
   const sheet = MOCK_DATA.progressSheets.find(s => s.id === sheetId);
   if (!sheet) return;
@@ -280,22 +293,26 @@ function openStatusSelect(sheetId, clientId, colName, badge) {
   const current = target.steps[colName] || '未着手';
   const statuses = ['未着手', '進行中', '完了', '差戻し'];
   const sel = document.createElement('select');
-  sel.style.cssText = 'font-size:12px;padding:2px 4px;border:1px solid var(--primary);border-radius:4px;';
+  sel.style.cssText = 'font-size:12px;padding:2px 4px;border:1px solid var(--primary);border-radius:4px;max-width:72px;';
   statuses.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s; opt.textContent = s;
     if (s === current) opt.selected = true;
     sel.appendChild(opt);
   });
-  badge.style.display = 'none';
-  td.insertBefore(sel, badge);
+  span.style.display = 'none';
+  td.insertBefore(sel, span);
   sel.focus();
   const save = () => {
     const newVal = sel.value;
     target.steps[colName] = newVal;
     if (!target.completedDates) target.completedDates = {};
     if (newVal === '完了') {
-      target.completedDates[colName] = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+      // JST基準で MM/DD 形式の日付を設定
+      const now = new Date();
+      const jstStr = now.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', month: '2-digit', day: '2-digit' }).replace('/', '/');
+      const parts = now.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }).split('-');
+      target.completedDates[colName] = `${parseInt(parts[1])}/${parseInt(parts[2])}`;
     } else {
       delete target.completedDates[colName];
     }
@@ -304,7 +321,7 @@ function openStatusSelect(sheetId, clientId, colName, badge) {
   sel.addEventListener('change', save);
   sel.addEventListener('blur', () => {
     sel.remove();
-    badge.style.display = '';
+    span.style.display = '';
   });
 }
 
