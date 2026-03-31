@@ -444,6 +444,14 @@ const MOCK_DATA = {
     { id: 'tf-001', taskId: 'tk-001', fileName: '月次報告書_3月.pdf', fileUrl: 'https://dropbox.com/example/report.pdf', uploadedBy: 'u-001', createdAt: '2026-03-12T10:00:00' },
   ],
 
+  // 進捗管理表 工程候補マスター
+  progressColumnCandidates: {
+    '決算': ['決算日', '月次', '決算予告', '資料回収', '開始', '会社法計算', '税金計算', '決算整理'],
+    '申告': ['法人税', '消費税', '地方税', '事業概況', '電子申告', '所得税'],
+    '年末調整': ['年末調整', '源泉所得税', '総括表（給与支払報告書）', '法定調書', '償却資産'],
+    'その他': ['報告書', '納品', '事後処理', 'レビュー', '記帳確認', '資料回収'],
+  },
+
   notifications: [
     { id: 'n-001', type: 'task_due', message: '株式会社サンプル商事「法人税確定申告書作成」の期限が3日後です', isRead: false, createdAt: '2026-03-10T09:00:00', linkPage: 'task-detail', linkParams: { id: 'tk-001' } },
     { id: 'n-002', type: 'task_assigned', message: '新しいタスク「決算報告書レビュー」が割り当てられました', isRead: false, createdAt: '2026-03-10T08:30:00', linkPage: 'task-detail', linkParams: { id: 'tk-011' } },

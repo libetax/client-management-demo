@@ -431,6 +431,10 @@ tbody tr.clickable { cursor: pointer; }
 .pg-col-item .pg-col-remove { background: none; border: none; color: var(--gray-400); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
 .pg-col-item .pg-col-remove:hover { color: var(--red-500, #ef4444); }
 
+/* ── 工程候補⇔表示リスト（デュアルリスト） ── */
+.pg-dual-list-item { transition: background .1s, color .1s; user-select: none; }
+.pg-dual-list-item:hover { background: var(--primary-light) !important; color: var(--primary) !important; }
+
 /* ── レスポンシブ ── */
 /* ── カスタムフィールド設定 ── */
 .cf-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 4px; background: #fff; border: 1px solid var(--gray-200); border-radius: 6px; cursor: grab; transition: opacity .2s, box-shadow .2s; }

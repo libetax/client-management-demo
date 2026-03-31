@@ -513,8 +513,16 @@ function pgSelectTemplate(templateId) {
   pgCurrentStep = 2;
   pgShowStep(2);
   renderPgColumnsList();
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
   pgFilterClients();
   pgBindClientFilters();
+  // 作成モーダルのターゲットモードをリセット
+  var radios = document.querySelectorAll('input[name="pg-create-target-mode"]');
+  radios.forEach(function(r) { r.checked = r.value === 'manual'; });
+  pgCreateTargetModeChanged('manual');
+  pgCreateFilterConditions = [];
+  pgCreateFilterApplied = false;
 }
 
 function pgShowStep(step) {
@@ -547,8 +555,17 @@ function pgStepNext() {
     if (!name) { alert('管理表名を入力してください'); return; }
     if (pgSelectedColumns.length === 0) { alert('工程を1つ以上追加してください'); return; }
 
-    // サマリー描画
-    var selectedClients = pgGetSelectedClientIds();
+    // 対象顧客モードに応じてselectedClientsを決定（サマリー表示用）
+    var createModeEl = document.querySelector('input[name="pg-create-target-mode"]:checked');
+    var createModeVal = createModeEl ? createModeEl.value : 'manual';
+    var selectedClients;
+    if (createModeVal === 'all') {
+      selectedClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+    } else if (createModeVal === 'filter') {
+      selectedClients = pgApplyCreateFilterConditions(pgCreateFilterConditions).map(function(c) { return c.id; });
+    } else {
+      selectedClients = pgGetSelectedClientIds();
+    }
     var mgr = getUserById(getVal('new-pg-manager'));
     var showReportLink = document.getElementById('pg-show-report-link').checked;
     document.getElementById('pg-confirm-summary').innerHTML =
@@ -595,14 +612,19 @@ function addProgressColumn() {
   var input = document.getElementById('pg-new-column-input');
   var name = input.value.trim();
   if (!name) return;
+  if (pgSelectedColumns.includes(name)) { alert('同名の工程がすでに存在します'); return; }
   pgSelectedColumns.push(name);
   input.value = '';
   renderPgColumnsList();
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
 }
 
 function pgRemoveColumn(idx) {
   pgSelectedColumns.splice(idx, 1);
   renderPgColumnsList();
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
 }
 
 function pgRenameColumn(idx, newName) {
@@ -693,6 +715,16 @@ function submitNewProgress() {
 
   var showReportLink = document.getElementById('pg-show-report-link').checked;
 
+  // 対象顧客モードに応じてselectedClientIdsを決定
+  var createMode = document.querySelector('input[name="pg-create-target-mode"]:checked');
+  createMode = createMode ? createMode.value : 'manual';
+  if (createMode === 'all') {
+    selectedClientIds = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+  } else if (createMode === 'filter') {
+    var filtered = pgApplyCreateFilterConditions(pgCreateFilterConditions);
+    selectedClientIds = filtered.map(function(c) { return c.id; });
+  }
+
   // マイテンプレート保存
   if (document.getElementById('pg-save-template').checked) {
     var tplName = getValTrim('pg-template-save-name');
@@ -753,8 +785,8 @@ function openProgressSettingsModal(sheetId) {
     document.getElementById('pg-settings-tab-basic').style.display = tab === 'basic' ? '' : 'none';
     document.getElementById('pg-settings-tab-columns').style.display = tab === 'columns' ? '' : 'none';
     document.getElementById('pg-settings-tab-targets').style.display = tab === 'targets' ? '' : 'none';
-    if (tab === 'columns') pgRenderColumnsList(s.id);
-    if (tab === 'targets') pgRenderTargetsList(s.id);
+    if (tab === 'columns') { pgInitSettingsColumnDualList(s.id); }
+    if (tab === 'targets') { pgRenderTargetsList(s.id); pgRenderTargetsTab(s.id); }
   }
   // 既存リスナーをクリーン化するためにcloneで置き換え
   const newTabsEl = tabsEl.cloneNode(true);
@@ -847,7 +879,7 @@ window.pgRemoveSheetColumn = function(sheetId, idx) {
   pgRenderColumnsList(sheetId);
 };
 
-// 工程の追加
+// 工程の追加（設定変更モーダル 直接入力）
 window.pgAddColumn = function() {
   const id = document.getElementById('edit-pg-id').value;
   const s = MOCK_DATA.progressSheets.find(x => x.id === id);
@@ -862,7 +894,9 @@ window.pgAddColumn = function() {
     if (t.steps) t.steps[name] = '未着手';
   });
   input.value = '';
-  pgRenderColumnsList(id);
+  // 新UIのデュアルリストを更新
+  pgSettingsRenderCandidates();
+  pgSettingsRenderDisplay(s.columns);
 };
 
 // 対象顧客リスト描画
@@ -938,7 +972,34 @@ function submitEditProgress() {
   s.name = name;
   s.status = getVal('edit-pg-status');
   s.managerId = getVal('edit-pg-manager');
-  // 工程・顧客の変更はpgUpdateColumnName/pgAddColumn/pgRemoveColumn等でリアルタイム反映済み
+
+  // 対象顧客モードを保存して反映
+  var modeEl = document.querySelector('input[name="pg-target-mode"]:checked');
+  var mode = modeEl ? modeEl.value : 'manual';
+  s.targetMode = mode;
+  if (mode === 'all') {
+    // アクティブ全顧客でtargetsを再構築
+    var activeIds = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+    activeIds.forEach(function(clientId) {
+      if (!s.targets.some(function(t) { return t.clientId === clientId; })) {
+        var steps = {}; var completedDates = {};
+        s.columns.forEach(function(col) { steps[col] = '未着手'; });
+        s.targets.push({ clientId: clientId, steps: steps, completedDates: completedDates, note: '' });
+      }
+    });
+  } else if (mode === 'filter') {
+    // フィルタ条件にマッチする顧客でtargetsを再構築
+    s.filterConditions = pgFilterConditions.slice();
+    var matched = pgApplyFilterConditions(pgFilterConditions);
+    matched.forEach(function(c) {
+      if (!s.targets.some(function(t) { return t.clientId === c.id; })) {
+        var steps = {}; var completedDates = {};
+        s.columns.forEach(function(col) { steps[col] = '未着手'; });
+        s.targets.push({ clientId: c.id, steps: steps, completedDates: completedDates, note: '' });
+      }
+    });
+  }
+
   closeProgressSettingsModal();
   if (currentPage === 'progress') navigateTo('progress');
   else if (currentPage === 'progress-detail') navigateTo('progress-detail', { id });
@@ -959,3 +1020,630 @@ function saveAsProgressTemplate(sheetId) {
   });
   alert('マイテンプレート「' + tplName.trim() + '」として保存しました');
 }
+
+// ============================================================
+// MyKomon風 対象顧客選択（設定変更モーダル用）
+// ============================================================
+
+// フィルタ条件フィールド定義
+var PG_FILTER_FIELDS = [
+  { key: 'clientType', label: '種別', options: ['法人', '個人'] },
+  { key: 'fiscalMonth', label: '決算月', options: Array.from({length: 12}, function(_, i) { return (i + 1) + '月'; }) },
+  { key: 'isActive', label: 'ステータス', options: ['有効', '無効'] },
+  { key: 'mainUserId', label: '主担当者', options: 'users' },
+];
+
+// 設定変更モーダル用 フィルタ条件の状態
+var pgFilterConditions = [];
+var pgFilterApplied = false; // 確定済みかどうか
+
+// 「対象顧客」タブを開くときに呼ばれる（sheetIdを引数で受け取れるよう拡張）
+function pgRenderTargetsTab(sheetId) {
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s) return;
+
+  // モードをリセット（シートにtargetModeが保存されている場合は復元）
+  var mode = s.targetMode || 'manual';
+  var radios = document.querySelectorAll('input[name="pg-target-mode"]');
+  radios.forEach(function(r) { r.checked = r.value === mode; });
+
+  pgFilterConditions = (s.filterConditions || []).slice();
+  pgFilterApplied = (s.filterConditions && s.filterConditions.length > 0);
+
+  pgTargetModeChanged(mode, sheetId);
+}
+
+// モード変更時
+window.pgTargetModeChanged = function(mode, sheetId) {
+  var manualUI = document.getElementById('pg-manual-targets-ui');
+  var filterPreview = document.getElementById('pg-filter-preview');
+  var allPreview = document.getElementById('pg-all-preview');
+  var filterBtn = document.getElementById('pg-filter-condition-btn');
+  var filterSummary = document.getElementById('pg-filter-summary');
+
+  manualUI.style.display = 'none';
+  filterPreview.style.display = 'none';
+  allPreview.style.display = 'none';
+  if (filterBtn) filterBtn.style.display = 'none';
+  if (filterSummary) filterSummary.style.display = 'none';
+
+  if (mode === 'all') {
+    allPreview.style.display = '';
+    var activeClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; });
+    document.getElementById('pg-all-count').textContent = 'アクティブな全顧客: ' + activeClients.length + '件';
+    document.getElementById('pg-all-list').innerHTML = activeClients.map(function(c) {
+      var main = getUserById(c.mainUserId);
+      return '<div style="padding:4px 6px;font-size:13px;display:flex;align-items:center;gap:8px;">' +
+        '<span style="color:var(--gray-500);font-size:11px;min-width:60px;">' + escapeHtml(c.clientCode) + '</span>' +
+        '<span>' + escapeHtml(c.name) + '</span>' +
+        '<span style="font-size:11px;color:var(--gray-400);margin-left:auto;">' + escapeHtml(c.clientType) + (main ? ' / ' + escapeHtml(main.name) : '') + '</span>' +
+        '</div>';
+    }).join('');
+
+  } else if (mode === 'filter') {
+    if (filterBtn) filterBtn.style.display = '';
+    filterPreview.style.display = '';
+    if (pgFilterApplied && pgFilterConditions.length > 0) {
+      pgRenderFilterPreview();
+      if (filterSummary) {
+        filterSummary.style.display = '';
+        filterSummary.textContent = pgFilterConditions.length + '件の条件';
+      }
+    } else {
+      document.getElementById('pg-filter-match-count').textContent = '条件が設定されていません。「条件設定」ボタンで条件を設定してください。';
+      document.getElementById('pg-filter-match-list').innerHTML = '';
+    }
+
+  } else {
+    // manual
+    manualUI.style.display = '';
+    var id = document.getElementById('edit-pg-id').value;
+    if (id) pgRenderTargetsList(id);
+  }
+};
+
+function pgRenderFilterPreview() {
+  var matched = pgApplyFilterConditions(pgFilterConditions);
+  document.getElementById('pg-filter-match-count').textContent = '条件にマッチする顧客: ' + matched.length + '件';
+  document.getElementById('pg-filter-match-list').innerHTML = matched.length === 0
+    ? '<div style="font-size:12px;color:var(--gray-400);padding:4px;">該当する顧客がありません</div>'
+    : matched.map(function(c) {
+        var main = getUserById(c.mainUserId);
+        return '<div style="padding:4px 6px;font-size:13px;display:flex;align-items:center;gap:8px;">' +
+          '<span style="color:var(--gray-500);font-size:11px;min-width:60px;">' + escapeHtml(c.clientCode) + '</span>' +
+          '<span>' + escapeHtml(c.name) + '</span>' +
+          '<span style="font-size:11px;color:var(--gray-400);margin-left:auto;">' + escapeHtml(c.clientType) + (main ? ' / ' + escapeHtml(main.name) : '') + '</span>' +
+          '</div>';
+      }).join('');
+}
+
+// フィルタ条件を MOCK_DATA.clients に適用
+function pgApplyFilterConditions(conditions) {
+  if (!conditions || conditions.length === 0) return [];
+  var logicEl = document.querySelector('input[name="pg-filter-logic"]:checked');
+  var logic = logicEl ? logicEl.value : 'AND';
+  return MOCK_DATA.clients.filter(function(c) {
+    if (logic === 'AND') {
+      return conditions.every(function(cond) { return pgMatchCondition(c, cond); });
+    } else {
+      return conditions.some(function(cond) { return pgMatchCondition(c, cond); });
+    }
+  });
+}
+
+function pgApplyCreateFilterConditions(conditions) {
+  if (!conditions || conditions.length === 0) return [];
+  var logicEl = document.querySelector('input[name="pg-create-filter-logic"]:checked');
+  var logic = logicEl ? logicEl.value : 'AND';
+  return MOCK_DATA.clients.filter(function(c) {
+    if (logic === 'AND') {
+      return conditions.every(function(cond) { return pgMatchCondition(c, cond); });
+    } else {
+      return conditions.some(function(cond) { return pgMatchCondition(c, cond); });
+    }
+  });
+}
+
+function pgMatchCondition(client, cond) {
+  var field = cond.field;
+  var op = cond.op;
+  var val = cond.value;
+  var actual;
+  if (field === 'clientType') {
+    actual = client.clientType;
+  } else if (field === 'fiscalMonth') {
+    actual = client.fiscalMonth + '月';
+  } else if (field === 'isActive') {
+    actual = client.isActive ? '有効' : '無効';
+  } else if (field === 'mainUserId') {
+    actual = client.mainUserId;
+  } else {
+    actual = client[field];
+  }
+  if (op === '=') return actual === val;
+  if (op === '!=') return actual !== val;
+  return true;
+}
+
+// 条件設定ダイアログを開く（設定変更モーダル用）
+window.openPgFilterDialog = function() {
+  pgRenderFilterConditionsUI();
+  showModal('pg-filter-dialog');
+};
+
+window.closePgFilterDialog = function() {
+  hideModal('pg-filter-dialog');
+};
+
+function pgRenderFilterConditionsUI() {
+  var container = document.getElementById('pg-filter-conditions');
+  if (pgFilterConditions.length === 0) {
+    pgFilterConditions.push({ field: 'clientType', op: '=', value: '法人' });
+  }
+  pgRedrawFilterConditions(container, pgFilterConditions, 'pg-filter-logic');
+}
+
+function pgRedrawFilterConditions(container, conditions, logicName) {
+  container.innerHTML = conditions.map(function(cond, idx) {
+    return pgBuildConditionRow(cond, idx, logicName === 'pg-filter-logic' ? 'settings' : 'create');
+  }).join('');
+}
+
+function pgBuildConditionRow(cond, idx, context) {
+  var prefix = context === 'settings' ? 'pgFilterRowChange' : 'pgCreateFilterRowChange';
+  var removePrefix = context === 'settings' ? 'pgRemoveFilterCondition' : 'pgRemoveCreateFilterCondition';
+
+  var fieldOpts = PG_FILTER_FIELDS.map(function(f) {
+    return '<option value="' + f.key + '"' + (cond.field === f.key ? ' selected' : '') + '>' + f.label + '</option>';
+  }).join('');
+
+  var opOpts = ['=', '!='].map(function(op) {
+    var label = op === '=' ? '＝（等しい）' : '≠（等しくない）';
+    return '<option value="' + op + '"' + (cond.op === op ? ' selected' : '') + '>' + label + '</option>';
+  }).join('');
+
+  var field = PG_FILTER_FIELDS.find(function(f) { return f.key === cond.field; });
+  var valueOpts = '';
+  if (field) {
+    var opts = field.options === 'users'
+      ? MOCK_DATA.users.filter(function(u) { return u.isActive; }).map(function(u) { return { v: u.id, l: u.name }; })
+      : field.options.map(function(o) { return { v: o, l: o }; });
+    valueOpts = opts.map(function(o) {
+      return '<option value="' + o.v + '"' + (cond.value === o.v ? ' selected' : '') + '>' + escapeHtml(o.l) + '</option>';
+    }).join('');
+  }
+
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;" data-cond-idx="' + idx + '">' +
+    '<select style="padding:5px 8px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;" onchange="' + prefix + '(' + idx + ',\'field\',this.value)">' + fieldOpts + '</select>' +
+    '<select style="padding:5px 8px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;min-width:120px;" onchange="' + prefix + '(' + idx + ',\'op\',this.value)">' + opOpts + '</select>' +
+    '<select style="padding:5px 8px;border:1px solid var(--gray-300);border-radius:6px;font-size:13px;flex:1;" onchange="' + prefix + '(' + idx + ',\'value\',this.value)">' + valueOpts + '</select>' +
+    '<button class="btn-icon" onclick="' + removePrefix + '(' + idx + ')" title="削除" style="color:var(--danger);">&times;</button>' +
+    '</div>';
+}
+
+window.pgFilterRowChange = function(idx, prop, val) {
+  if (!pgFilterConditions[idx]) return;
+  pgFilterConditions[idx][prop] = val;
+  // フィールドが変わったら値を初期値にリセット
+  if (prop === 'field') {
+    var field = PG_FILTER_FIELDS.find(function(f) { return f.key === val; });
+    if (field) {
+      var opts = field.options === 'users'
+        ? MOCK_DATA.users.filter(function(u) { return u.isActive; })
+        : null;
+      pgFilterConditions[idx].value = opts
+        ? opts[0].id
+        : (field.options[0] || '');
+    }
+    pgRedrawFilterConditions(document.getElementById('pg-filter-conditions'), pgFilterConditions, 'pg-filter-logic');
+  }
+};
+
+window.pgAddFilterCondition = function() {
+  pgFilterConditions.push({ field: 'clientType', op: '=', value: '法人' });
+  pgRedrawFilterConditions(document.getElementById('pg-filter-conditions'), pgFilterConditions, 'pg-filter-logic');
+};
+
+window.pgRemoveFilterCondition = function(idx) {
+  pgFilterConditions.splice(idx, 1);
+  pgRedrawFilterConditions(document.getElementById('pg-filter-conditions'), pgFilterConditions, 'pg-filter-logic');
+};
+
+window.pgCheckFilterCount = function() {
+  var matched = pgApplyFilterConditions(pgFilterConditions);
+  document.getElementById('pg-filter-count-result').textContent = matched.length + '件の顧客が対象です';
+};
+
+window.applyPgFilter = function() {
+  pgFilterApplied = true;
+  closePgFilterDialog();
+  // 設定変更モーダルのフィルタプレビューを更新
+  pgRenderFilterPreview();
+  var filterSummary = document.getElementById('pg-filter-summary');
+  if (filterSummary) {
+    filterSummary.style.display = '';
+    filterSummary.textContent = pgFilterConditions.length + '件の条件';
+  }
+  // シートに条件を保存（次回モーダル開時に復元するため）
+  var id = document.getElementById('edit-pg-id').value;
+  var s = id ? MOCK_DATA.progressSheets.find(function(x) { return x.id === id; }) : null;
+  if (s) {
+    s.filterConditions = pgFilterConditions.slice();
+    s.targetMode = 'filter';
+  }
+};
+
+// ============================================================
+// MyKomon風 対象顧客選択（作成モーダル用）
+// ============================================================
+
+var pgCreateFilterConditions = [];
+var pgCreateFilterApplied = false;
+
+window.pgCreateTargetModeChanged = function(mode) {
+  var manualArea = document.getElementById('pg-create-manual-area');
+  var autoPreview = document.getElementById('pg-create-auto-preview');
+  var filterBtn = document.getElementById('pg-create-filter-btn');
+  var filterSummary = document.getElementById('pg-create-filter-summary');
+
+  manualArea.style.display = 'none';
+  autoPreview.style.display = 'none';
+  if (filterBtn) filterBtn.style.display = 'none';
+  if (filterSummary) filterSummary.style.display = 'none';
+
+  if (mode === 'all') {
+    autoPreview.style.display = '';
+    var activeClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; });
+    document.getElementById('pg-create-auto-count').textContent = 'アクティブな全顧客: ' + activeClients.length + '件が対象になります';
+    document.getElementById('pg-create-auto-list').innerHTML = activeClients.map(function(c) {
+      var main = getUserById(c.mainUserId);
+      return '<div style="padding:3px 6px;font-size:12px;display:flex;align-items:center;gap:8px;">' +
+        '<span style="color:var(--gray-500);font-size:11px;min-width:60px;">' + escapeHtml(c.clientCode) + '</span>' +
+        '<span>' + escapeHtml(c.name) + '</span>' +
+        '<span style="font-size:11px;color:var(--gray-400);margin-left:auto;">' + escapeHtml(c.clientType) + (main ? ' / ' + escapeHtml(main.name) : '') + '</span>' +
+        '</div>';
+    }).join('');
+    // pg-selected-count を更新（submitNewProgress で参照するため）
+    document.getElementById('pg-selected-count').textContent = activeClients.length + '件選択中';
+
+  } else if (mode === 'filter') {
+    autoPreview.style.display = '';
+    if (filterBtn) filterBtn.style.display = '';
+    if (pgCreateFilterApplied && pgCreateFilterConditions.length > 0) {
+      pgRenderCreateFilterPreview();
+      if (filterSummary) {
+        filterSummary.style.display = '';
+        filterSummary.textContent = pgCreateFilterConditions.length + '件の条件';
+      }
+    } else {
+      document.getElementById('pg-create-auto-count').textContent = '条件が設定されていません。「条件設定」ボタンで条件を設定してください。';
+      document.getElementById('pg-create-auto-list').innerHTML = '';
+    }
+
+  } else {
+    // manual
+    manualArea.style.display = '';
+  }
+};
+
+function pgRenderCreateFilterPreview() {
+  var matched = pgApplyCreateFilterConditions(pgCreateFilterConditions);
+  document.getElementById('pg-create-auto-count').textContent = '条件にマッチする顧客: ' + matched.length + '件が対象になります';
+  document.getElementById('pg-create-auto-list').innerHTML = matched.length === 0
+    ? '<div style="font-size:12px;color:var(--gray-400);padding:4px;">該当する顧客がありません</div>'
+    : matched.map(function(c) {
+        var main = getUserById(c.mainUserId);
+        return '<div style="padding:3px 6px;font-size:12px;display:flex;align-items:center;gap:8px;">' +
+          '<span style="color:var(--gray-500);font-size:11px;min-width:60px;">' + escapeHtml(c.clientCode) + '</span>' +
+          '<span>' + escapeHtml(c.name) + '</span>' +
+          '<span style="font-size:11px;color:var(--gray-400);margin-left:auto;">' + escapeHtml(c.clientType) + (main ? ' / ' + escapeHtml(main.name) : '') + '</span>' +
+          '</div>';
+      }).join('');
+  // pg-selected-count を更新
+  document.getElementById('pg-selected-count').textContent = matched.length + '件選択中';
+}
+
+window.openPgCreateFilterDialog = function() {
+  pgRenderCreateFilterConditionsUI();
+  showModal('pg-create-filter-dialog');
+};
+
+window.closePgCreateFilterDialog = function() {
+  hideModal('pg-create-filter-dialog');
+};
+
+function pgRenderCreateFilterConditionsUI() {
+  var container = document.getElementById('pg-create-filter-conditions');
+  if (pgCreateFilterConditions.length === 0) {
+    pgCreateFilterConditions.push({ field: 'clientType', op: '=', value: '法人' });
+  }
+  pgRedrawFilterConditions(container, pgCreateFilterConditions, 'pg-create-filter-logic');
+}
+
+window.pgCreateFilterRowChange = function(idx, prop, val) {
+  if (!pgCreateFilterConditions[idx]) return;
+  pgCreateFilterConditions[idx][prop] = val;
+  if (prop === 'field') {
+    var field = PG_FILTER_FIELDS.find(function(f) { return f.key === val; });
+    if (field) {
+      var opts = field.options === 'users'
+        ? MOCK_DATA.users.filter(function(u) { return u.isActive; })
+        : null;
+      pgCreateFilterConditions[idx].value = opts
+        ? opts[0].id
+        : (field.options[0] || '');
+    }
+    pgRedrawFilterConditions(document.getElementById('pg-create-filter-conditions'), pgCreateFilterConditions, 'pg-create-filter-logic');
+  }
+};
+
+window.pgAddCreateFilterCondition = function() {
+  pgCreateFilterConditions.push({ field: 'clientType', op: '=', value: '法人' });
+  pgRedrawFilterConditions(document.getElementById('pg-create-filter-conditions'), pgCreateFilterConditions, 'pg-create-filter-logic');
+};
+
+window.pgRemoveCreateFilterCondition = function(idx) {
+  pgCreateFilterConditions.splice(idx, 1);
+  pgRedrawFilterConditions(document.getElementById('pg-create-filter-conditions'), pgCreateFilterConditions, 'pg-create-filter-logic');
+};
+
+window.pgCheckCreateFilterCount = function() {
+  var matched = pgApplyCreateFilterConditions(pgCreateFilterConditions);
+  document.getElementById('pg-create-filter-count-result').textContent = matched.length + '件の顧客が対象です';
+};
+
+window.applyPgCreateFilter = function() {
+  pgCreateFilterApplied = true;
+  closePgCreateFilterDialog();
+  pgRenderCreateFilterPreview();
+  var filterSummary = document.getElementById('pg-create-filter-summary');
+  if (filterSummary) {
+    filterSummary.style.display = '';
+    filterSummary.textContent = pgCreateFilterConditions.length + '件の条件';
+  }
+};
+
+// ============================================================
+// 候補⇔表示リスト（設定変更モーダル 工程設定タブ）
+// ============================================================
+
+var pgSettingsSelectedCandidateIdx = null;
+var pgSettingsSelectedDisplayIdx = null;
+
+// 工程設定タブを開いたときに初期化
+function pgInitSettingsColumnDualList(sheetId) {
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s) return;
+  pgSettingsSelectedCandidateIdx = null;
+  pgSettingsSelectedDisplayIdx = null;
+  pgSettingsRenderCandidates();
+  pgSettingsRenderDisplay(s.columns);
+}
+
+window.pgSettingsRenderCandidates = function() {
+  var category = document.getElementById('pg-settings-col-category').value;
+  var sheetId = document.getElementById('edit-pg-id').value;
+  var s = sheetId ? MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; }) : null;
+  var displayCols = s ? s.columns : [];
+
+  var candidates = pgGetCandidatesByCategory(category);
+  // 既に表示リストにある項目を除外
+  candidates = candidates.filter(function(c) { return !displayCols.includes(c); });
+
+  var container = document.getElementById('pg-settings-col-candidates');
+  if (candidates.length === 0) {
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--gray-400);">候補がありません</div>';
+    return;
+  }
+  container.innerHTML = candidates.map(function(c, idx) {
+    return '<div class="pg-dual-list-item" data-idx="' + idx + '" data-name="' + escapeHtml(c) + '" onclick="pgSettingsSelectCandidate(' + idx + ', this)" style="padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(c) + '</div>';
+  }).join('');
+};
+
+window.pgSettingsSelectCandidate = function(idx, el) {
+  pgSettingsSelectedCandidateIdx = idx;
+  pgSettingsSelectedDisplayIdx = null;
+  document.querySelectorAll('#pg-settings-col-candidates .pg-dual-list-item').forEach(function(item) {
+    item.style.background = '';
+    item.style.color = '';
+  });
+  document.querySelectorAll('#pg-settings-col-display .pg-dual-list-item').forEach(function(item) {
+    item.style.background = '';
+    item.style.color = '';
+  });
+  el.style.background = 'var(--primary)';
+  el.style.color = '#fff';
+};
+
+window.pgSettingsSelectDisplay = function(idx, el) {
+  pgSettingsSelectedDisplayIdx = idx;
+  pgSettingsSelectedCandidateIdx = null;
+  document.querySelectorAll('#pg-settings-col-candidates .pg-dual-list-item').forEach(function(item) {
+    item.style.background = '';
+    item.style.color = '';
+  });
+  document.querySelectorAll('#pg-settings-col-display .pg-dual-list-item').forEach(function(item) {
+    item.style.background = '';
+    item.style.color = '';
+  });
+  el.style.background = 'var(--primary)';
+  el.style.color = '#fff';
+};
+
+function pgSettingsRenderDisplay(columns) {
+  var container = document.getElementById('pg-settings-col-display');
+  if (!columns || columns.length === 0) {
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--gray-400);">工程がありません</div>';
+    return;
+  }
+  container.innerHTML = columns.map(function(c, idx) {
+    return '<div class="pg-dual-list-item" data-idx="' + idx + '" data-name="' + escapeHtml(c) + '" onclick="pgSettingsSelectDisplay(' + idx + ', this)" style="padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(c) + '</div>';
+  }).join('');
+}
+
+window.pgSettingsColAdd = function() {
+  var selectedEl = document.querySelector('#pg-settings-col-candidates .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) {
+    alert('候補から追加する工程を選択してください');
+    return;
+  }
+  var name = selectedEl.dataset.name;
+  var sheetId = document.getElementById('edit-pg-id').value;
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s) return;
+  if (s.columns.includes(name)) return;
+  s.columns.push(name);
+  s.targets.forEach(function(t) {
+    if (t.steps) t.steps[name] = '未着手';
+  });
+  pgSettingsSelectedCandidateIdx = null;
+  pgSettingsRenderCandidates();
+  pgSettingsRenderDisplay(s.columns);
+};
+
+window.pgSettingsColRemove = function() {
+  var selectedEl = document.querySelector('#pg-settings-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) {
+    alert('削除する工程を選択してください');
+    return;
+  }
+  var name = selectedEl.dataset.name;
+  var sheetId = document.getElementById('edit-pg-id').value;
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s) return;
+  var idx = s.columns.indexOf(name);
+  if (idx < 0) return;
+  var hasData = s.targets.some(function(t) { return t.steps && t.steps[name] && t.steps[name] !== '未着手'; });
+  if (hasData && !confirm('工程「' + name + '」には進捗データがあります。削除してもよろしいですか？')) return;
+  s.columns.splice(idx, 1);
+  s.targets.forEach(function(t) {
+    if (t.steps) delete t.steps[name];
+    if (t.completedDates) delete t.completedDates[name];
+  });
+  pgSettingsSelectedDisplayIdx = null;
+  pgSettingsRenderCandidates();
+  pgSettingsRenderDisplay(s.columns);
+};
+
+window.pgSettingsColMoveUp = function() {
+  var selectedEl = document.querySelector('#pg-settings-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) return;
+  var idx = parseInt(selectedEl.dataset.idx);
+  var sheetId = document.getElementById('edit-pg-id').value;
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s || idx <= 0) return;
+  var tmp = s.columns[idx]; s.columns[idx] = s.columns[idx - 1]; s.columns[idx - 1] = tmp;
+  pgSettingsRenderDisplay(s.columns);
+  // 移動後に選択状態を維持
+  var items = document.querySelectorAll('#pg-settings-col-display .pg-dual-list-item');
+  if (items[idx - 1]) { items[idx - 1].style.background = 'var(--primary)'; items[idx - 1].style.color = '#fff'; }
+};
+
+window.pgSettingsColMoveDown = function() {
+  var selectedEl = document.querySelector('#pg-settings-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) return;
+  var idx = parseInt(selectedEl.dataset.idx);
+  var sheetId = document.getElementById('edit-pg-id').value;
+  var s = MOCK_DATA.progressSheets.find(function(x) { return x.id === sheetId; });
+  if (!s || idx >= s.columns.length - 1) return;
+  var tmp = s.columns[idx]; s.columns[idx] = s.columns[idx + 1]; s.columns[idx + 1] = tmp;
+  pgSettingsRenderDisplay(s.columns);
+  var items = document.querySelectorAll('#pg-settings-col-display .pg-dual-list-item');
+  if (items[idx + 1]) { items[idx + 1].style.background = 'var(--primary)'; items[idx + 1].style.color = '#fff'; }
+};
+
+function pgGetCandidatesByCategory(category) {
+  var candidates = MOCK_DATA.progressColumnCandidates || {};
+  if (category === 'all') {
+    var all = [];
+    Object.values(candidates).forEach(function(arr) {
+      arr.forEach(function(c) { if (!all.includes(c)) all.push(c); });
+    });
+    return all;
+  }
+  return (candidates[category] || []).slice();
+}
+
+// ============================================================
+// 候補⇔表示リスト（作成モーダル 工程列）
+// ============================================================
+
+window.pgCreateRenderCandidates = function() {
+  var category = document.getElementById('pg-col-category').value;
+  var displayCols = pgSelectedColumns.slice();
+  var candidates = pgGetCandidatesByCategory(category).filter(function(c) { return !displayCols.includes(c); });
+
+  var container = document.getElementById('pg-col-candidates');
+  if (candidates.length === 0) {
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--gray-400);">候補がありません</div>';
+    return;
+  }
+  container.innerHTML = candidates.map(function(c, idx) {
+    return '<div class="pg-dual-list-item" data-idx="' + idx + '" data-name="' + escapeHtml(c) + '" onclick="pgCreateSelectCandidate(this)" style="padding:5px 8px;font-size:12px;cursor:pointer;border-radius:4px;">' + escapeHtml(c) + '</div>';
+  }).join('');
+};
+
+window.pgCreateSelectCandidate = function(el) {
+  document.querySelectorAll('#pg-col-candidates .pg-dual-list-item').forEach(function(item) { item.style.background = ''; item.style.color = ''; });
+  document.querySelectorAll('#pg-col-display .pg-dual-list-item').forEach(function(item) { item.style.background = ''; item.style.color = ''; });
+  el.style.background = 'var(--primary)'; el.style.color = '#fff';
+};
+
+window.pgCreateSelectDisplay = function(el) {
+  document.querySelectorAll('#pg-col-candidates .pg-dual-list-item').forEach(function(item) { item.style.background = ''; item.style.color = ''; });
+  document.querySelectorAll('#pg-col-display .pg-dual-list-item').forEach(function(item) { item.style.background = ''; item.style.color = ''; });
+  el.style.background = 'var(--primary)'; el.style.color = '#fff';
+};
+
+function pgCreateRenderDisplay() {
+  var container = document.getElementById('pg-col-display');
+  if (!pgSelectedColumns || pgSelectedColumns.length === 0) {
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--gray-400);">工程がありません</div>';
+    return;
+  }
+  container.innerHTML = pgSelectedColumns.map(function(c, idx) {
+    return '<div class="pg-dual-list-item" data-idx="' + idx + '" data-name="' + escapeHtml(c) + '" onclick="pgCreateSelectDisplay(this)" style="padding:5px 8px;font-size:12px;cursor:pointer;border-radius:4px;">' + escapeHtml(c) + '</div>';
+  }).join('');
+}
+
+window.pgCreateColAdd = function() {
+  var selectedEl = document.querySelector('#pg-col-candidates .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) { alert('候補から追加する工程を選択してください'); return; }
+  var name = selectedEl.dataset.name;
+  if (pgSelectedColumns.includes(name)) return;
+  pgSelectedColumns.push(name);
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
+};
+
+window.pgCreateColRemove = function() {
+  var selectedEl = document.querySelector('#pg-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) { alert('削除する工程を選択してください'); return; }
+  var name = selectedEl.dataset.name;
+  var idx = pgSelectedColumns.indexOf(name);
+  if (idx >= 0) pgSelectedColumns.splice(idx, 1);
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
+};
+
+window.pgCreateColMoveUp = function() {
+  var selectedEl = document.querySelector('#pg-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) return;
+  var idx = parseInt(selectedEl.dataset.idx);
+  if (idx <= 0) return;
+  var tmp = pgSelectedColumns[idx]; pgSelectedColumns[idx] = pgSelectedColumns[idx - 1]; pgSelectedColumns[idx - 1] = tmp;
+  pgCreateRenderDisplay();
+  var items = document.querySelectorAll('#pg-col-display .pg-dual-list-item');
+  if (items[idx - 1]) { items[idx - 1].style.background = 'var(--primary)'; items[idx - 1].style.color = '#fff'; }
+};
+
+window.pgCreateColMoveDown = function() {
+  var selectedEl = document.querySelector('#pg-col-display .pg-dual-list-item[style*="primary"]');
+  if (!selectedEl) return;
+  var idx = parseInt(selectedEl.dataset.idx);
+  if (idx >= pgSelectedColumns.length - 1) return;
+  var tmp = pgSelectedColumns[idx]; pgSelectedColumns[idx] = pgSelectedColumns[idx + 1]; pgSelectedColumns[idx + 1] = tmp;
+  pgCreateRenderDisplay();
+  var items = document.querySelectorAll('#pg-col-display .pg-dual-list-item');
+  if (items[idx + 1]) { items[idx + 1].style.background = 'var(--primary)'; items[idx + 1].style.color = '#fff'; }
+};
