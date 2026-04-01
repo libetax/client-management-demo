@@ -320,23 +320,33 @@ function renderClientDetail(el, params) {
 
         <div id="ctab-basic">
           <div class="detail-section-title">基本情報</div>
-          ${!isNew ? `<div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${c.clientCode}</div></div>` : ''}
+          <div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${editing ? inp('ed-clientCode', c?.clientCode, 'text', '例: 030450') : val(c?.clientCode)}</div></div>
           <div class="detail-row"><div class="detail-label">契約ステータス</div><div class="detail-value">${editing ? `<select id="ed-contractStatus" class="inline-edit-input">${contractStatusOptions}</select>` : val(c?.contractStatus, '未設定')}</div></div>
           <div class="detail-row"><div class="detail-label">顧客名</div><div class="detail-value">${editing ? inp('ed-name', c?.name, 'text', '例: 株式会社サンプル商事') : val(c.name)}</div></div>
-          <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value">${editing ? inp('ed-type', '', 'select-type') : renderTypeBadge(c.clientType)}</div></div>
+          <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value">${editing ? `<select id="ed-type" class="inline-edit-input"><option value="法人">法人</option><option value="個人">個人</option></select>` : renderTypeBadge(c.clientType)}</div></div>
           <div class="detail-row"><div class="detail-label">決算月</div><div class="detail-value">${editing ? `<select id="ed-fiscal" class="inline-edit-input">${fiscalOptionsWithPersonal}</select>` : (c.fiscalMonth === 'personal' ? '個人（12月）' : c.fiscalMonth + '月')}</div></div>
           <div class="detail-row"><div class="detail-label">業種</div><div class="detail-value">${editing ? `<select id="ed-industry-select" class="inline-edit-input" onchange="document.getElementById('ed-industry-wrap').style.display=this.value==='_other'?'':'none'"><option value="">選択...</option>${industryOptions}<option value="_other">その他（手入力）</option></select><div id="ed-industry-wrap" style="display:${c?.industry && !['卸売業','製造業','不動産業','不動産賃貸','小売業','サービス業','IT・ソフトウェア','建設業','飲食業','医療・福祉','農業','NPO・福祉','フリーランス（IT）','その他'].includes(c.industry) ? '' : 'none'};margin-top:6px;"><input type="text" id="ed-industry" class="inline-edit-input" value="${c?.industry && !['卸売業','製造業','不動産業','不動産賃貸','小売業','サービス業','IT・ソフトウェア','建設業','飲食業','医療・福祉','農業','NPO・福祉','フリーランス（IT）','その他'].includes(c.industry) ? (c.industry || '') : ''}" placeholder="業種を入力"></div>` : val(c?.industry)}</div></div>
-          <div class="detail-row"><div class="detail-label">月額報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-sales', c?.monthlySales, 'number', '50000') : (c.monthlySales || 0).toLocaleString() + '円'}</div></div>
-          <div class="detail-row"><div class="detail-label">年1申告報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-annualfee', c?.annualFee, 'number', '150000') : (c?.annualFee || 0).toLocaleString() + '円'}</div></div>
-          <div class="detail-row"><div class="detail-label">消費税申告報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-consumptionTaxFee', c?.consumptionTaxFee, 'number', '50000') : (c?.consumptionTaxFee || 0).toLocaleString() + '円'}</div></div>
-          <div class="detail-row"><div class="detail-label">消費税申告頻度</div><div class="detail-value">${editing ? `<select id="ed-consumptionTaxFreq" class="inline-edit-input"><option value="年1回" ${c?.consumptionTaxFreq === '年1回' ? 'selected' : ''}>年1回</option><option value="四半期" ${c?.consumptionTaxFreq === '四半期' ? 'selected' : ''}>四半期</option><option value="毎月" ${c?.consumptionTaxFreq === '毎月' ? 'selected' : ''}>毎月</option><option value="なし" ${c?.consumptionTaxFreq === 'なし' || !c?.consumptionTaxFreq ? 'selected' : ''}>なし</option></select>` : val(c?.consumptionTaxFreq, 'なし')}</div></div>
-          <div class="detail-row"><div class="detail-label">SPOT報酬</div><div class="detail-value">${editing ? spotFeesEditHtml : spotFeesViewHtml}</div></div>
+          <div class="detail-row"><div class="detail-label">郵便番号</div><div class="detail-value">${editing ? inp('ed-postalCode', c?.postalCode, 'text', '例: 100-0004') : val(c?.postalCode)}</div></div>
           <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${editing ? inp('ed-address', c?.address, 'text', '例: 東京都千代田区大手町1-1-1') : val(c.address)}</div></div>
           <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${editing ? inp('ed-tel', c?.tel, 'text', '例: 03-1234-5678') : val(c.tel)}</div></div>
           <div class="detail-row"><div class="detail-label">代表者</div><div class="detail-value">${editing ? inp('ed-representative', c?.representative, 'text', '例: 山本 太郎') : val(c?.representative)}</div></div>
           <div class="detail-row"><div class="detail-label">管轄税務署</div><div class="detail-value">${editing ? inp('ed-taxoffice', c?.taxOffice, 'text', '例: 千代田税務署') : val(c.taxOffice)}</div></div>
+          <div class="detail-row"><div class="detail-label">消費税申告区分</div><div class="detail-value">${editing ? `<select id="ed-consumptionTaxCategory" class="inline-edit-input"><option value="免税" ${c?.consumptionTaxCategory === '免税' ? 'selected' : ''}>免税</option><option value="簡易課税" ${c?.consumptionTaxCategory === '簡易課税' ? 'selected' : ''}>簡易課税</option><option value="本則課税" ${c?.consumptionTaxCategory === '本則課税' ? 'selected' : ''}>本則課税</option></select>` : val(c?.consumptionTaxCategory)}</div></div>
+          <div class="detail-row"><div class="detail-label">インボイス登録</div><div class="detail-value">${editing ? `<select id="ed-invoiceRegistered" class="inline-edit-input"><option value="あり" ${c?.invoiceRegistered === 'あり' ? 'selected' : ''}>あり</option><option value="なし" ${c?.invoiceRegistered === 'なし' || !c?.invoiceRegistered ? 'selected' : ''}>なし</option></select>` : val(c?.invoiceRegistered)}</div></div>
+
+          <div class="detail-section-title">報酬</div>
+          <div class="detail-row"><div class="detail-label">月額報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-sales', c?.monthlySales, 'number', '50000') : (c.monthlySales || 0).toLocaleString() + '円'}</div></div>
+          <div class="detail-row"><div class="detail-label">月額記帳代行報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-monthlyBookkeepingFee', c?.monthlyBookkeepingFee, 'number', '10000') : (c?.monthlyBookkeepingFee || 0).toLocaleString() + '円'}</div></div>
+          <div class="detail-row"><div class="detail-label">年1申告報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-annualfee', c?.annualFee, 'number', '150000') : (c?.annualFee || 0).toLocaleString() + '円'}</div></div>
+          <div class="detail-row"><div class="detail-label">消費税申告報酬（税抜）</div><div class="detail-value">${editing ? inp('ed-consumptionTaxFee', c?.consumptionTaxFee, 'number', '50000') : (c?.consumptionTaxFee || 0).toLocaleString() + '円'}</div></div>
+          <div class="detail-row"><div class="detail-label">消費税申告頻度</div><div class="detail-value">${editing ? `<select id="ed-consumptionTaxFreq" class="inline-edit-input"><option value="年1回" ${c?.consumptionTaxFreq === '年1回' ? 'selected' : ''}>年1回</option><option value="四半期" ${c?.consumptionTaxFreq === '四半期' ? 'selected' : ''}>四半期</option><option value="毎月" ${c?.consumptionTaxFreq === '毎月' ? 'selected' : ''}>毎月</option><option value="なし" ${c?.consumptionTaxFreq === 'なし' || !c?.consumptionTaxFreq ? 'selected' : ''}>なし</option></select>` : val(c?.consumptionTaxFreq, 'なし')}</div></div>
+          <div class="detail-row"><div class="detail-label">SPOT報酬</div><div class="detail-value">${editing ? spotFeesEditHtml : spotFeesViewHtml}</div></div>
+
+          <div class="detail-section-title">契約期間</div>
           <div class="detail-row"><div class="detail-label">契約開始日</div><div class="detail-value">${editing ? inp('ed-contractStartDate', c?.contractStartDate, 'date') : val(c?.contractStartDate ? formatDate(c.contractStartDate) : '')}</div></div>
           <div class="detail-row"><div class="detail-label">契約終了日</div><div class="detail-value">${editing ? inp('ed-contractEndDate', c?.contractEndDate, 'date') : val(c?.contractEndDate ? formatDate(c.contractEndDate) : '')}</div></div>
+          <div class="detail-row"><div class="detail-label">記帳代行契約開始日</div><div class="detail-value">${editing ? inp('ed-bookkeepingStartDate', c?.bookkeepingStartDate, 'date') : val(c?.bookkeepingStartDate ? formatDate(c.bookkeepingStartDate) : '')}</div></div>
+          <div class="detail-row"><div class="detail-label">記帳代行契約終了日</div><div class="detail-value">${editing ? inp('ed-bookkeepingEndDate', c?.bookkeepingEndDate, 'date') : val(c?.bookkeepingEndDate ? formatDate(c.bookkeepingEndDate) : '')}</div></div>
           ${!editing && c?.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${c.memo}</div></div>` : ''}
 
           ${!isNew ? `
@@ -345,24 +355,30 @@ function renderClientDetail(el, params) {
           ` : ''}
 
           <div class="detail-section-title">担当者</div>
-          <div class="detail-row"><div class="detail-label">担当税理士</div><div class="detail-value">${editing ? inp('ed-mgr', '', 'select-staff') : val(mgr?.name)}</div></div>
+          <div class="detail-row"><div class="detail-label">税理士</div><div class="detail-value">${editing ? inp('ed-mgr', '', 'select-staff') : val(mgr?.name)}</div></div>
           <div class="detail-row"><div class="detail-label">主担当</div><div class="detail-value">${editing ? inp('ed-main', '', 'select-staff') : val(main?.name)}</div></div>
           <div class="detail-row"><div class="detail-label">副担当</div><div class="detail-value">${editing ? inp('ed-sub', '', 'select-staff') : val(sub?.name)}</div></div>
+          <div class="detail-row"><div class="detail-label">記帳担当者</div><div class="detail-value">${editing ? inp('ed-bookkeeper', '', 'select-staff') : val(c ? getUserById(c.bookkeeperId)?.name : null)}</div></div>
+          <div class="detail-row"><div class="detail-label">記帳責任者補佐</div><div class="detail-value">${editing ? inp('ed-bookkeepingSub', '', 'select-staff') : val(c ? getUserById(c.bookkeepingSubId)?.name : null)}</div></div>
         </div>
 
         <div id="ctab-tax" style="display:none;">
           <div class="detail-section-title">税務情報</div>
           <div class="detail-row"><div class="detail-label">日税コード</div><div class="detail-value">${editing ? inp('ed-nichizeiCode', c?.nichizeiCode, 'text', '例: NT-001234') : val(c?.nichizeiCode)}</div></div>
           <div class="detail-row"><div class="detail-label">管理表No</div><div class="detail-value">${editing ? inp('ed-managementNo', c?.managementNo, 'text', '例: M-0450') : val(c?.managementNo)}</div></div>
+          <div class="detail-row"><div class="detail-label">MF事業者番号</div><div class="detail-value">${editing ? inp('ed-mfBusinessNo', c?.mfBusinessNo, 'text', '例: MF-001234') : val(c?.mfBusinessNo)}</div></div>
           <div class="detail-row"><div class="detail-label">e-Tax利用者識別番号</div><div class="detail-value">${editing ? inp('ed-etaxId', c?.etaxId, 'text', '例: 0012345678901234') : val(c?.etaxId)}</div></div>
           <div class="detail-row"><div class="detail-label">e-Taxパスワード</div><div class="detail-value">${editing ? inp('ed-etaxPassword', c?.etaxPassword, 'text', 'パスワードを入力') : (c?.etaxPassword ? '••••••••' : '-')}</div></div>
           <div class="detail-row"><div class="detail-label">eLTAX利用者ID</div><div class="detail-value">${editing ? inp('ed-eltaxId', c?.eltaxId, 'text', '例: LT001234') : val(c?.eltaxId)}</div></div>
           <div class="detail-row"><div class="detail-label">eLTAXパスワード</div><div class="detail-value">${editing ? inp('ed-eltaxPassword', c?.eltaxPassword, 'text', 'パスワードを入力') : (c?.eltaxPassword ? '••••••••' : '-')}</div></div>
+          <div class="detail-row"><div class="detail-label">委任登録</div><div class="detail-value">${editing ? `<select id="ed-delegationStatus" class="inline-edit-input"><option value="登録済み" ${c?.delegationStatus === '登録済み' ? 'selected' : ''}>登録済み</option><option value="未登録" ${c?.delegationStatus === '未登録' || !c?.delegationStatus ? 'selected' : ''}>未登録</option></select>` : val(c?.delegationStatus)}</div></div>
+          <div class="detail-row"><div class="detail-label">日税登録</div><div class="detail-value">${editing ? `<select id="ed-nichizeiRegistration" class="inline-edit-input"><option value="登録確認済" ${c?.nichizeiRegistration === '登録確認済' ? 'selected' : ''}>登録確認済</option><option value="要登録" ${c?.nichizeiRegistration === '要登録' || !c?.nichizeiRegistration ? 'selected' : ''}>要登録</option></select>` : val(c?.nichizeiRegistration)}</div></div>
 
           <div class="detail-section-title">納付情報</div>
           <div class="detail-row"><div class="detail-label">ダイレクト納付</div><div class="detail-value">${editing ? `<select id="ed-directDebit" class="inline-edit-input"><option value="true" ${c?.paymentInfo?.directDebit ? 'selected' : ''}>設定済み</option><option value="false" ${!c?.paymentInfo?.directDebit ? 'selected' : ''}>未設定</option></select>` : (c?.paymentInfo?.directDebit ? '<span style="color:var(--success)">設定済み</span>' : '<span style="color:var(--gray-400)">未設定</span>')}</div></div>
           <div class="detail-row"><div class="detail-label">ダイレクト納付書類依頼状況</div><div class="detail-value">${editing ? inp('ed-directDebitStatus', c?.directDebitStatus, 'text', '例: 設定済み / 依頼中 / 未依頼') : val(c?.directDebitStatus)}</div></div>
           <div class="detail-row"><div class="detail-label">振替口座</div><div class="detail-value">${editing ? inp('ed-transferAccount', c?.paymentInfo?.transferAccount, 'text', '例: 三井住友銀行 大手町支店') : val(c?.paymentInfo?.transferAccount)}</div></div>
+          <div class="detail-row"><div class="detail-label">引落口座情報（カナ）</div><div class="detail-value">${editing ? inp('ed-transferAccountKana', c?.paymentInfo?.transferAccountKana, 'text', '例: ミツイスミトモギンコウ オオテマチシテン') : val(c?.paymentInfo?.transferAccountKana)}</div></div>
           <div class="detail-row"><div class="detail-label">納付備考</div><div class="detail-value">${editing ? inp('ed-paymentRemarks', c?.paymentInfo?.remarks, 'textarea', '納付に関する備考') : val(c?.paymentInfo?.remarks)}</div></div>
         </div>
 
@@ -373,7 +389,7 @@ function renderClientDetail(el, params) {
           <div class="detail-row"><div class="detail-label">シティURL</div><div class="detail-value">${editing ? inp('ed-cityUrl', c?.cityUrl, 'text', 'https://libecity.com/user/...') : (c?.cityUrl ? `<a href="${escapeHtml(c.cityUrl)}" target="_blank">${escapeHtml(c.cityUrl)}</a>` : val(''))}</div></div>
 
           <div class="detail-section-title">Chatwork連携</div>
-          <div class="detail-row"><div class="detail-label">CWアカウントID</div><div class="detail-value">${editing ? inp('ed-cwid', c?.cwAccountId, 'text', '例: 1234567') : val(c?.cwAccountId, '未設定')}</div></div>
+          <div class="detail-row"><div class="detail-label">CWURL</div><div class="detail-value">${editing ? inp('ed-cwid', c?.cwAccountId, 'text', '例: https://www.chatwork.com/#!rid123456') : val(c?.cwAccountId, '未設定')}</div></div>
         ${!editing ? `
           <div class="detail-row"><div class="detail-label">メンション</div><div class="detail-value">${c.cwAccountId ? '<code style="background:var(--gray-100);padding:2px 6px;border-radius:3px;font-size:12px;">[To:' + c.cwAccountId + ']' + c.name + 'さん</code>' : val('', '-')}</div></div>
         ` : ''}
@@ -477,6 +493,8 @@ function renderClientDetail(el, params) {
     setVal('ed-mgr', c?.mgrUserId || '');
     setVal('ed-main', c?.mainUserId || '');
     setVal('ed-sub', c?.subUserId || '');
+    setVal('ed-bookkeeper', c?.bookkeeperId || '');
+    setVal('ed-bookkeepingSub', c?.bookkeepingSubId || '');
   }
 }
 
@@ -515,9 +533,22 @@ function saveClientInline(id) {
   const dropboxPath = getValTrim('ed-dropboxPath');
   const consumptionTaxFee = getValInt('ed-consumptionTaxFee');
   const consumptionTaxFreq = getVal('ed-consumptionTaxFreq', 'なし');
+  const clientCode = getValTrim('ed-clientCode');
+  const postalCode = getValTrim('ed-postalCode');
+  const consumptionTaxCategory = getVal('ed-consumptionTaxCategory', '');
+  const invoiceRegistered = getVal('ed-invoiceRegistered', 'なし');
+  const monthlyBookkeepingFee = getValInt('ed-monthlyBookkeepingFee');
+  const bookkeepingStartDate = getVal('ed-bookkeepingStartDate', '');
+  const bookkeepingEndDate = getVal('ed-bookkeepingEndDate', '');
+  const bookkeeperId = getVal('ed-bookkeeper', '') || null;
+  const bookkeepingSubId = getVal('ed-bookkeepingSub', '') || null;
+  const mfBusinessNo = getValTrim('ed-mfBusinessNo');
+  const delegationStatus = getVal('ed-delegationStatus', '');
+  const nichizeiRegistration = getVal('ed-nichizeiRegistration', '');
   const paymentInfo = {
     directDebit: getVal('ed-directDebit', 'false') === 'true',
     transferAccount: getValTrim('ed-transferAccount'),
+    transferAccountKana: getValTrim('ed-transferAccountKana'),
     remarks: getValTrim('ed-paymentRemarks'),
   };
 
@@ -531,22 +562,25 @@ function saveClientInline(id) {
   if (!name) { alert('顧客名を入力してください'); return; }
 
   if (isNew) {
-    const lastCode = MOCK_DATA.clients.length > 0 ? MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode : '030449';
-    const nextCode = String(parseInt(lastCode) + 1).padStart(6, '0');
+    const resolvedCode = clientCode || (function() { const last = MOCK_DATA.clients.length > 0 ? MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode : '030449'; return String(parseInt(last) + 1).padStart(6, '0'); })();
     const newId = generateId('c-', MOCK_DATA.clients);
     MOCK_DATA.clients.push({
-      id: newId, clientCode: nextCode, name, clientType, fiscalMonth,
+      id: newId, clientCode: resolvedCode, name, clientType, fiscalMonth,
       isActive: true, mainUserId, subUserId, mgrUserId: mgrUserId || mainUserId,
       monthlySales, annualFee, spotFees: [], address, tel, industry, representative, taxOffice,
       memo: '', establishDate: '', cwAccountId, cwRoomUrls: [], relatedClientIds: [], customFieldValues,
       contractStatus, contractStartDate, contractEndDate, nichizeiCode, managementNo, etaxId, etaxPassword, eltaxId, eltaxPassword, directDebitStatus,
       email, cityName, cityUrl, dropboxPath, consumptionTaxFee, consumptionTaxFreq, paymentInfo,
+      postalCode, consumptionTaxCategory, invoiceRegistered, monthlyBookkeepingFee,
+      bookkeepingStartDate, bookkeepingEndDate, bookkeeperId, bookkeepingSubId,
+      mfBusinessNo, delegationStatus, nichizeiRegistration,
     });
     clientEditMode = false;
     navigateTo('client-detail', { id: newId });
   } else {
     const c = getClientById(id);
     if (c) {
+      if (clientCode) c.clientCode = clientCode;
       c.name = name; c.clientType = clientType; c.fiscalMonth = fiscalMonth;
       c.mgrUserId = mgrUserId || mainUserId; c.mainUserId = mainUserId; c.subUserId = subUserId;
       c.monthlySales = monthlySales; c.annualFee = annualFee;
@@ -560,6 +594,11 @@ function saveClientInline(id) {
       c.email = email; c.cityName = cityName; c.cityUrl = cityUrl;
       c.dropboxPath = dropboxPath; c.paymentInfo = paymentInfo;
       c.consumptionTaxFee = consumptionTaxFee; c.consumptionTaxFreq = consumptionTaxFreq;
+      c.postalCode = postalCode; c.consumptionTaxCategory = consumptionTaxCategory;
+      c.invoiceRegistered = invoiceRegistered; c.monthlyBookkeepingFee = monthlyBookkeepingFee;
+      c.bookkeepingStartDate = bookkeepingStartDate; c.bookkeepingEndDate = bookkeepingEndDate;
+      c.bookkeeperId = bookkeeperId; c.bookkeepingSubId = bookkeepingSubId;
+      c.mfBusinessNo = mfBusinessNo; c.delegationStatus = delegationStatus; c.nichizeiRegistration = nichizeiRegistration;
     }
     clientEditMode = false;
     navigateTo('client-detail', { id });
@@ -647,11 +686,11 @@ function exportClientCSV() {
   const cfHeaders = customFields.map(cf => cf.name);
   const cfIds = customFields.map(cf => cf.id);
 
-  const header = ['clientCode', 'name', 'clientType', 'fiscalMonth', 'address', 'tel', 'representative', 'industry', 'taxOffice', 'monthlySales', 'annualFee', 'spotFees', 'cwAccountId', ...cfHeaders];
+  const header = ['clientCode', 'name', 'clientType', 'fiscalMonth', 'postalCode', 'address', 'tel', 'representative', 'industry', 'taxOffice', 'consumptionTaxCategory', 'invoiceRegistered', 'monthlySales', 'monthlyBookkeepingFee', 'annualFee', 'spotFees', 'cwAccountId', 'contractStartDate', 'contractEndDate', 'bookkeepingStartDate', 'bookkeepingEndDate', 'mfBusinessNo', 'delegationStatus', 'nichizeiRegistration', ...cfHeaders];
   const rows = clients.map(c => {
     const cfv = c.customFieldValues || {};
     const spotFeesJson = (c.spotFees && c.spotFees.length > 0) ? JSON.stringify(c.spotFees) : '';
-    return [c.clientCode, c.name, c.clientType, c.fiscalMonth, c.address || '', c.tel || '', c.representative || '', c.industry || '', c.taxOffice || '', c.monthlySales || 0, c.annualFee || 0, spotFeesJson, c.cwAccountId || '', ...cfIds.map(id => cfv[id] || '')];
+    return [c.clientCode, c.name, c.clientType, c.fiscalMonth, c.postalCode || '', c.address || '', c.tel || '', c.representative || '', c.industry || '', c.taxOffice || '', c.consumptionTaxCategory || '', c.invoiceRegistered || '', c.monthlySales || 0, c.monthlyBookkeepingFee || 0, c.annualFee || 0, spotFeesJson, c.cwAccountId || '', c.contractStartDate || '', c.contractEndDate || '', c.bookkeepingStartDate || '', c.bookkeepingEndDate || '', c.mfBusinessNo || '', c.delegationStatus || '', c.nichizeiRegistration || '', ...cfIds.map(id => cfv[id] || '')];
   });
 
   downloadCSV('顧客一覧.csv', header, rows);
@@ -674,7 +713,7 @@ function exportTatsujinCSV() {
     '', // フリガナ（データなし）
     c.clientType === '法人' ? '1' : '2',
     c.representative || '',
-    '', // 郵便番号（データなし）
+    c.postalCode || '',
     c.address || '',
     c.tel || '',
     c.fiscalMonth === 'personal' ? '12' : String(c.fiscalMonth || ''),
@@ -708,6 +747,17 @@ function importClientCSV() {
       if (obj.annualFee) existing.annualFee = parseInt(obj.annualFee) || existing.annualFee;
       if (obj.spotFees) { try { existing.spotFees = JSON.parse(obj.spotFees); } catch(e) {} }
       if (obj.cwAccountId !== undefined) existing.cwAccountId = obj.cwAccountId;
+      if (obj.postalCode !== undefined) existing.postalCode = obj.postalCode;
+      if (obj.consumptionTaxCategory !== undefined) existing.consumptionTaxCategory = obj.consumptionTaxCategory;
+      if (obj.invoiceRegistered !== undefined) existing.invoiceRegistered = obj.invoiceRegistered;
+      if (obj.monthlyBookkeepingFee) existing.monthlyBookkeepingFee = parseInt(obj.monthlyBookkeepingFee) || existing.monthlyBookkeepingFee;
+      if (obj.bookkeepingStartDate !== undefined) existing.bookkeepingStartDate = obj.bookkeepingStartDate;
+      if (obj.bookkeepingEndDate !== undefined) existing.bookkeepingEndDate = obj.bookkeepingEndDate;
+      if (obj.mfBusinessNo !== undefined) existing.mfBusinessNo = obj.mfBusinessNo;
+      if (obj.delegationStatus !== undefined) existing.delegationStatus = obj.delegationStatus;
+      if (obj.nichizeiRegistration !== undefined) existing.nichizeiRegistration = obj.nichizeiRegistration;
+      if (obj.contractStartDate !== undefined) existing.contractStartDate = obj.contractStartDate;
+      if (obj.contractEndDate !== undefined) existing.contractEndDate = obj.contractEndDate;
       if (!existing.customFieldValues) existing.customFieldValues = {};
       customFields.forEach(cf => {
         if (obj[cf.name] !== undefined && obj[cf.name] !== '') existing.customFieldValues[cf.id] = obj[cf.name];
