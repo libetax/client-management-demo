@@ -11,11 +11,11 @@ function renderTasks(el) {
       <input type="text" class="search-input" placeholder="タスク名・顧客名で検索..." id="task-search">
       <select class="filter-select" id="task-status-filter">
         <option value="">全ステータス</option>
+        <option value="incomplete" selected>未完了</option>
         <option value="overdue">期限超過</option>
         <option value="未着手">未着手</option>
         <option value="進行中">進行中</option>
         <option value="完了">完了</option>
-        <option value="差戻し">差戻し</option>
       </select>
       <select class="filter-select" id="task-assignee-filter">
         <option value="">全担当者</option>
@@ -53,7 +53,9 @@ function renderTaskTable() {
   let tasks = MOCK_DATA.tasks.filter(t => {
     const client = getClientById(t.clientId);
     if (search && !t.title.toLowerCase().includes(search) && !(client?.name || '').toLowerCase().includes(search)) return false;
-    if (statusFilter === 'overdue') {
+    if (statusFilter === 'incomplete') {
+      if (t.status === '完了') return false;
+    } else if (statusFilter === 'overdue') {
       if (t.status === '完了' || t.dueDate >= today) return false;
     } else if (statusFilter && t.status !== statusFilter) return false;
     if (assigneeFilter && t.assigneeUserId !== assigneeFilter) return false;
@@ -75,7 +77,7 @@ function renderTaskTable() {
       <td><strong>${t.title}</strong></td>
       <td>${assignee?.name || '-'}</td>
       <td>${formatDate(t.dueDate)}</td>
-      <td>${renderStatusBadge(t.status)}</td>
+      <td onclick="event.stopPropagation()">${renderTaskStatusSelect(t)}</td>
     </tr>`;
   }, 5);
 
@@ -89,6 +91,47 @@ function renderTaskTable() {
     `;
   } else if (pag) {
     pag.innerHTML = '';
+  }
+}
+
+/** タスクのステータス遷移ルール */
+function getTaskTransitions(status) {
+  switch (status) {
+    case '未着手': return ['進行中'];
+    case '進行中': return ['完了'];
+    case '完了': return ['進行中'];
+    case '差戻し': return ['進行中'];
+    default: return [];
+  }
+}
+
+/** タスク一覧用ステータスセレクト */
+function renderTaskStatusSelect(t) {
+  const transitions = getTaskTransitions(t.status);
+  const options = [`<option value="${t.status}" selected>${t.status}</option>`]
+    .concat(transitions.map(s => `<option value="${s}">${s}</option>`))
+    .join('');
+  return `<select class="status-select status-${statusClass(t.status)}" onchange="changeTaskStatus('${t.id}', this.value)">${options}</select>`;
+}
+
+/** ステータスのCSSクラス名 */
+function statusClass(status) {
+  switch (status) {
+    case '未着手': return 'todo';
+    case '進行中': return 'in-progress';
+    case '完了': return 'done';
+    case '差戻し': return 'returned';
+    default: return '';
+  }
+}
+
+/** タスクステータス変更 */
+function changeTaskStatus(taskId, newStatus) {
+  const task = MOCK_DATA.tasks.find(t => t.id === taskId);
+  if (task) {
+    task.status = newStatus;
+    if (newStatus === '完了') task.completedAt = new Date().toISOString();
+    renderTaskTable();
   }
 }
 

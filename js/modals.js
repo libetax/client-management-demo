@@ -374,6 +374,24 @@ function openReportModal() {
   // 本文をクリア
   const bodyEl = document.getElementById('new-rp-body');
   if (bodyEl) bodyEl.value = '';
+  // 宛先チェックボックスを構築
+  const recipientEl = document.getElementById('new-rp-recipients');
+  if (recipientEl) {
+    recipientEl.innerHTML = MOCK_DATA.users.filter(u => u.isActive).map(u =>
+      `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:2px 0;">
+        <input type="checkbox" class="rp-recipient-cb" value="${u.id}"> ${escapeHtml(u.name)}
+      </label>`
+    ).join('');
+    recipientEl.querySelectorAll('.rp-recipient-cb').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const count = recipientEl.querySelectorAll('.rp-recipient-cb:checked').length;
+        const countEl = document.getElementById('new-rp-recipients-count');
+        if (countEl) countEl.textContent = count > 0 ? `${count}名を選択中` : '';
+      });
+    });
+  }
+  const countEl = document.getElementById('new-rp-recipients-count');
+  if (countEl) countEl.textContent = '';
   showModal('report-create-modal');
 }
 
