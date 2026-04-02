@@ -40,6 +40,11 @@ function renderTasks(el) {
     if (sel) sel.value = dashTaskFilter;
     dashTaskFilter = '';
   }
+  // デフォルト担当フィルタ: adminは全員、それ以外は自分
+  if (MOCK_DATA.currentUser.role !== 'admin') {
+    const assigneeSel = document.getElementById('task-assignee-filter');
+    if (assigneeSel) assigneeSel.value = MOCK_DATA.currentUser.id;
+  }
   renderTaskTable();
   bindFilters(['task-search', 'task-status-filter', 'task-assignee-filter'], () => { taskPage = 1; renderTaskTable(); });
 }

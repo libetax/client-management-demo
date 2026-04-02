@@ -66,6 +66,11 @@ function renderClients(el) {
     </div>
   `;
   clientPage = 1;
+  // デフォルト担当フィルタ: adminは全員、それ以外は自分
+  if (MOCK_DATA.currentUser.role !== 'admin') {
+    const mainSel = document.getElementById('client-main-filter');
+    if (mainSel) mainSel.value = MOCK_DATA.currentUser.id;
+  }
   renderClientTable();
   bindFilters(['client-search', 'client-type-filter', 'client-status-filter', 'client-main-filter', 'client-fiscal-filter'], () => { clientPage = 1; renderClientTable(); });
 
