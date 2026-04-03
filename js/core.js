@@ -12,7 +12,7 @@ const PAGE_TITLES = {
   'progress-detail': '進捗管理表 詳細', staff: '職員一覧', 'staff-detail': '職員詳細',
   timesheet: '工数管理', reports: '報告書', 'report-detail': '報告書詳細',
   calendar: 'カレンダー', rewards: '報酬管理',
-  templates: 'テンプレート', 'template-detail': 'テンプレート詳細',
+  templates: 'タスクテンプレート', 'template-detail': 'テンプレート詳細',
   archive: 'アーカイブ', teams: 'チーム管理',
   audit: '監査ログ', 'import-export': 'インポート/エクスポート',
   chatrooms: 'チャットマスタ', integrations: '外部連携',
@@ -29,6 +29,15 @@ function navigateTo(pageName, params = {}) {
   currentPage = pageName;
   const content = document.getElementById('page-content');
   const header = document.getElementById('header-title');
+
+  // ツールセクション内のページの場合は自動展開
+  const toolsPages = ['chatrooms','integrations','ai','automation','views','links','summary','settings'];
+  const toolsBody = document.getElementById('tools-section-body');
+  const toolsHeader = document.getElementById('tools-section-header');
+  if (toolsBody && toolsPages.includes(pageName)) {
+    toolsBody.classList.remove('collapsed');
+    if (toolsHeader) toolsHeader.classList.add('expanded');
+  }
 
   if (pages[pageName]) {
     pages[pageName](content, params);
@@ -97,6 +106,16 @@ function initSidebar() {
       closeSidebar();
     });
   });
+
+  // ツールセクション折りたたみ
+  const toolsHeader = document.getElementById('tools-section-header');
+  const toolsBody = document.getElementById('tools-section-body');
+  if (toolsHeader && toolsBody) {
+    toolsHeader.addEventListener('click', () => {
+      toolsBody.classList.toggle('collapsed');
+      toolsHeader.classList.toggle('expanded');
+    });
+  }
 
   // ユーザー情報
   const u = MOCK_DATA.currentUser;

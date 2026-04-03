@@ -121,6 +121,14 @@ function renderTypeBadge(clientType) {
   return `<span class="type-badge ${clientType === '法人' ? 'type-corp' : 'type-individual'}">${clientType}</span>`;
 }
 
+// 契約ステータスバッジHTML
+function renderContractStatusBadge(status) {
+  const cls = status === '契約完了' || status === '契約中' ? 'status-badge status-done'
+    : status === '見込み' ? 'status-badge status-todo'
+    : 'status-badge status-outline';
+  return `<span class="${cls}" style="font-size:11px;">${status}</span>`;
+}
+
 // selectのoptions生成
 function buildUserOptions(filter) {
   let users = MOCK_DATA.users.filter(u => u.isActive);

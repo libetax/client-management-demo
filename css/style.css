@@ -81,6 +81,12 @@ a:hover { text-decoration: underline; }
 .sidebar-nav a:hover { background: var(--gray-800); color: #fff; }
 .sidebar-nav a.active { background: var(--primary); color: #fff; }
 .sidebar-nav .nav-section { padding: 16px 20px 6px; font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: .05em; }
+.sidebar-nav .nav-section-collapsible { cursor: pointer; display: flex; align-items: center; gap: 4px; transition: color .15s; user-select: none; }
+.sidebar-nav .nav-section-collapsible:hover { color: var(--gray-300); }
+.nav-section-toggle { font-size: 9px; transition: transform .2s; display: inline-block; }
+.nav-section-body { overflow: hidden; transition: max-height .2s ease; max-height: 500px; }
+.nav-section-body.collapsed { max-height: 0; }
+.nav-section-collapsible.expanded .nav-section-toggle { transform: rotate(90deg); }
 .sidebar-user { padding: 12px 20px; border-top: 1px solid var(--gray-700); display: flex; align-items: center; gap: 10px; }
 .sidebar-user .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
 .sidebar-user .user-info { font-size: 12px; }
@@ -116,6 +122,21 @@ a:hover { text-decoration: underline; }
 .stat-card.clickable:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
 .stat-card.stat-card-active { outline: 2px solid var(--primary); outline-offset: -2px; }
 
+/* サマリーカード（ダッシュボード） */
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.summary-card { display: flex; align-items: center; gap: 16px; background: #fff; border-radius: var(--radius); padding: 16px; border: 1px solid var(--gray-200); box-shadow: var(--shadow); cursor: pointer; transition: box-shadow .15s; }
+.summary-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.summary-card.variant-danger { background: #fef2f2; border-color: #fecaca; }
+.summary-card.variant-warning { background: #fffbeb; border-color: #fde68a; }
+.summary-icon { width: 48px; height: 48px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.summary-icon.bg-gray { background: var(--gray-100); }
+.summary-icon.bg-red { background: #fee2e2; }
+.summary-icon.bg-yellow { background: #fef3c7; }
+.summary-data .summary-value { font-size: 24px; font-weight: 700; color: var(--gray-900); }
+.summary-card.variant-danger .summary-value { color: var(--danger); }
+.summary-card.variant-warning .summary-value { color: #b45309; }
+.summary-data .summary-label { font-size: 13px; color: var(--gray-500); }
+
 /* ── テーブル ── */
 .table-wrapper { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
@@ -130,6 +151,7 @@ tbody tr.clickable { cursor: pointer; }
 .status-progress { background: #dbeafe; color: #1e40af; }
 .status-done { background: #dcfce7; color: #166534; }
 .status-returned { background: #fee2e2; color: #991b1b; }
+.status-outline { background: transparent; border: 1px solid var(--gray-300); color: var(--gray-600); }
 
 /* ── ステータスセレクト（タスク一覧インライン変更） ── */
 .status-select { border: 1px solid transparent; border-radius: 12px; padding: 3px 8px; font-size: 12px; font-weight: 500; cursor: pointer; appearance: auto; background: transparent; }
@@ -544,6 +566,7 @@ textarea.inline-edit-input { resize: vertical; font-family: inherit; }
   .main-content { margin-left: 0; }
   .detail-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
   .notif-dropdown { width: calc(100vw - 32px); right: -12px; }
   .view-card-grid { grid-template-columns: 1fr; }
 }

@@ -3,10 +3,6 @@
 // ===========================
 let rpPage = 1;
 const rpPerPage = 20;
-let rpReadFilter = '全て';      // 全て / 未読
-let rpTypeFilter = '両方';      // 両方 / 業務報告書 / 日報
-let rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
-const rpExpandedSet = new Set();
 let rpInitialClient = '';
 
 function navigateToReportsWithClient(clientName) {
@@ -16,143 +12,56 @@ function navigateToReportsWithClient(clientName) {
 
 function renderReports(el) {
   rpPage = 1;
-  rpReadFilter = '全て';
-  rpTypeFilter = '両方';
-  rpSearchState = { category: '', author: '', period: '1年以内', dateFrom: '', dateTo: '', ranks: [], attachOnly: false, draftOnly: false, keyword: '', client: '' };
+
+  el.innerHTML = `
+    <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
+      <input type="text" class="search-input" placeholder="タイトルで検索..." id="rp-search">
+      <select class="filter-select" id="rp-type-filter">
+        <option value="">全種別</option>
+        <option value="業務報告書">業務報告書</option>
+        <option value="日報">日報</option>
+      </select>
+      <select class="filter-select" id="rp-category-filter">
+        <option value="">全カテゴリ</option>
+        <option value="確定申告">確定申告</option>
+        <option value="決算業務">決算業務</option>
+        <option value="月次業務">月次業務</option>
+        <option value="その他">その他</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn btn-primary" onclick="openReportModal()">+ 報告書作成</button>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th style="width:40px;"></th><th>タイトル</th><th>顧客</th><th>作成者</th><th>種別</th><th>カテゴリ</th><th>ランク</th><th>作成日</th></tr></thead>
+          <tbody id="rp-table-body"></tbody>
+        </table>
+      </div>
+      <div id="rp-pagination" class="rp-pagination"></div>
+    </div>
+  `;
 
   // 進捗管理表からの顧客フィルタ遷移
   if (rpInitialClient) {
-    rpSearchState.client = rpInitialClient;
+    document.getElementById('rp-search').value = rpInitialClient;
     rpInitialClient = '';
   }
 
-  el.innerHTML = `
-    <div class="rp-header-bar">
-      <h2>報告書一覧</h2>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-secondary btn-sm" onclick="rpMarkAllRead()">全てを既読にする</button>
-        <button class="btn btn-primary btn-sm" onclick="openReportModal()">+ 新規報告書</button>
-      </div>
-    </div>
-
-    <div class="rp-tabs">
-      <button class="rp-tab active" data-rf="全て" onclick="rpSetReadFilter(this)">全て</button>
-      <button class="rp-tab" data-rf="未読" onclick="rpSetReadFilter(this)">未読</button>
-      <span class="rp-tab-sep">|</span>
-      <button class="rp-tab" onclick="rpExpandAll()">全て開く</button>
-      <button class="rp-tab" onclick="rpCollapseAll()">全て閉じる</button>
-      <span class="rp-tab-sep">|</span>
-      <span class="rp-view-label">表示：</span>
-      <button class="rp-tab active" data-tf="両方" onclick="rpSetTypeFilter(this)">両方</button>
-      <button class="rp-tab" data-tf="業務報告書" onclick="rpSetTypeFilter(this)">業務報告書</button>
-      <button class="rp-tab" data-tf="日報" onclick="rpSetTypeFilter(this)">日報</button>
-    </div>
-
-    <div class="rp-layout">
-      <div>
-        <div class="rp-list" id="rp-list-body"></div>
-        <div class="rp-pagination" id="rp-pagination"></div>
-      </div>
-      <div class="rp-search-panel">
-        <h4>検索</h4>
-        <div class="rp-search-group">
-          <label>種別：</label>
-          <select id="rp-s-category">
-            <option value="">すべて</option>
-            <option value="確定申告">確定申告</option>
-            <option value="決算業務">決算業務</option>
-            <option value="月次業務">月次業務</option>
-            <option value="その他">その他</option>
-            <option value="日報">日報</option>
-          </select>
-        </div>
-        <div class="rp-search-group">
-          <label>顧客：</label>
-          <input type="text" id="rp-s-client" placeholder="顧客名で検索...">
-        </div>
-        <div class="rp-search-group">
-          <label>作成者：</label>
-          <select id="rp-s-author">
-            <option value="">すべて</option>
-            ${buildUserOptions()}
-          </select>
-        </div>
-        <div class="rp-search-group">
-          <label>期間：</label>
-          <div class="rp-period-btns">
-            <button class="rp-period-btn active" data-p="1年以内" onclick="rpSetPeriod(this)">1年以内</button>
-            <button class="rp-period-btn" data-p="2年以内" onclick="rpSetPeriod(this)">2年以内</button>
-            <button class="rp-period-btn" data-p="全て" onclick="rpSetPeriod(this)">全て</button>
-          </div>
-          <div class="rp-date-range">
-            <input type="date" id="rp-s-from">
-            <span>～</span>
-            <input type="date" id="rp-s-to">
-          </div>
-        </div>
-        <div class="rp-search-group">
-          <label>ランク：</label>
-          <div class="rp-rank-btns" id="rp-rank-btns">
-            <button class="rp-rank-btn" data-rank="A" onclick="rpToggleRank(this)">A</button>
-            <button class="rp-rank-btn" data-rank="B" onclick="rpToggleRank(this)">B</button>
-            <button class="rp-rank-btn" data-rank="C" onclick="rpToggleRank(this)">C</button>
-            <button class="rp-rank-btn" data-rank="日報" onclick="rpToggleRank(this)">日報</button>
-          </div>
-        </div>
-        <div class="rp-search-group">
-          <label>オプション：</label>
-          <div class="rp-search-opts">
-            <label><input type="checkbox" id="rp-s-attach"> 添付ファイルのみ</label>
-            <label><input type="checkbox" id="rp-s-draft"> 一時保存中のみ</label>
-          </div>
-        </div>
-        <div class="rp-search-group">
-          <label>キーワード：</label>
-          <input type="text" id="rp-s-keyword" placeholder="キーワード検索...">
-        </div>
-        <div class="rp-search-actions">
-          <button class="btn btn-primary btn-sm" onclick="rpDoSearch()">検索</button>
-          <button class="btn btn-secondary btn-sm" onclick="rpClearSearch()">検索クリア</button>
-        </div>
-      </div>
-    </div>
-  `;
-  // 顧客フィルタが設定されている場合、検索欄に反映して期間を「全て」に
-  if (rpSearchState.client) {
-    document.getElementById('rp-s-client').value = rpSearchState.client;
-    rpSearchState.period = '全て';
-    document.querySelectorAll('.rp-period-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.p === '全て'); });
-  }
   rpRenderList();
+  bindFilters(['rp-search', 'rp-type-filter', 'rp-category-filter'], () => { rpPage = 1; rpRenderList(); });
 }
 
 function rpGetFiltered() {
   let reports = [...MOCK_DATA.reports];
-  // 既読フィルタ
-  if (rpReadFilter === '未読') reports = reports.filter(r => r.readStatus === '未読');
-  // タイプフィルタ
-  if (rpTypeFilter !== '両方') reports = reports.filter(r => r.type === rpTypeFilter);
-  // 検索条件
-  const s = rpSearchState;
-  if (s.category) reports = reports.filter(r => r.category === s.category);
-  if (s.client) reports = reports.filter(r => (r.clientName || '').includes(s.client));
-  if (s.author) reports = reports.filter(r => r.authorId === s.author);
-  if (s.ranks.length > 0) reports = reports.filter(r => s.ranks.includes(r.rank));
-  if (s.attachOnly) reports = reports.filter(r => r.hasAttachment);
-  if (s.draftOnly) reports = reports.filter(r => r.readStatus === '一時保存中');
-  if (s.keyword) {
-    const kw = s.keyword.toLowerCase();
-    reports = reports.filter(r => r.title.toLowerCase().includes(kw) || (r.clientName || '').toLowerCase().includes(kw));
-  }
-  if (s.dateFrom) reports = reports.filter(r => r.createdAt >= s.dateFrom);
-  if (s.dateTo) reports = reports.filter(r => r.createdAt <= s.dateTo + 'T23:59:59');
-  // 期間プリセット
-  if (s.period !== '全て' && !s.dateFrom && !s.dateTo) {
-    const now = new Date();
-    const years = s.period === '1年以内' ? 1 : 2;
-    const cutoff = new Date(now.getFullYear() - years, now.getMonth(), now.getDate()).toISOString();
-    reports = reports.filter(r => r.createdAt >= cutoff);
-  }
+  const search = (document.getElementById('rp-search')?.value || '').toLowerCase();
+  const typeFilter = document.getElementById('rp-type-filter')?.value || '';
+  const categoryFilter = document.getElementById('rp-category-filter')?.value || '';
+
+  if (search) reports = reports.filter(r => r.title.toLowerCase().includes(search) || (r.clientName || '').toLowerCase().includes(search));
+  if (typeFilter) reports = reports.filter(r => r.type === typeFilter);
+  if (categoryFilter) reports = reports.filter(r => r.category === categoryFilter);
+
   reports.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return reports;
 }
@@ -164,35 +73,43 @@ function rpRenderList() {
   const start = (rpPage - 1) * rpPerPage;
   const page = all.slice(start, start + rpPerPage);
 
-  const body = document.getElementById('rp-list-body');
+  const tbody = document.getElementById('rp-table-body');
   if (all.length === 0) {
-    body.innerHTML = renderEmptyState('該当する報告書がありません', '\ud83d\udcdd');
+    tbody.innerHTML = renderEmptyRow(8, '該当する報告書がありません');
   } else {
-    body.innerHTML = page.map(r => {
+    tbody.innerHTML = page.map(r => {
       const author = getUserById(r.authorId);
       const isUnread = r.readStatus === '未読';
-      const isDraft = r.readStatus === '一時保存中';
-      const badgeClass = isUnread ? 'rp-badge-unread' : isDraft ? 'rp-badge-draft' : 'rp-badge-read';
-      const badgeText = isUnread ? '未読' : isDraft ? '一時保存中' : '';
-      const isExpanded = rpExpandedSet.has(r.id);
-      return `<div class="rp-row ${isUnread ? 'unread' : ''}" onclick="rpClickReport('${r.id}')">
-        <span class="rp-row-date">${formatDate(r.createdAt)}</span>
-        <span class="rp-row-author">${escapeHtml(author?.name || '-')}</span>
-        <span class="rp-row-title">${r.hasAttachment ? '<span class="attach-icon">\ud83d\udcce</span>' : ''}${escapeHtml(r.title)}</span>
-        ${badgeText ? `<span class="rp-row-badge ${badgeClass}">${badgeText}</span>` : '<span></span>'}
-      </div>${isExpanded ? `<div class="rp-row-detail" style="padding:8px 16px 12px;font-size:13px;color:var(--gray-500);background:var(--gray-50);border-bottom:1px solid var(--gray-200);"><strong>タイトル：</strong>${escapeHtml(r.title)}<br><strong>種別：</strong>${escapeHtml(r.category || r.type || '-')}\u3000<strong>ランク：</strong>${escapeHtml(r.rank || '-')}\u3000<strong>顧客：</strong>${escapeHtml(r.clientName || '-')}</div>` : ''}`;
+      const unreadDot = isUnread ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);"></span>' : '';
+      const rowBg = isUnread ? ' style="background:rgba(37,99,235,0.04);"' : '';
+      const rankBadge = r.rank
+        ? `<span class="status-badge ${r.rank === 'A' ? 'status-done' : r.rank === 'B' ? 'status-todo' : 'status-outline'}" style="font-size:11px;">${r.rank}</span>`
+        : '-';
+      return `<tr class="clickable" onclick="rpClickReport('${r.id}')"${rowBg}>
+        <td style="text-align:center;">${unreadDot}</td>
+        <td><strong>${escapeHtml(r.title)}</strong></td>
+        <td>${escapeHtml(r.clientName || '-')}</td>
+        <td>${escapeHtml(author?.name || '-')}</td>
+        <td><span class="status-badge status-outline" style="font-size:11px;">${escapeHtml(r.type)}</span></td>
+        <td>${escapeHtml(r.category || '-')}</td>
+        <td>${rankBadge}</td>
+        <td>${formatDate(r.createdAt)}</td>
+      </tr>`;
     }).join('');
   }
 
   // ページネーション
   const pag = document.getElementById('rp-pagination');
-  pag.innerHTML = `
-    <button onclick="rpGoPage(1)" ${rpPage <= 1 ? 'disabled' : ''}>&laquo;最初</button>
-    <button onclick="rpGoPage(${rpPage - 1})" ${rpPage <= 1 ? 'disabled' : ''}>&lsaquo;前</button>
-    <span class="page-info">${rpPage} / ${totalPages}</span>
-    <button onclick="rpGoPage(${rpPage + 1})" ${rpPage >= totalPages ? 'disabled' : ''}>次&rsaquo;</button>
-    <button onclick="rpGoPage(${totalPages})" ${rpPage >= totalPages ? 'disabled' : ''}>最後&raquo;</button>
-  `;
+  if (all.length > rpPerPage) {
+    pag.innerHTML = `
+      <button onclick="rpGoPage(${rpPage - 1})" ${rpPage <= 1 ? 'disabled' : ''}>← 前</button>
+      <span class="page-info">${rpPage} / ${totalPages}</span>
+      <button onclick="rpGoPage(${rpPage + 1})" ${rpPage >= totalPages ? 'disabled' : ''}>次 →</button>
+      <span style="margin-left:8px;font-size:11px;">(全${all.length}件)</span>
+    `;
+  } else {
+    pag.innerHTML = '';
+  }
 }
 
 function rpGoPage(n) { rpPage = n; rpRenderList(); }

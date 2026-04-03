@@ -11,8 +11,6 @@ function getDeptName(deptId) {
 }
 
 function renderStaff(el) {
-  const deptOptions = MOCK_DATA.departments.filter(d => d.status === 1)
-    .map(d => `<option value="${d.deptId}">${d.deptName}</option>`).join('');
   const empTypes = [...new Set(MOCK_DATA.users.map(u => u.employmentType).filter(Boolean))];
   const empTypeOptions = empTypes.map(t => `<option value="${t}">${t}</option>`).join('');
 
@@ -22,12 +20,7 @@ function renderStaff(el) {
       <select class="filter-select" id="staff-role-filter">
         <option value="">全ロール</option>
         <option value="admin">管理者</option>
-        <option value="team_leader">チームリーダー</option>
         <option value="member">メンバー</option>
-      </select>
-      <select class="filter-select" id="staff-dept-filter">
-        <option value="">全部署</option>
-        ${deptOptions}
       </select>
       <select class="filter-select" id="staff-emptype-filter">
         <option value="">全雇用形態</option>
@@ -41,7 +34,7 @@ function renderStaff(el) {
     <div class="card">
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>コード</th><th>氏名</th><th>フリガナ</th><th>メール</th><th>CWID</th><th>部署</th><th>役職</th><th>雇用形態</th><th>ステータス</th></tr></thead>
+          <thead><tr><th>コード</th><th>氏名</th><th>メール</th><th>CW ID</th><th>役職</th><th>雇用形態</th><th>ロール</th><th>状態</th></tr></thead>
           <tbody id="staff-table-body"></tbody>
         </table>
       </div>
@@ -50,13 +43,12 @@ function renderStaff(el) {
   `;
   staffPage = 1;
   renderStaffTable();
-  bindFilters(['staff-search', 'staff-role-filter', 'staff-dept-filter', 'staff-emptype-filter'], () => { staffPage = 1; renderStaffTable(); });
+  bindFilters(['staff-search', 'staff-role-filter', 'staff-emptype-filter'], () => { staffPage = 1; renderStaffTable(); });
 }
 
 function getFilteredStaff() {
   const search = (document.getElementById('staff-search')?.value || '').toLowerCase();
   const roleFilter = document.getElementById('staff-role-filter')?.value || '';
-  const deptFilter = document.getElementById('staff-dept-filter')?.value || '';
   const empTypeFilter = document.getElementById('staff-emptype-filter')?.value || '';
 
   return MOCK_DATA.users.filter(u => {
@@ -65,8 +57,8 @@ function getFilteredStaff() {
       const fullName = ((u.lastName || '') + ' ' + (u.firstName || '')).toLowerCase();
       if (!u.name.toLowerCase().includes(search) && !u.staffCode.toLowerCase().includes(search) && !kana.includes(search) && !fullName.includes(search)) return false;
     }
-    if (roleFilter && u.role !== roleFilter) return false;
-    if (deptFilter && String(u.deptId) !== deptFilter) return false;
+    if (roleFilter === 'admin' && u.role !== 'admin') return false;
+    if (roleFilter === 'member' && u.role === 'admin') return false;
     if (empTypeFilter && u.employmentType !== empTypeFilter) return false;
     return true;
   });
@@ -82,24 +74,24 @@ function renderStaffTable() {
 
   renderTableBody('staff-table-body', pageItems, u => {
     const displayName = (u.lastName || '') + (u.firstName ? ' ' + u.firstName : '');
-    const displayKana = (u.lastNameKana || '') + (u.firstNameKana ? ' ' + u.firstNameKana : '');
+    const roleBadge = u.role === 'admin' ? '<span class="status-badge status-done" style="font-size:11px;">管理者</span>'
+      : '<span class="status-badge status-todo" style="font-size:11px;">メンバー</span>';
     return `
     <tr class="clickable" onclick="navigateTo('staff-detail',{id:'${u.id}'})">
-      <td>${u.staffCode || '-'}</td>
+      <td style="font-family:monospace;font-size:12px;">${u.staffCode || '-'}</td>
       <td><strong>${displayName || u.name}</strong></td>
-      <td>${displayKana || '-'}</td>
       <td>${u.email || '-'}</td>
       <td>${u.cwAccountId || '-'}</td>
-      <td>${getDeptName(u.deptId)}</td>
       <td>${u.position || '-'}</td>
       <td>${u.employmentType || '-'}</td>
+      <td>${roleBadge}</td>
       <td>
         <button class="btn btn-sm ${u.isActive ? 'btn-secondary' : 'btn-primary'}" onclick="event.stopPropagation();toggleStaffActive('${u.id}')" style="font-size:11px;padding:3px 8px;">
-          ${u.isActive ? '有効 \u2713' : '無効'}
+          ${u.isActive ? '有効 ✓' : '無効'}
         </button>
       </td>
     </tr>`;
-  }, 9);
+  }, 8);
 
   const pag = document.getElementById('staff-pagination');
   if (pag && total > staffPerPage) {

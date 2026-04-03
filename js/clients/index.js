@@ -11,13 +11,13 @@ const CLIENT_COLUMNS = [
   { key: 'type', label: '種別', visible: true },
   { key: 'fiscal', label: '決算月', visible: true },
   { key: 'main', label: '主担当', visible: true },
-  { key: 'sales', label: '売上（税抜）', visible: true },
-  { key: 'status', label: '状態', visible: true },
+  { key: 'sub', label: '副担当', visible: true },
+  { key: 'mgr', label: '税理士', visible: true },
+  { key: 'bookkeeper', label: '記帳担当', visible: true },
+  { key: 'status', label: 'ステータス', visible: true },
 ];
 
 function renderClients(el) {
-  const fiscalOpts = Array.from({length: 12}, (_, i) => `<option value="${i+1}">${i+1}月</option>`).join('');
-
   el.innerHTML = `
     <div class="toolbar" style="flex-wrap:wrap;gap:8px;">
       <input type="text" class="search-input" placeholder="顧客名・コードで検索..." id="client-search">
@@ -27,17 +27,30 @@ function renderClients(el) {
         <option value="個人">個人</option>
       </select>
       <select class="filter-select" id="client-status-filter">
-        <option value="active" selected>有効</option>
+        <option value="契約中" selected>契約中</option>
         <option value="">全ステータス</option>
-        <option value="inactive">無効</option>
+        <optgroup label="契約中">
+          <option value="契約完了">契約完了</option>
+          <option value="契約書手続中">契約書手続中</option>
+          <option value="スポット依頼">スポット依頼</option>
+        </optgroup>
+        <optgroup label="検討中">
+          <option value="見込み">見込み</option>
+          <option value="顧問契約検討中">顧問契約検討中</option>
+          <option value="チャット作成済">チャット作成済</option>
+          <option value="Zoom">Zoom</option>
+          <option value="初回メール送信済">初回メール送信済</option>
+          <option value="コンタクト送信済">コンタクト送信済</option>
+        </optgroup>
+        <optgroup label="終了・休止">
+          <option value="契約解除">契約解除</option>
+          <option value="休止中">休止中</option>
+          <option value="失注">失注</option>
+        </optgroup>
       </select>
       <select class="filter-select" id="client-main-filter">
         <option value="">全担当者</option>
         ${buildUserOptions()}
-      </select>
-      <select class="filter-select" id="client-fiscal-filter">
-        <option value="">全決算月</option>
-        ${fiscalOpts}
       </select>
       <div class="spacer"></div>
       <div style="position:relative;">
@@ -72,7 +85,7 @@ function renderClients(el) {
     if (mainSel) mainSel.value = MOCK_DATA.currentUser.id;
   }
   renderClientTable();
-  bindFilters(['client-search', 'client-type-filter', 'client-status-filter', 'client-main-filter', 'client-fiscal-filter'], () => { clientPage = 1; renderClientTable(); });
+  bindFilters(['client-search', 'client-type-filter', 'client-status-filter', 'client-main-filter'], () => { clientPage = 1; renderClientTable(); });
 
   // 列表示トグル
   const toggleBtn = document.getElementById('client-col-toggle-btn');
@@ -95,20 +108,30 @@ function renderClients(el) {
   });
 }
 
+// 契約ステータスのグループ定義
+const CONTRACT_STATUS_GROUPS = {
+  '契約中': ['契約中', '契約完了', '契約書手続中', 'スポット依頼'],
+};
+
 function getFilteredClients() {
   const search = (document.getElementById('client-search')?.value || '').toLowerCase();
   const typeFilter = document.getElementById('client-type-filter')?.value || '';
   const statusFilter = document.getElementById('client-status-filter')?.value || '';
   const mainFilter = document.getElementById('client-main-filter')?.value || '';
-  const fiscalFilter = document.getElementById('client-fiscal-filter')?.value || '';
 
   return MOCK_DATA.clients.filter(c => {
     if (search && !c.name.toLowerCase().includes(search) && !c.clientCode.includes(search)) return false;
     if (typeFilter && c.clientType !== typeFilter) return false;
-    if (statusFilter === 'active' && !c.isActive) return false;
-    if (statusFilter === 'inactive' && c.isActive) return false;
+    if (statusFilter) {
+      const cs = c.contractStatus || '契約中';
+      const group = CONTRACT_STATUS_GROUPS[statusFilter];
+      if (group) {
+        if (!group.includes(cs)) return false;
+      } else {
+        if (cs !== statusFilter) return false;
+      }
+    }
     if (mainFilter && c.mainUserId !== mainFilter) return false;
-    if (fiscalFilter && String(c.fiscalMonth) !== fiscalFilter) return false;
     return true;
   });
 }
@@ -122,13 +145,15 @@ function renderClientTable() {
   if (thead) thead.innerHTML = visibleCols.map(c => `<th>${c.label}</th>`).join('');
 
   const colMap = {
-    code: c => `<td>${c.clientCode}</td>`,
+    code: c => `<td style="font-family:monospace;font-size:12px;">${c.clientCode}</td>`,
     name: c => `<td><strong>${c.name}</strong></td>`,
     type: c => `<td>${renderTypeBadge(c.clientType)}</td>`,
-    fiscal: c => `<td>${c.fiscalMonth}月</td>`,
+    fiscal: c => `<td>${c.fiscalMonth ? c.fiscalMonth + '月' : '-'}</td>`,
     main: c => { const m = getUserById(c.mainUserId); return `<td>${m?.name || '-'}</td>`; },
-    sales: c => `<td>${c.monthlySales.toLocaleString()}円</td>`,
-    status: c => `<td>${c.isActive ? '<span style="color:var(--success)">有効</span>' : '<span style="color:var(--gray-400)">無効</span>'}</td>`,
+    sub: c => { const s = getUserById(c.subUserId); return `<td>${s?.name || '-'}</td>`; },
+    mgr: c => { const m = getUserById(c.mgrUserId); return `<td>${m?.name || '-'}</td>`; },
+    bookkeeper: c => { const b = getUserById(c.bookkeeperId); return `<td>${b?.name || '-'}</td>`; },
+    status: c => { const cs = c.contractStatus || '契約中'; return `<td>${renderContractStatusBadge(cs)}</td>`; },
   };
 
   const total = clients.length;

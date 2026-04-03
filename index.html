@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>リベ大税理士法人 業務管理システム</title>
-  <link rel="stylesheet" href="css/style.css?v=20260331a">
+  <link rel="stylesheet" href="css/style.css?v=20260403a">
 </head>
 <body>
 
@@ -46,6 +46,7 @@
       <a href="#" data-page="dashboard"><span class="nav-icon">&#x1f4ca;</span>ダッシュボード</a>
       <a href="#" data-page="tasks"><span class="nav-icon">&#x2705;</span>タスク一覧</a>
       <a href="#" data-page="progress"><span class="nav-icon">&#x1f4cb;</span>進捗管理表</a>
+      <a href="#" data-page="templates"><span class="nav-icon">&#x1f4c4;</span>タスクテンプレート</a>
 
       <div class="nav-section">管理</div>
       <a href="#" data-page="clients"><span class="nav-icon">&#x1f465;</span>顧客一覧</a>
@@ -53,21 +54,24 @@
       <a href="#" data-page="timesheet"><span class="nav-icon">&#x23f1;</span>工数管理</a>
       <a href="#" data-page="reports"><span class="nav-icon">&#x1f4dd;</span>報告書</a>
       <a href="#" data-page="calendar"><span class="nav-icon">&#x1f4c5;</span>カレンダー</a>
-      <a href="#" data-page="templates"><span class="nav-icon">&#x1f4c4;</span>テンプレート</a>
       <a href="#" data-page="archive"><span class="nav-icon">&#x1f4e6;</span>アーカイブ</a>
 
       <div class="nav-section">報酬</div>
       <a href="#" data-page="rewards"><span class="nav-icon">&#x1f4b0;</span>報酬管理</a>
 
-      <div class="nav-section">ツール</div>
-      <a href="#" data-page="chatrooms"><span class="nav-icon">&#x1f4ac;</span>チャットマスタ</a>
-      <a href="#" data-page="integrations"><span class="nav-icon">&#x1f517;</span>外部連携</a>
-      <a href="#" data-page="ai"><span class="nav-icon">&#x1f916;</span>AIアシスタント</a>
-      <a href="#" data-page="automation"><span class="nav-icon">&#x2699;</span>自動化設定</a>
-      <a href="#" data-page="views"><span class="nav-icon">&#x1f4d0;</span>ビュー管理</a>
-      <a href="#" data-page="links"><span class="nav-icon">&#x1f310;</span>リンク集</a>
-      <a href="#" data-page="summary"><span class="nav-icon">&#x1f4c8;</span>集計</a>
-      <a href="#" data-page="settings"><span class="nav-icon">&#x1f527;</span>マイ設定</a>
+      <div class="nav-section nav-section-collapsible" id="tools-section-header">
+        <span class="nav-section-toggle">&#x25B6;</span>ツール
+      </div>
+      <div class="nav-section-body collapsed" id="tools-section-body">
+        <a href="#" data-page="chatrooms"><span class="nav-icon">&#x1f4ac;</span>チャットマスタ</a>
+        <a href="#" data-page="integrations"><span class="nav-icon">&#x1f517;</span>外部連携</a>
+        <a href="#" data-page="ai"><span class="nav-icon">&#x1f916;</span>AIアシスタント</a>
+        <a href="#" data-page="automation"><span class="nav-icon">&#x2699;</span>自動化設定</a>
+        <a href="#" data-page="views"><span class="nav-icon">&#x1f4d0;</span>ビュー管理</a>
+        <a href="#" data-page="links"><span class="nav-icon">&#x1f310;</span>リンク集</a>
+        <a href="#" data-page="summary"><span class="nav-icon">&#x1f4c8;</span>集計</a>
+        <a href="#" data-page="settings"><span class="nav-icon">&#x1f527;</span>マイ設定</a>
+      </div>
 
       <div class="nav-section">管理者</div>
       <a href="#" data-page="import-export"><span class="nav-icon">&#x1f4e5;</span>インポート/エクスポート</a>

@@ -27,7 +27,7 @@ function renderTasks(el) {
     <div class="card">
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>顧客名</th><th>タスク名</th><th>担当者</th><th>期限</th><th>状態</th></tr></thead>
+          <thead><tr><th>タスク名</th><th>顧客名</th><th>担当者</th><th>ステータス</th><th>期限日</th></tr></thead>
           <tbody id="task-table-body"></tbody>
         </table>
       </div>
@@ -78,11 +78,11 @@ function renderTaskTable() {
     const client = getClientById(t.clientId);
     const assignee = getUserById(t.assigneeUserId);
     return `<tr class="clickable" onclick="navigateTo('task-detail',{id:'${t.id}'})">
+      <td><strong>${escapeHtml(t.title)}</strong></td>
       <td>${client?.name || '-'}</td>
-      <td><strong>${t.title}</strong></td>
       <td>${assignee?.name || '-'}</td>
-      <td>${formatDate(t.dueDate)}</td>
       <td onclick="event.stopPropagation()">${renderTaskStatusSelect(t)}</td>
+      <td>${formatDate(t.dueDate)}</td>
     </tr>`;
   }, 5);
 
