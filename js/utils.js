@@ -111,6 +111,15 @@ function renderEmptyRow(colspan, message) {
   return `<tr><td colspan="${colspan}" style="text-align:center;color:var(--gray-400);padding:24px;">${message || '該当するデータがありません'}</td></tr>`;
 }
 
+// ステータス値 → CSSクラス変換
+function getStatusClass(status) {
+  if (status === '未着手') return 'status-todo';
+  if (status === '進行中') return 'status-progress';
+  if (status === '完了') return 'status-done';
+  if (status === '差戻し') return 'status-returned';
+  return 'status-outline';
+}
+
 // ステータスバッジHTML
 function renderStatusBadge(status) {
   return `<span class="status-badge ${getStatusClass(status)}">${status}</span>`;
