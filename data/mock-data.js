@@ -481,10 +481,6 @@ function getRoleBadge(role) {
   return map[role] || role;
 }
 
-function getStatusClass(status) {
-  const map = { '未着手': 'status-todo', '進行中': 'status-progress', '完了': 'status-done', '差戻し': 'status-returned' };
-  return map[status] || '';
-}
 
 function formatDate(iso) {
   if (!iso) return '-';
