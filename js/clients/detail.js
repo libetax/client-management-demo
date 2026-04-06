@@ -169,7 +169,8 @@ function renderClientDetail(el, params) {
 
         <div id="ctab-basic">
           <div class="detail-section-title">基本情報</div>
-          <div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${editing ? inp('ed-clientCode', c?.clientCode, 'text', '例: 030450') : val(c?.clientCode)}</div></div>
+          <div class="detail-row"><div class="detail-label">管理コード</div><div class="detail-value">${editing ? inp('ed-clientCode', c?.clientCode, 'text', '例: 030450') : val(c?.clientCode)}</div></div>
+          <div class="detail-row"><div class="detail-label">顧客コード</div><div class="detail-value">${editing ? inp('ed-displayCode', c?.displayCode, 'text', '例: 001') : val(c?.displayCode)}</div></div>
           <div class="detail-row"><div class="detail-label">契約ステータス</div><div class="detail-value">${editing ? `<select id="ed-contractStatus" class="inline-edit-input">${contractStatusOptions}</select>` : val(c?.contractStatus, '未設定')}</div></div>
           <div class="detail-row"><div class="detail-label">顧客名</div><div class="detail-value">${editing ? inp('ed-name', c?.name, 'text', '例: 株式会社サンプル商事') : val(c.name)}</div></div>
           <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value">${editing ? `<select id="ed-type" class="inline-edit-input"><option value="法人">法人</option><option value="個人">個人</option></select>` : renderTypeBadge(c.clientType)}</div></div>
@@ -217,11 +218,18 @@ function renderClientDetail(el, params) {
           <div class="detail-row"><div class="detail-label">管理表No</div><div class="detail-value">${editing ? inp('ed-managementNo', c?.managementNo, 'text', '例: M-0450') : val(c?.managementNo)}</div></div>
           <div class="detail-row"><div class="detail-label">MF事業者番号</div><div class="detail-value">${editing ? inp('ed-mfBusinessNo', c?.mfBusinessNo, 'text', '例: MF-001234') : val(c?.mfBusinessNo)}</div></div>
           <div class="detail-row"><div class="detail-label">e-Tax利用者識別番号</div><div class="detail-value">${editing ? inp('ed-etaxId', c?.etaxId, 'text', '例: 0012345678901234') : val(c?.etaxId)}</div></div>
-          <div class="detail-row"><div class="detail-label">e-Taxパスワード</div><div class="detail-value">${editing ? inp('ed-etaxPassword', c?.etaxPassword, 'text', 'パスワードを入力') : (c?.etaxPassword ? '••••••••' : '-')}</div></div>
+          <div class="detail-row"><div class="detail-label">e-Taxパスワード</div><div class="detail-value">${editing ? '<div style="display:flex;align-items:center;gap:4px;"><input type="password" id="ed-etaxPassword" class="inline-edit-input" value="' + escapeHtml(c?.etaxPassword || '') + '" placeholder="パスワードを入力" style="flex:1;"><button type="button" class="btn btn-ghost btn-xs" onclick="togglePasswordField(\'ed-etaxPassword\', this)" title="表示切替">👁</button></div>' : (c?.etaxPassword ? '<span style="display:inline-flex;align-items:center;gap:6px;"><span class="pw-mask" data-pw="' + escapeHtml(c.etaxPassword) + '">••••••••</span><button type="button" class="btn btn-ghost btn-xs" onclick="togglePasswordMask(this)" title="表示切替">👁</button></span>' : '-')}</div></div>
           <div class="detail-row"><div class="detail-label">eLTAX利用者ID</div><div class="detail-value">${editing ? inp('ed-eltaxId', c?.eltaxId, 'text', '例: LT001234') : val(c?.eltaxId)}</div></div>
-          <div class="detail-row"><div class="detail-label">eLTAXパスワード</div><div class="detail-value">${editing ? inp('ed-eltaxPassword', c?.eltaxPassword, 'text', 'パスワードを入力') : (c?.eltaxPassword ? '••••••••' : '-')}</div></div>
+          <div class="detail-row"><div class="detail-label">eLTAXパスワード</div><div class="detail-value">${editing ? '<div style="display:flex;align-items:center;gap:4px;"><input type="password" id="ed-eltaxPassword" class="inline-edit-input" value="' + escapeHtml(c?.eltaxPassword || '') + '" placeholder="パスワードを入力" style="flex:1;"><button type="button" class="btn btn-ghost btn-xs" onclick="togglePasswordField(\'ed-eltaxPassword\', this)" title="表示切替">👁</button></div>' : (c?.eltaxPassword ? '<span style="display:inline-flex;align-items:center;gap:6px;"><span class="pw-mask" data-pw="' + escapeHtml(c.eltaxPassword) + '">••••••••</span><button type="button" class="btn btn-ghost btn-xs" onclick="togglePasswordMask(this)" title="表示切替">👁</button></span>' : '-')}</div></div>
           <div class="detail-row"><div class="detail-label">委任登録</div><div class="detail-value">${editing ? `<select id="ed-delegationStatus" class="inline-edit-input"><option value="登録済み" ${c?.delegationStatus === '登録済み' ? 'selected' : ''}>登録済み</option><option value="未登録" ${c?.delegationStatus === '未登録' || !c?.delegationStatus ? 'selected' : ''}>未登録</option></select>` : val(c?.delegationStatus)}</div></div>
           <div class="detail-row"><div class="detail-label">日税登録</div><div class="detail-value">${editing ? `<select id="ed-nichizeiRegistration" class="inline-edit-input"><option value="登録確認済" ${c?.nichizeiRegistration === '登録確認済' ? 'selected' : ''}>登録確認済</option><option value="要登録" ${c?.nichizeiRegistration === '要登録' || !c?.nichizeiRegistration ? 'selected' : ''}>要登録</option></select>` : val(c?.nichizeiRegistration)}</div></div>
+
+          <div class="detail-section-title">申告・法人情報</div>
+          <div class="detail-row"><div class="detail-label">資本金</div><div class="detail-value">${editing ? inp('ed-capitalAmount', c?.capitalAmount, 'number', '例: 10000000') : (c?.capitalAmount ? Number(c.capitalAmount).toLocaleString() + '円' : val(''))}</div></div>
+          <div class="detail-row"><div class="detail-label">法人番号</div><div class="detail-value">${editing ? inp('ed-corporateNumber', c?.corporateNumber, 'text', '13桁の法人番号') : val(c?.corporateNumber)}</div></div>
+          <div class="detail-row"><div class="detail-label">申告区分</div><div class="detail-value">${editing ? `<select id="ed-filingType" class="inline-edit-input"><option value="">未設定</option><option value="青色" ${c?.filingType === '青色' ? 'selected' : ''}>青色</option><option value="白色" ${c?.filingType === '白色' ? 'selected' : ''}>白色</option></select>` : val(c?.filingType)}</div></div>
+          <div class="detail-row"><div class="detail-label">年末調整</div><div class="detail-value">${editing ? `<select id="ed-yearEndAdjustment" class="inline-edit-input"><option value="true" ${c?.yearEndAdjustment ? 'selected' : ''}>対応あり</option><option value="false" ${!c?.yearEndAdjustment ? 'selected' : ''}>対応なし</option></select>` : (c?.yearEndAdjustment ? '<span style="color:var(--success)">対応あり</span>' : '<span style="color:var(--gray-400)">対応なし</span>')}</div></div>
+          <div class="detail-row"><div class="detail-label">中間申告</div><div class="detail-value">${editing ? `<select id="ed-interimFiling" class="inline-edit-input"><option value="なし" ${c?.interimFiling === 'なし' || !c?.interimFiling ? 'selected' : ''}>なし</option><option value="法人税のみ" ${c?.interimFiling === '法人税のみ' ? 'selected' : ''}>法人税のみ</option><option value="法人税+消費税" ${c?.interimFiling === '法人税+消費税' ? 'selected' : ''}>法人税+消費税</option><option value="消費税のみ" ${c?.interimFiling === '消費税のみ' ? 'selected' : ''}>消費税のみ</option></select>` : val(c?.interimFiling)}</div></div>
 
           <div class="detail-section-title">納付情報</div>
           <div class="detail-row"><div class="detail-label">ダイレクト納付</div><div class="detail-value">${editing ? `<select id="ed-directDebit" class="inline-edit-input"><option value="true" ${c?.paymentInfo?.directDebit ? 'selected' : ''}>設定済み</option><option value="false" ${!c?.paymentInfo?.directDebit ? 'selected' : ''}>未設定</option></select>` : (c?.paymentInfo?.directDebit ? '<span style="color:var(--success)">設定済み</span>' : '<span style="color:var(--gray-400)">未設定</span>')}</div></div>
@@ -394,6 +402,12 @@ function saveClientInline(id) {
   const mfBusinessNo = getValTrim('ed-mfBusinessNo');
   const delegationStatus = getVal('ed-delegationStatus', '');
   const nichizeiRegistration = getVal('ed-nichizeiRegistration', '');
+  const displayCode = getValTrim('ed-displayCode');
+  const capitalAmount = getValInt('ed-capitalAmount', 0) || null;
+  const corporateNumber = getValTrim('ed-corporateNumber');
+  const filingType = getVal('ed-filingType', '');
+  const yearEndAdjustment = getVal('ed-yearEndAdjustment', 'false') === 'true';
+  const interimFiling = getVal('ed-interimFiling', 'なし');
   const paymentInfo = {
     directDebit: getVal('ed-directDebit', 'false') === 'true',
     transferAccount: getValTrim('ed-transferAccount'),
@@ -423,6 +437,7 @@ function saveClientInline(id) {
       postalCode, consumptionTaxCategory, invoiceRegistered, monthlyBookkeepingFee,
       bookkeepingStartDate, bookkeepingEndDate, bookkeeperId, bookkeepingSubId,
       mfBusinessNo, delegationStatus, nichizeiRegistration,
+      displayCode, capitalAmount, corporateNumber, filingType, yearEndAdjustment, interimFiling,
     });
     clientEditMode = false;
     navigateTo('client-detail', { id: newId });
@@ -448,6 +463,8 @@ function saveClientInline(id) {
       c.bookkeepingStartDate = bookkeepingStartDate; c.bookkeepingEndDate = bookkeepingEndDate;
       c.bookkeeperId = bookkeeperId; c.bookkeepingSubId = bookkeepingSubId;
       c.mfBusinessNo = mfBusinessNo; c.delegationStatus = delegationStatus; c.nichizeiRegistration = nichizeiRegistration;
+      c.displayCode = displayCode; c.capitalAmount = capitalAmount; c.corporateNumber = corporateNumber;
+      c.filingType = filingType; c.yearEndAdjustment = yearEndAdjustment; c.interimFiling = interimFiling;
     }
     clientEditMode = false;
     navigateTo('client-detail', { id });

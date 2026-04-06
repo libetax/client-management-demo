@@ -339,3 +339,33 @@ function runCSVImport(processRow, onComplete) {
   };
   input.click();
 }
+
+// パスワードマスク切り替え（閲覧モード）
+function togglePasswordMask(btn) {
+  var span = btn.parentElement.querySelector('.pw-mask');
+  if (!span) return;
+  if (span.textContent === '••••••••') {
+    span.textContent = span.getAttribute('data-pw') || '';
+    btn.textContent = '🔒';
+    btn.title = 'マスクする';
+  } else {
+    span.textContent = '••••••••';
+    btn.textContent = '👁';
+    btn.title = '表示切替';
+  }
+}
+
+// パスワードフィールド切り替え（編集モード）
+function togglePasswordField(inputId, btn) {
+  var field = document.getElementById(inputId);
+  if (!field) return;
+  if (field.type === 'password') {
+    field.type = 'text';
+    btn.textContent = '🔒';
+    btn.title = 'マスクする';
+  } else {
+    field.type = 'password';
+    btn.textContent = '👁';
+    btn.title = '表示切替';
+  }
+}
