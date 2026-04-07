@@ -445,7 +445,10 @@ function togglePasswordMask(btn) {
   var span = btn.parentElement.querySelector('.pw-mask');
   if (!span) return;
   if (span.textContent === '••••••••') {
-    span.textContent = span.getAttribute('data-pw') || '';
+    var cid = span.getAttribute('data-cid');
+    var field = span.getAttribute('data-field');
+    var client = cid && field ? MOCK_DATA.clients.find(function(c) { return c.id === cid; }) : null;
+    span.textContent = (client ? client[field] : '') || '';
     btn.textContent = '🔒';
     btn.title = 'マスクする';
   } else {
