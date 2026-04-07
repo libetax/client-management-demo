@@ -182,9 +182,16 @@ function formatDateTime(iso) {
 
 // ── UI共通ヘルパー ──
 
-// ID生成
+// ID生成（削除後の重複を防ぐため最大ID+1方式）
 function generateId(prefix, collection) {
-  return prefix + String(collection.length + 1).padStart(3, '0');
+  let max = 0;
+  collection.forEach(function(item) {
+    if (item.id && item.id.startsWith(prefix)) {
+      var num = parseInt(item.id.slice(prefix.length), 10);
+      if (num > max) max = num;
+    }
+  });
+  return prefix + String(max + 1).padStart(3, '0');
 }
 
 // 空状態表示
