@@ -38,8 +38,6 @@ function openProgressSettingsModal(sheetId) {
   showModal('progress-settings-modal');
 }
 
-function closeProgressSettingsModal() { hideModal('progress-settings-modal'); }
-
 // 工程リスト描画
 function pgRenderColumnsList(sheetId) {
   const s = MOCK_DATA.progressSheets.find(x => x.id === sheetId);
@@ -238,7 +236,7 @@ function submitEditProgress() {
     });
   }
 
-  closeProgressSettingsModal();
+  hideModal('progress-settings-modal');
   if (currentPage === 'progress') navigateTo('progress');
   else if (currentPage === 'progress-detail') navigateTo('progress-detail', { id });
 }

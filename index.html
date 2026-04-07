@@ -116,7 +116,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>新規タスク作成</h3>
-      <button class="btn-icon" onclick="closeTaskModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('task-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -144,7 +144,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeTaskModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('task-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewTask()">作成</button>
     </div>
   </div>
@@ -155,7 +155,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>新規顧客登録</h3>
-      <button class="btn-icon" onclick="closeClientModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('client-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -239,7 +239,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeClientModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('client-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewClient()">登録</button>
     </div>
   </div>
@@ -250,7 +250,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>新規職員登録</h3>
-      <button class="btn-icon" onclick="closeStaffModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('staff-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -351,7 +351,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeStaffModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('staff-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewStaff()">登録</button>
     </div>
   </div>
@@ -362,7 +362,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>タスク編集</h3>
-      <button class="btn-icon" onclick="closeTaskEditModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('task-edit-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-task-id">
@@ -392,7 +392,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" onclick="deleteTask()" style="margin-right:auto">削除</button>
-      <button class="btn btn-secondary" onclick="closeTaskEditModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('task-edit-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitEditTask()">保存</button>
     </div>
   </div>
@@ -403,7 +403,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>工数入力</h3>
-      <button class="btn-icon" onclick="closeTimesheetModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('timesheet-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -432,7 +432,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeTimesheetModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('timesheet-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewTimeEntry()">登録</button>
     </div>
   </div>
@@ -443,7 +443,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>新規報告書作成</h3>
-      <button class="btn-icon" onclick="closeReportModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('report-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -505,7 +505,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeReportModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('report-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewReport()">作成</button>
     </div>
   </div>
@@ -541,7 +541,7 @@
   <div class="modal" style="width:720px;max-width:95vw;">
     <div class="modal-header">
       <h3 id="pg-modal-title">進捗管理表の作成</h3>
-      <button class="btn-icon" onclick="closeProgressCreateModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('progress-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <!-- ステップインジケーター -->
@@ -703,7 +703,7 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" id="pg-btn-back" onclick="pgStepBack()" style="display:none;">戻る</button>
       <div style="flex:1;"></div>
-      <button class="btn btn-secondary" onclick="closeProgressCreateModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('progress-create-modal')">キャンセル</button>
       <button class="btn btn-primary" id="pg-btn-next" onclick="pgStepNext()">次へ</button>
       <button class="btn btn-primary" id="pg-btn-create" onclick="submitNewProgress()" style="display:none;">作成</button>
     </div>
@@ -715,7 +715,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>進捗管理表 設定変更</h3>
-      <button class="btn-icon" onclick="closeProgressSettingsModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('progress-settings-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-pg-id">
@@ -841,7 +841,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary btn-sm" onclick="saveAsProgressTemplate()" style="margin-right:auto;">テンプレートとして保存</button>
-      <button class="btn btn-secondary" onclick="closeProgressSettingsModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('progress-settings-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitEditProgress()">保存</button>
     </div>
   </div>
@@ -969,7 +969,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <h3>イベント追加</h3>
-      <button class="btn-icon" onclick="closeEventModal()">&times;</button>
+      <button class="btn-icon" onclick="hideModal('event-create-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
@@ -1020,7 +1020,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeEventModal()">キャンセル</button>
+      <button class="btn btn-secondary" onclick="hideModal('event-create-modal')">キャンセル</button>
       <button class="btn btn-primary" onclick="submitNewEvent()">作成</button>
     </div>
   </div>

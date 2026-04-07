@@ -39,8 +39,6 @@ function openProgressCreateModal() {
   showModal('progress-create-modal');
 }
 
-function closeProgressCreateModal() { hideModal('progress-create-modal'); }
-
 function renderProgressTemplateList() {
   const templates = MOCK_DATA.progressTemplates || [];
   const presets = templates.filter(t => !t.isCustom);
@@ -337,7 +335,7 @@ function submitNewProgress() {
     showReportLink: showReportLink,
   });
 
-  closeProgressCreateModal();
+  hideModal('progress-create-modal');
   if (currentPage === 'progress') navigateTo('progress');
   else alert('進捗管理表「' + name + '」を作成しました');
 }

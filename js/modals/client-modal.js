@@ -72,8 +72,6 @@ function openClientModal(clientId) {
   showModal('client-create-modal');
 }
 
-function closeClientModal() { hideModal('client-create-modal'); }
-
 function submitNewClient() {
   const name = getValTrim('new-client-name');
   const clientType = getVal('new-client-type');
@@ -114,7 +112,7 @@ function submitNewClient() {
       upsertAssignment(editingClientId, 'bookkeeping_main', bookkeeperId);
       upsertAssignment(editingClientId, 'bookkeeping_sub', bookkeepingSubId);
     }
-    closeClientModal();
+    hideModal('client-create-modal');
     navigateTo('client-detail', { id: editingClientId });
     editingClientId = null;
   } else {
@@ -137,7 +135,7 @@ function submitNewClient() {
     if (bookkeeperId) upsertAssignment(newId, 'bookkeeping_main', bookkeeperId);
     if (bookkeepingSubId) upsertAssignment(newId, 'bookkeeping_sub', bookkeepingSubId);
 
-    closeClientModal();
+    hideModal('client-create-modal');
     if (currentPage === 'clients') navigateTo('clients');
     else navigateTo('client-detail', { id: newId });
   }

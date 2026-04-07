@@ -29,8 +29,6 @@ function openTimesheetModal(entryId) {
   showModal('timesheet-create-modal');
 }
 
-function closeTimesheetModal() { hideModal('timesheet-create-modal'); }
-
 function submitNewTimeEntry() {
   const userId = getVal('new-ts-user');
   const clientId = getVal('new-ts-client');
@@ -47,14 +45,14 @@ function submitNewTimeEntry() {
       Object.assign(entry, { userId, clientId, date, hours, description });
     }
     editingTimesheetId = null;
-    closeTimesheetModal();
+    hideModal('timesheet-create-modal');
     if (currentPage === 'timesheet') navigateTo('timesheet');
   } else {
     MOCK_DATA.timeEntries.push({
       id: generateId('te-', MOCK_DATA.timeEntries),
       userId, clientId, taskId: null, date, hours, description,
     });
-    closeTimesheetModal();
+    hideModal('timesheet-create-modal');
     if (currentPage === 'timesheet') navigateTo('timesheet');
     else alert('工数を登録しました');
   }
@@ -98,8 +96,6 @@ function openReportModal() {
   showModal('report-create-modal');
 }
 
-function closeReportModal() { hideModal('report-create-modal'); }
-
 function applyReportTemplate() {
   const tplId = getVal('new-rp-template');
   if (!tplId) return;
@@ -138,7 +134,7 @@ function submitNewReport() {
     authorId: MOCK_DATA.currentUser.id, type, category,
     clientName, title, rank, readStatus: '一時保存中', hasAttachment, body,
   });
-  closeReportModal();
+  hideModal('report-create-modal');
   if (currentPage === 'reports') navigateTo('reports');
   else alert(`報告書「${title}」を作成しました`);
 }

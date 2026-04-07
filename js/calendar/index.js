@@ -421,8 +421,6 @@ function openEventModal() {
   showModal('event-create-modal');
 }
 
-function closeEventModal() { hideModal('event-create-modal'); }
-
 function submitNewEvent() {
   const title = getValTrim('new-ev-title');
   const date = getVal('new-ev-date');
@@ -439,7 +437,7 @@ function submitNewEvent() {
     clientId: getVal('new-ev-client') || null,
     location: getValTrim('new-ev-location') || null,
   });
-  closeEventModal();
+  hideModal('event-create-modal');
   navigateTo('calendar');
 }
 

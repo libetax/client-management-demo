@@ -50,8 +50,6 @@ function openStaffModal(staffId) {
   showModal('staff-create-modal');
 }
 
-function closeStaffModal() { hideModal('staff-create-modal'); }
-
 function submitNewStaff() {
   const lastName = getValTrim('new-staff-lastName');
   const firstName = getValTrim('new-staff-firstName');
@@ -85,7 +83,7 @@ function submitNewStaff() {
         name, email, tel, mobile, deptId, position, employmentType,
         joinDate, role, staffFlag, memo, cwAccountId, photoUrl, libeProfileUrl, selfIntro, loginId: email.split('@')[0] });
     }
-    closeStaffModal();
+    hideModal('staff-create-modal');
     navigateTo('staff-detail', { id: editingStaffId });
     editingStaffId = null;
   } else {
@@ -100,7 +98,7 @@ function submitNewStaff() {
       baseRatio: null, staffFlag,
     });
 
-    closeStaffModal();
+    hideModal('staff-create-modal');
     if (currentPage === 'staff') navigateTo('staff');
     else alert(`職員「${name}」を登録しました`);
   }

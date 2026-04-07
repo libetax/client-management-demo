@@ -11,8 +11,6 @@ function openTaskModal() {
   showModal('task-create-modal');
 }
 
-function closeTaskModal() { hideModal('task-create-modal'); }
-
 function submitNewTask() {
   const title = getValTrim('new-task-title');
   const clientId = getVal('new-task-client');
@@ -29,7 +27,7 @@ function submitNewTask() {
     createdAt: new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }),
   });
 
-  closeTaskModal();
+  hideModal('task-create-modal');
   if (currentPage === 'tasks') navigateTo('tasks');
   else if (currentPage === 'dashboard') navigateTo('dashboard');
   else alert(`タスク「${title}」を作成しました`);
@@ -52,8 +50,6 @@ function openTaskEditModal(taskId) {
   showModal('task-edit-modal');
 }
 
-function closeTaskEditModal() { hideModal('task-edit-modal'); }
-
 function submitEditTask() {
   const id = getVal('edit-task-id');
   const t = MOCK_DATA.tasks.find(x => x.id === id);
@@ -62,7 +58,7 @@ function submitEditTask() {
   t.assigneeUserId = getVal('edit-task-assignee');
   t.status = getVal('edit-task-status');
   t.dueDate = getVal('edit-task-due');
-  closeTaskEditModal();
+  hideModal('task-edit-modal');
   navigateTo('task-detail', { id });
 }
 
@@ -70,6 +66,6 @@ function deleteTask() {
   const id = getVal('edit-task-id');
   if (!confirm('このタスクを削除しますか？')) return;
   MOCK_DATA.tasks = MOCK_DATA.tasks.filter(x => x.id !== id);
-  closeTaskEditModal();
+  hideModal('task-edit-modal');
   navigateTo('tasks');
 }
