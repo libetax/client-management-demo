@@ -429,7 +429,7 @@ function saveClientInline(id) {
   if (!name) { alert('顧客名を入力してください'); return; }
 
   if (isNew) {
-    const resolvedCode = clientCode || (function() { const last = MOCK_DATA.clients.length > 0 ? MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode : '030449'; return String(parseInt(last) + 1).padStart(6, '0'); })();
+    const resolvedCode = clientCode || generateClientCode();
     const newId = generateId('c-', MOCK_DATA.clients);
     MOCK_DATA.clients.push({
       id: newId, clientCode: resolvedCode, name, clientType, fiscalMonth,

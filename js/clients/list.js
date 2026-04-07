@@ -111,6 +111,8 @@ function renderClients(el) {
 // 契約ステータスのグループ定義
 const CONTRACT_STATUS_GROUPS = {
   '契約中': ['契約中', '契約完了', '契約書手続中', 'スポット依頼'],
+  '検討中': ['見込み', '相談中', '見積提出済'],
+  '終了・休止': ['解約済み', '休止', '契約終了'],
 };
 
 function getFilteredClients() {

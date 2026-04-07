@@ -463,6 +463,7 @@ const MOCK_DATA = {
     { id: 'n-003', type: 'report_created', message: '朝倉さんが報告書「第1チーム 週次報告（3/7）」を作成しました', isRead: true, createdAt: '2026-03-07T17:00:00', linkPage: 'report-detail', linkParams: { id: 'rp-021' } },
     { id: 'n-004', type: 'task_due', message: '佐藤 二郎「確定申告書作成」が差し戻されています', isRead: false, createdAt: '2026-03-09T10:00:00', linkPage: 'task-detail', linkParams: { id: 'tk-006' } },
   ],
+  rewardAdjustments: [],
 };
 
 // ヘルパー関数

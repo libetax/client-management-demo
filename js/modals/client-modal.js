@@ -93,7 +93,7 @@ function submitNewClient() {
   const cwAccountId = getValTrim('new-client-cw-id');
 
   if (!name) { alert('顧客名を入力してください'); return; }
-  if (!monthlySales) { alert('月額報酬を入力してください'); return; }
+  if (monthlySales === null || monthlySales === undefined || isNaN(monthlySales)) { alert('月額報酬を入力してください'); return; }
 
   const customFieldValues = {};
   (MOCK_DATA.customFields || []).forEach(cf => {
@@ -119,7 +119,7 @@ function submitNewClient() {
     navigateTo('client-detail', { id: editingClientId });
     editingClientId = null;
   } else {
-    const nextCode = String(parseInt(MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode) + 1).padStart(6, '0');
+    const nextCode = generateClientCode();
     const newId = generateId('c-', MOCK_DATA.clients);
 
     MOCK_DATA.clients.push({

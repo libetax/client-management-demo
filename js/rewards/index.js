@@ -62,7 +62,7 @@ function renderRewardData(month, viewType) {
   let spotTotal = 0;
   getActiveClients().forEach(c => {
     (c.spotFees || []).forEach(sf => {
-      if (sf.timing === month || sf.timing?.startsWith(month)) {
+      if (sf.timing === month || (sf.timing && sf.timing.slice(0, 7) === month)) {
         spotTotal += sf.amount || 0;
       }
     });
@@ -129,7 +129,7 @@ function renderRewardData(month, viewType) {
     const spotRows = [];
     getActiveClients().forEach(c => {
       (c.spotFees || []).forEach(sf => {
-        if (sf.timing === month || sf.timing?.startsWith(month)) {
+        if (sf.timing === month || (sf.timing && sf.timing.slice(0, 7) === month)) {
           spotRows.push({ client: c, spot: sf });
         }
       });
@@ -180,7 +180,7 @@ function exportRewardCSV() {
   // SPOT報酬
   getActiveClients().forEach(c => {
     (c.spotFees || []).forEach(sf => {
-      if (sf.timing === month || sf.timing?.startsWith(month)) {
+      if (sf.timing === month || (sf.timing && sf.timing.slice(0, 7) === month)) {
         const main = getAssigneeUser(c.id, 'main');
         rows.push([month, main?.name || '-', c.name, sf.description || 'SPOT', sf.amount || 0, 'SPOT']);
       }

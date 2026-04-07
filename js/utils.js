@@ -194,6 +194,16 @@ function generateId(prefix, collection) {
   return prefix + String(max + 1).padStart(3, '0');
 }
 
+// 次の顧客コードを生成
+function generateClientCode() {
+  let max = 0;
+  MOCK_DATA.clients.forEach(function(c) {
+    var num = parseInt(c.clientCode, 10);
+    if (num > max) max = num;
+  });
+  return String(max + 1).padStart(6, '0');
+}
+
 // 空状態表示
 function renderEmptyState(message, icon) {
   return `<div class="empty-state"><div class="icon">${icon || '?'}</div><p>${message}</p></div>`;
