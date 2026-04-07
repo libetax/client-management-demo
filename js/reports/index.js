@@ -58,9 +58,9 @@ function rpGetFiltered() {
   const typeFilter = document.getElementById('rp-type-filter')?.value || '';
   const categoryFilter = document.getElementById('rp-category-filter')?.value || '';
 
-  if (search) reports = reports.filter(r => r.title.toLowerCase().includes(search) || (r.clientName || '').toLowerCase().includes(search));
-  if (typeFilter) reports = reports.filter(r => r.type === typeFilter);
-  if (categoryFilter) reports = reports.filter(r => r.category === categoryFilter);
+  reports = filterByKeyword(reports, search, ['title', 'clientName']);
+  reports = filterByField(reports, 'type', typeFilter);
+  reports = filterByField(reports, 'category', categoryFilter);
 
   reports.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return reports;

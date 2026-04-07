@@ -270,6 +270,20 @@ function renderTableBody(tbodyId, items, rowRenderer, emptyColspan, emptyMessage
   tbody.innerHTML = items.map(rowRenderer).join('');
 }
 
+// 共通フィルタ関数
+function filterByKeyword(items, keyword, fields) {
+  if (!keyword) return items;
+  const kw = keyword.toLowerCase();
+  return items.filter(item => fields.some(f => {
+    const val = typeof f === 'function' ? f(item) : (item[f] || '');
+    return String(val).toLowerCase().includes(kw);
+  }));
+}
+function filterByField(items, fieldName, value) {
+  if (!value) return items;
+  return items.filter(item => item[fieldName] === value);
+}
+
 // フィルタ要素へのイベントバインド
 function bindFilters(ids, handler) {
   ids.forEach(id => {

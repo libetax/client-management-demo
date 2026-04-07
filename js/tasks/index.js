@@ -55,17 +55,15 @@ function renderTaskTable() {
   const assigneeFilter = document.getElementById('task-assignee-filter')?.value || '';
 
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
-  let tasks = MOCK_DATA.tasks.filter(t => {
-    const client = getClientById(t.clientId);
-    if (search && !t.title.toLowerCase().includes(search) && !(client?.name || '').toLowerCase().includes(search)) return false;
-    if (statusFilter === 'incomplete') {
-      if (t.status === '完了') return false;
-    } else if (statusFilter === 'overdue') {
-      if (t.status === '完了' || t.dueDate >= today) return false;
-    } else if (statusFilter && t.status !== statusFilter) return false;
-    if (assigneeFilter && t.assigneeUserId !== assigneeFilter) return false;
-    return true;
-  });
+  let tasks = filterByKeyword(MOCK_DATA.tasks, search, ['title', t => getClientById(t.clientId)?.name || '']);
+  if (statusFilter === 'incomplete') {
+    tasks = tasks.filter(t => t.status !== '完了');
+  } else if (statusFilter === 'overdue') {
+    tasks = tasks.filter(t => t.status !== '完了' && t.dueDate < today);
+  } else {
+    tasks = filterByField(tasks, 'status', statusFilter);
+  }
+  tasks = filterByField(tasks, 'assigneeUserId', assigneeFilter);
 
   tasks.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
