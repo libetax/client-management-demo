@@ -18,7 +18,7 @@ function renderDashboard(el) {
   const incompleteTasks = tasks.filter(t => t.status !== '完了').length;
   const overdueTasks = tasks.filter(t => t.status !== '完了' && t.dueDate < today).length;
   const thisWeekTasks = tasks.filter(t => t.status !== '完了' && t.dueDate >= today && t.dueDate <= endOfWeekStr).length;
-  const activeClients = MOCK_DATA.clients.filter(c => c.isActive).length;
+  const activeClients = getActiveClients().length;
 
   // 今日のタスク
   const todayTasks = tasks.filter(t => t.status !== '完了' && t.dueDate === today);

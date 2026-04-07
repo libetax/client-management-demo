@@ -43,7 +43,7 @@ function openTaskEditModal(taskId) {
   });
 
   const assigneeSelect = document.getElementById('edit-task-assignee');
-  assigneeSelect.innerHTML = MOCK_DATA.users.filter(u => u.isActive && u.role !== 'admin').map(u =>
+  assigneeSelect.innerHTML = getActiveUsers().filter(u => u.role !== 'admin').map(u =>
     `<option value="${u.id}" ${u.id === t.assigneeUserId ? 'selected' : ''}>${u.name}</option>`
   ).join('');
 

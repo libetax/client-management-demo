@@ -226,14 +226,14 @@ function renderContractStatusBadge(status) {
 
 // selectのoptions生成
 function buildUserOptions(filter) {
-  let users = MOCK_DATA.users.filter(u => u.isActive);
+  let users = getActiveUsers();
   if (filter === 'staff') users = users.filter(u => u.role !== 'admin');
   if (filter === 'leaders') users = users.filter(u => u.role === 'admin' || u.role === 'team_leader');
   return users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
 }
 
 function buildClientOptions(activeOnly) {
-  const clients = activeOnly ? MOCK_DATA.clients.filter(c => c.isActive) : MOCK_DATA.clients;
+  const clients = activeOnly ? getActiveClients() : MOCK_DATA.clients;
   return clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 }
 
@@ -355,7 +355,7 @@ function getTaxAlerts() {
   const showNextMonth = currentDay >= 21;
 
   const alerts = [];
-  MOCK_DATA.clients.filter(function(c) { return c.isActive; }).forEach(function(client) {
+  getActiveClients().forEach(function(client) {
     const deadlines = getTaxDeadlines(client.fiscalMonth);
     deadlines.forEach(function(d) {
       if (!settings.types[d.type]) return;

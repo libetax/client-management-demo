@@ -86,7 +86,7 @@ function pgBuildConditionRow(cond, idx, context) {
   var valueOpts = '';
   if (field) {
     var opts = field.options === 'users'
-      ? MOCK_DATA.users.filter(function(u) { return u.isActive; }).map(function(u) { return { v: u.id, l: u.name }; })
+      ? getActiveUsers().map(function(u) { return { v: u.id, l: u.name }; })
       : field.options.map(function(o) { return { v: o, l: o }; });
     valueOpts = opts.map(function(o) {
       return '<option value="' + o.v + '"' + (cond.value === o.v ? ' selected' : '') + '>' + escapeHtml(o.l) + '</option>';

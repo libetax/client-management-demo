@@ -137,7 +137,7 @@ function pgStepNext() {
     var createModeVal = createModeEl ? createModeEl.value : 'manual';
     var selectedClients;
     if (createModeVal === 'all') {
-      selectedClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+      selectedClients = getActiveClients().map(function(c) { return c.id; });
     } else if (createModeVal === 'filter') {
       selectedClients = pgApplyCreateFilterConditions(pgCreateFilterConditions).map(function(c) { return c.id; });
     } else {
@@ -296,7 +296,7 @@ function submitNewProgress() {
   var createMode = document.querySelector('input[name="pg-create-target-mode"]:checked');
   createMode = createMode ? createMode.value : 'manual';
   if (createMode === 'all') {
-    selectedClientIds = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+    selectedClientIds = getActiveClients().map(function(c) { return c.id; });
   } else if (createMode === 'filter') {
     var filtered = pgApplyCreateFilterConditions(pgCreateFilterConditions);
     selectedClientIds = filtered.map(function(c) { return c.id; });
@@ -360,7 +360,7 @@ window.pgCreateTargetModeChanged = function(mode) {
 
   if (mode === 'all') {
     autoPreview.style.display = '';
-    var activeClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; });
+    var activeClients = getActiveClients();
     document.getElementById('pg-create-auto-count').textContent = 'アクティブな全顧客: ' + activeClients.length + '件が対象になります';
     document.getElementById('pg-create-auto-list').innerHTML = activeClients.map(function(c) {
       var main = getAssigneeUser(c.id, 'main');

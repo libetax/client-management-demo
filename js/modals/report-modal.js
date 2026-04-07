@@ -78,7 +78,7 @@ function openReportModal() {
   // 宛先チェックボックスを構築
   const recipientEl = document.getElementById('new-rp-recipients');
   if (recipientEl) {
-    recipientEl.innerHTML = MOCK_DATA.users.filter(u => u.isActive).map(u =>
+    recipientEl.innerHTML = getActiveUsers().map(u =>
       `<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:2px 0;">
         <input type="checkbox" class="rp-recipient-cb" value="${u.id}"> ${escapeHtml(u.name)}
       </label>`

@@ -60,7 +60,7 @@ function renderTeamCards() {
             <div style="display:flex;gap:8px;margin-top:8px;">
               <select id="team-add-member-${team.id}" class="filter-select" style="flex:1;font-size:12px;">
                 <option value="">職員を選択...</option>
-                ${MOCK_DATA.users.filter(u => u.isActive && !members.some(m => m.userId === u.id)).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+                ${getActiveUsers().filter(u => !members.some(m => m.userId === u.id)).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
               </select>
               <select id="team-add-role-${team.id}" class="filter-select" style="font-size:12px;">
                 <option value="member">メンバー</option>

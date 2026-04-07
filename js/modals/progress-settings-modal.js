@@ -161,7 +161,7 @@ function pgRenderTargetsList(sheetId) {
 
   // 未追加顧客のドロップダウン構築
   const existingIds = new Set(s.targets.map(t => t.clientId));
-  const available = MOCK_DATA.clients.filter(c => c.isActive && !existingIds.has(c.id));
+  const available = getActiveClients().filter(c => !existingIds.has(c.id));
   const sel = document.getElementById('pg-add-target-client');
   if (available.length === 0) {
     sel.innerHTML = '<option value="">-- 追加できる顧客がありません --</option>';
@@ -215,7 +215,7 @@ function submitEditProgress() {
   s.targetMode = mode;
   if (mode === 'all') {
     // アクティブ全顧客でtargetsを再構築
-    var activeIds = MOCK_DATA.clients.filter(function(c) { return c.isActive; }).map(function(c) { return c.id; });
+    var activeIds = getActiveClients().map(function(c) { return c.id; });
     activeIds.forEach(function(clientId) {
       if (!s.targets.some(function(t) { return t.clientId === clientId; })) {
         var steps = {}; var completedDates = {};

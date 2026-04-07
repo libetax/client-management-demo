@@ -60,7 +60,7 @@ function renderRewardData(month, viewType) {
 
   // SPOT報酬の集計（全タブ共通で表示）
   let spotTotal = 0;
-  MOCK_DATA.clients.filter(c => c.isActive).forEach(c => {
+  getActiveClients().forEach(c => {
     (c.spotFees || []).forEach(sf => {
       if (sf.timing === month || sf.timing?.startsWith(month)) {
         spotTotal += sf.amount || 0;
@@ -127,7 +127,7 @@ function renderRewardData(month, viewType) {
 
     // 全顧客のSPOT報酬から該当月のものを抽出
     const spotRows = [];
-    MOCK_DATA.clients.filter(c => c.isActive).forEach(c => {
+    getActiveClients().forEach(c => {
       (c.spotFees || []).forEach(sf => {
         if (sf.timing === month || sf.timing?.startsWith(month)) {
           spotRows.push({ client: c, spot: sf });
@@ -178,7 +178,7 @@ function exportRewardCSV() {
   });
 
   // SPOT報酬
-  MOCK_DATA.clients.filter(c => c.isActive).forEach(c => {
+  getActiveClients().forEach(c => {
     (c.spotFees || []).forEach(sf => {
       if (sf.timing === month || sf.timing?.startsWith(month)) {
         const main = getAssigneeUser(c.id, 'main');
@@ -193,8 +193,8 @@ function exportRewardCSV() {
 // FB#34: 報酬調整
 function openRewardAdjustModal() {
   const month = document.getElementById('rw-month-filter')?.value || '2026-03';
-  const userOpts = MOCK_DATA.users.filter(u => u.isActive).map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('');
-  const clientOpts = MOCK_DATA.clients.filter(c => c.isActive).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  const userOpts = getActiveUsers().map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('');
+  const clientOpts = getActiveClients().map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
 
   const adjustments = (MOCK_DATA.rewardAdjustments || []).filter(a => a.month === month);
   const existingRows = adjustments.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--gray-400);">調整データなし</td></tr>' :

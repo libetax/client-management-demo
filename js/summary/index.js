@@ -2,13 +2,13 @@
 // 集計
 // ===========================
 function renderSummary(el) {
-  const activeClients = MOCK_DATA.clients.filter(c => c.isActive);
+  const activeClients = getActiveClients();
   const allTasks = MOCK_DATA.tasks;
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
 
   // 担当者別顧客数
   const staffClientCount = {};
-  MOCK_DATA.users.filter(u => u.isActive).forEach(u => {
+  getActiveUsers().forEach(u => {
     staffClientCount[u.id] = { name: u.name, main: 0, sub: 0, total: 0 };
   });
   activeClients.forEach(c => {
@@ -26,7 +26,7 @@ function renderSummary(el) {
 
   // 担当者別タスク件数
   const staffTaskCount = {};
-  MOCK_DATA.users.filter(u => u.isActive).forEach(u => {
+  getActiveUsers().forEach(u => {
     staffTaskCount[u.id] = { name: u.name, active: 0, overdue: 0, completed: 0 };
   });
   allTasks.forEach(t => {

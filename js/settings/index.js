@@ -381,7 +381,7 @@ function renderSettings(el) {
         { tool: 'Dropbox', desc: 'クラウドストレージ' },
         { tool: 'Zoom', desc: 'Web会議' },
       ];
-      const activeUsers = MOCK_DATA.users.filter(u => u.isActive);
+      const activeUsers = getActiveUsers();
       return `
       <div class="card">
         <div class="card-header"><h3>ツール権限付与一覧</h3></div>

@@ -137,7 +137,7 @@ function getAIMockResponse(question) {
 }
 
 function renderAIDraft(panel) {
-  const activeClients = MOCK_DATA.clients.filter(c => c.isActive);
+  const activeClients = getActiveClients();
 
   panel.innerHTML = `
     <div class="card">
@@ -294,7 +294,7 @@ function generateAISuggestions() {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
-  MOCK_DATA.clients.filter(c => c.isActive).forEach(client => {
+  getActiveClients().forEach(client => {
     const fiscalMonth = client.fiscalMonth;
     const currentMonth = today.getMonth() + 1;
     let monthsUntilFiscal = fiscalMonth - currentMonth;
@@ -315,7 +315,7 @@ function generateAISuggestions() {
     }
   });
 
-  MOCK_DATA.clients.filter(c => c.isActive).forEach(client => {
+  getActiveClients().forEach(client => {
     const tasks = MOCK_DATA.tasks.filter(t => t.clientId === client.id);
     if (tasks.length === 0) {
       suggestions.push({
@@ -400,7 +400,7 @@ function renderAISuggestionResults() {
   const overdueTasks = MOCK_DATA.tasks.filter(t => t.status !== '完了' && t.dueDate < todayStr).length;
   const currentMonth = today.getMonth() + 1;
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-  const nextMonthClients = MOCK_DATA.clients.filter(c => c.isActive && c.clientType === '法人' && c.fiscalMonth === nextMonth).length;
+  const nextMonthClients = getActiveClients().filter(c => c.clientType === '法人' && c.fiscalMonth === nextMonth).length;
 
   summaryDiv.style.display = '';
   summaryDiv.innerHTML = `

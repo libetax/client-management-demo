@@ -21,7 +21,7 @@ function exportClientCSV() {
 
 // FB#41: 達人取込用CSVフォーマット出力
 function exportTatsujinCSV() {
-  const clients = MOCK_DATA.clients.filter(c => c.isActive);
+  const clients = getActiveClients();
   const header = [
     '顧客コード', '顧客名', '顧客名フリガナ', '法人個人区分',
     '代表者名', '郵便番号', '住所', '電話番号',

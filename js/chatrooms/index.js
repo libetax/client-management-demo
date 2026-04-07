@@ -110,7 +110,7 @@ function openChatRoomModal(roomId) {
 
   // 顧客チェックボックスを生成
   const checkboxes = document.getElementById('cr-client-checkboxes');
-  checkboxes.innerHTML = MOCK_DATA.clients.filter(c => c.isActive).map(c =>
+  checkboxes.innerHTML = getActiveClients().map(c =>
     `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0;cursor:pointer;">
       <input type="checkbox" value="${c.id}" class="cr-client-cb"> ${c.name}
       ${c.cwAccountId ? '<span style="font-size:11px;color:var(--gray-400);">(CW: ' + c.cwAccountId + ')</span>' : '<span style="font-size:11px;color:var(--warning);">(CW未設定)</span>'}

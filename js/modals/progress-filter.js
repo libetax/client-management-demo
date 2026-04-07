@@ -44,7 +44,7 @@ window.pgTargetModeChanged = function(mode, sheetId) {
 
   if (mode === 'all') {
     allPreview.style.display = '';
-    var activeClients = MOCK_DATA.clients.filter(function(c) { return c.isActive; });
+    var activeClients = getActiveClients();
     document.getElementById('pg-all-count').textContent = 'アクティブな全顧客: ' + activeClients.length + '件';
     document.getElementById('pg-all-list').innerHTML = activeClients.map(function(c) {
       var main = getAssigneeUser(c.id, 'main');
