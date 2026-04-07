@@ -11,6 +11,7 @@ function openClientModal(clientId) {
   const modal = document.getElementById('client-create-modal');
 
   const staffOptions = buildUserOptions('staff');
+  document.getElementById('new-client-mgr').innerHTML = '<option value="">なし</option>' + staffOptions;
   document.getElementById('new-client-main').innerHTML = staffOptions;
   document.getElementById('new-client-sub').innerHTML = '<option value="">なし</option>' + staffOptions;
   document.getElementById('new-client-bookkeeper').innerHTML = '<option value="">なし</option>' + staffOptions;
@@ -47,6 +48,7 @@ function openClientModal(clientId) {
         'new-client-sales': c.monthlySales, 'new-client-address': c.address,
         'new-client-tel': c.tel, 'new-client-industry': c.industry,
         'new-client-representative': c.representative, 'new-client-taxoffice': c.taxOffice,
+        'new-client-mgr': getAssigneeUserId(c.id, 'reviewer') || c.mgrUserId || '',
         'new-client-main': getAssigneeUserId(c.id, 'main') || c.mainUserId,
         'new-client-sub': getAssigneeUserId(c.id, 'sub') || c.subUserId,
         'new-client-bookkeeper': getAssigneeUserId(c.id, 'bookkeeping_main') || c.bookkeeperId || '',
@@ -76,6 +78,7 @@ function submitNewClient() {
   const name = getValTrim('new-client-name');
   const clientType = getVal('new-client-type');
   const fiscalMonth = getValInt('new-client-fiscal');
+  const mgrUserId = getVal('new-client-mgr') || null;
   const mainUserId = getVal('new-client-main');
   const subUserId = getVal('new-client-sub') || null;
   const bookkeeperId = getVal('new-client-bookkeeper') || null;
@@ -102,13 +105,13 @@ function submitNewClient() {
     const c = getClientById(editingClientId);
     if (c) {
       Object.assign(c, { name, clientType, fiscalMonth, mainUserId, subUserId,
-        mgrUserId: mainUserId, bookkeeperId, bookkeepingSubId,
+        mgrUserId: mgrUserId || mainUserId, bookkeeperId, bookkeepingSubId,
         monthlySales, annualFee, address, tel,
         industry, representative, taxOffice, cwAccountId, customFieldValues });
       // clientAssignments を同期
       upsertAssignment(editingClientId, 'main', mainUserId);
       upsertAssignment(editingClientId, 'sub', subUserId);
-      upsertAssignment(editingClientId, 'reviewer', mainUserId);
+      upsertAssignment(editingClientId, 'reviewer', mgrUserId || mainUserId);
       upsertAssignment(editingClientId, 'bookkeeping_main', bookkeeperId);
       upsertAssignment(editingClientId, 'bookkeeping_sub', bookkeepingSubId);
     }
@@ -121,7 +124,7 @@ function submitNewClient() {
 
     MOCK_DATA.clients.push({
       id: newId, clientCode: nextCode, name, clientType, fiscalMonth,
-      isActive: true, mainUserId, subUserId, mgrUserId: mainUserId,
+      isActive: true, mainUserId, subUserId, mgrUserId: mgrUserId || mainUserId,
       bookkeeperId, bookkeepingSubId,
       monthlySales, annualFee, spotFees: [], address, tel, industry,
       representative, taxOffice, memo: '', establishDate: '',
@@ -131,7 +134,7 @@ function submitNewClient() {
     // clientAssignments に追加
     upsertAssignment(newId, 'main', mainUserId);
     if (subUserId) upsertAssignment(newId, 'sub', subUserId);
-    upsertAssignment(newId, 'reviewer', mainUserId);
+    upsertAssignment(newId, 'reviewer', mgrUserId || mainUserId);
     if (bookkeeperId) upsertAssignment(newId, 'bookkeeping_main', bookkeeperId);
     if (bookkeepingSubId) upsertAssignment(newId, 'bookkeeping_sub', bookkeepingSubId);
 
