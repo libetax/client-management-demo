@@ -225,8 +225,10 @@ function submitEditProgress() {
     });
   } else if (mode === 'filter') {
     // フィルタ条件にマッチする顧客でtargetsを再構築
-    s.filterConditions = pgFilterConditions.slice();
-    var matched = pgApplyFilterConditions(pgFilterConditions);
+    // 対象顧客タブ未開封時はpgFilterConditionsが空のため、既存条件を保持
+    var effectiveConditions = pgFilterConditions.length > 0 ? pgFilterConditions : (s.filterConditions || []);
+    s.filterConditions = effectiveConditions.slice();
+    var matched = pgApplyFilterConditions(effectiveConditions);
     matched.forEach(function(c) {
       if (!s.targets.some(function(t) { return t.clientId === c.id; })) {
         var steps = {}; var completedDates = {};
