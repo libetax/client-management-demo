@@ -230,7 +230,7 @@ function renderStatusBadge(status) {
 
 // 種別バッジHTML
 function renderTypeBadge(clientType) {
-  return `<span class="type-badge ${clientType === '法人' ? 'type-corp' : 'type-individual'}">${clientType}</span>`;
+  return `<span class="type-badge ${clientType === '法人' ? 'type-corp' : 'type-individual'}">${escapeHtml(clientType || '')}</span>`;
 }
 
 // 契約ステータスバッジHTML
@@ -238,7 +238,7 @@ function renderContractStatusBadge(status) {
   const cls = status === '契約完了' || status === '契約中' ? 'status-badge status-done'
     : status === '見込み' ? 'status-badge status-todo'
     : 'status-badge status-outline';
-  return `<span class="${cls}" style="font-size:11px;">${status}</span>`;
+  return `<span class="${cls}" style="font-size:11px;">${escapeHtml(status || '')}</span>`;
 }
 
 // selectのoptions生成

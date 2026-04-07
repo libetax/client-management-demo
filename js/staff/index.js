@@ -149,7 +149,7 @@ function renderStaffDetail(el, params) {
       <div class="card">
         <div class="card-header"><h3>プロフィール</h3></div>
         <div class="card-body">
-          <div class="detail-row"><div class="detail-label">リベシティURL</div><div class="detail-value">${u.libeProfileUrl ? `<a href="${escapeHtml(u.libeProfileUrl)}" target="_blank">${escapeHtml(u.libeProfileUrl)}</a>` : '-'}</div></div>
+          <div class="detail-row"><div class="detail-label">リベシティURL</div><div class="detail-value">${u.libeProfileUrl && /^https?:\/\//.test(u.libeProfileUrl) ? `<a href="${escapeHtml(u.libeProfileUrl)}" target="_blank">${escapeHtml(u.libeProfileUrl)}</a>` : escapeHtml(u.libeProfileUrl || '-')}</div></div>
           <div class="detail-row"><div class="detail-label">自己紹介</div><div class="detail-value" style="white-space:pre-wrap;">${u.selfIntro ? escapeHtml(u.selfIntro) : '-'}</div></div>
         </div>
       </div>
@@ -176,7 +176,7 @@ function renderStaffDetail(el, params) {
                 const role = getAssigneeUserId(c.id, 'main') === u.id ? '主担当' : '副担当';
                 return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${c.id}'})">
                   <td>${c.clientCode}</td>
-                  <td><strong>${c.name}</strong></td>
+                  <td><strong>${escapeHtml(c.name)}</strong></td>
                   <td>${renderTypeBadge(c.clientType)}</td>
                   <td>${c.fiscalMonth}月</td>
                   <td>${role}</td>

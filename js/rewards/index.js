@@ -150,7 +150,7 @@ function renderRewardData(month, viewType) {
           <td>${escapeHtml(r.spot.timing || '-')}</td>
           <td>${escapeHtml(r.spot.description || '-')}</td>
           <td><strong>${(r.spot.amount || 0).toLocaleString()}円</strong></td>
-          <td>${main?.name || '-'}</td>
+          <td>${escapeHtml(main?.name || '-')}</td>
         </tr>`;
       }).join('');
   }
@@ -202,8 +202,8 @@ function openRewardAdjustModal() {
       const user = getUserById(a.userId);
       const client = a.clientId ? getClientById(a.clientId) : null;
       return `<tr>
-        <td>${user?.name || '-'}</td>
-        <td>${client?.name || '（全般）'}</td>
+        <td>${escapeHtml(user?.name || '-')}</td>
+        <td>${escapeHtml(client?.name || '（全般）')}</td>
         <td>${escapeHtml(a.reason)}</td>
         <td style="text-align:right;${a.amount < 0 ? 'color:var(--danger);' : ''}">${a.amount.toLocaleString()}円</td>
         <td><button class="btn btn-secondary btn-sm" style="color:var(--danger);font-size:11px;" onclick="deleteRewardAdjust('${a.id}')">削除</button></td>

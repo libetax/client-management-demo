@@ -30,10 +30,10 @@ function renderClientDetail(el, params) {
     if (type === 'select-staff') return `<select id="${id}" class="inline-edit-input">${'<option value="">なし</option>' + staffOptions}</select>`;
     if (type === 'select-fiscal') return `<select id="${id}" class="inline-edit-input">${fiscalOptions}</select>`;
     if (type === 'select-type') return `<select id="${id}" class="inline-edit-input"><option value="法人">法人</option><option value="個人">個人</option></select>`;
-    if (type === 'number') return `<input type="number" id="${id}" class="inline-edit-input" value="${v || ''}" placeholder="${placeholder || ''}" min="0" step="1000">`;
-    if (type === 'date') return `<input type="date" id="${id}" class="inline-edit-input" value="${v || ''}">`;
-    if (type === 'textarea') return `<textarea id="${id}" class="inline-edit-input" rows="2" placeholder="${placeholder || ''}">${v || ''}</textarea>`;
-    return `<input type="text" id="${id}" class="inline-edit-input" value="${v || ''}" placeholder="${placeholder || ''}">`;
+    if (type === 'number') return `<input type="number" id="${id}" class="inline-edit-input" value="${escapeHtml(String(v || ''))}" placeholder="${escapeHtml(placeholder || '')}" min="0" step="1000">`;
+    if (type === 'date') return `<input type="date" id="${id}" class="inline-edit-input" value="${escapeHtml(String(v || ''))}">`;
+    if (type === 'textarea') return `<textarea id="${id}" class="inline-edit-input" rows="2" placeholder="${escapeHtml(placeholder || '')}">${escapeHtml(String(v || ''))}</textarea>`;
+    return `<input type="text" id="${id}" class="inline-edit-input" value="${escapeHtml(String(v || ''))}" placeholder="${escapeHtml(placeholder || '')}">`;
   };
 
   const tasks = c ? getTasksByClient(c.id) : [];
@@ -138,7 +138,7 @@ function renderClientDetail(el, params) {
   ).join('');
 
   // 契約ステータス選択肢
-  const contractStatusOptions = ['契約中','契約終了','休止中','見込み'].map(s =>
+  const contractStatusOptions = ['契約中','契約完了','契約書手続中','スポット依頼','見込み','顧問契約検討中','チャット作成済','Zoom','初回メール送信済','コンタクト送信済','契約解除','休止中','失注'].map(s =>
     `<option value="${s}" ${c?.contractStatus === s ? 'selected' : ''}>${s}</option>`
   ).join('');
 
@@ -246,7 +246,7 @@ function renderClientDetail(el, params) {
           <div class="detail-section-title">連絡先</div>
           <div class="detail-row"><div class="detail-label">メールアドレス</div><div class="detail-value">${editing ? inp('ed-email', c?.email, 'text', '例: info@example.com') : val(c?.email)}</div></div>
           <div class="detail-row"><div class="detail-label">シティネーム</div><div class="detail-value">${editing ? inp('ed-cityName', c?.cityName, 'text', '例: やまもとたろう') : val(c?.cityName)}</div></div>
-          <div class="detail-row"><div class="detail-label">シティURL</div><div class="detail-value">${editing ? inp('ed-cityUrl', c?.cityUrl, 'text', 'https://libecity.com/user/...') : (c?.cityUrl ? `<a href="${escapeHtml(c.cityUrl)}" target="_blank">${escapeHtml(c.cityUrl)}</a>` : val(''))}</div></div>
+          <div class="detail-row"><div class="detail-label">シティURL</div><div class="detail-value">${editing ? inp('ed-cityUrl', c?.cityUrl, 'text', 'https://libecity.com/user/...') : (c?.cityUrl && /^https?:\/\//.test(c.cityUrl) ? `<a href="${escapeHtml(c.cityUrl)}" target="_blank">${escapeHtml(c.cityUrl)}</a>` : val(c?.cityUrl))}</div></div>
 
           <div class="detail-section-title">Chatwork連携</div>
           <div class="detail-row"><div class="detail-label">CWURL</div><div class="detail-value">${editing ? inp('ed-cwid', c?.cwAccountId, 'text', '例: https://www.chatwork.com/#!rid123456') : val(c?.cwAccountId, '未設定')}</div></div>
@@ -311,8 +311,8 @@ function renderClientDetail(el, params) {
               ${tasks.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:var(--gray-400)">タスクなし</td></tr>' : tasks.map(t => {
                 const assignee = getUserById(t.assigneeUserId);
                 return `<tr class="clickable" onclick="navigateTo('task-detail',{id:'${t.id}'})">
-                  <td>${t.title}</td>
-                  <td>${assignee?.name || '-'}</td>
+                  <td>${escapeHtml(t.title)}</td>
+                  <td>${escapeHtml(assignee?.name || '-')}</td>
                   <td>${formatDate(t.dueDate)}</td>
                   <td>${renderStatusBadge(t.status)}</td>
                 </tr>`;

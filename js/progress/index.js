@@ -72,7 +72,7 @@ function renderProgress(el) {
                     <td>${incomplete > 0 ? `<span class="count-badge count-warn">${incomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${myComplete > 0 ? `<span class="count-badge" style="background:var(--success-light);color:var(--success);">${myComplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${complete > 0 ? `<span class="count-badge" style="background:var(--success-light);color:var(--success);">${complete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
-                    <td>${mgr?.name || '-'}</td>
+                    <td>${escapeHtml(mgr?.name || '-')}</td>
                     <td>
                       <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openProgressSettingsModal('${s.id}')">設定変更</button>
                     </td>
@@ -101,7 +101,7 @@ function renderProgress(el) {
                 <span>${complete}/${totalTargets}件 完了</span>
                 <span>${pct}%</span>
               </div>
-              <div style="margin-top:12px;font-size:12px;color:var(--gray-500);">管理者: ${mgr?.name || '-'}</div>
+              <div style="margin-top:12px;font-size:12px;color:var(--gray-500);">管理者: ${escapeHtml(mgr?.name || '-')}</div>
               <div style="margin-top:8px;text-align:right;">
                 <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openProgressSettingsModal('${s.id}')">設定変更</button>
               </div>
