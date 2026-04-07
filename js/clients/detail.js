@@ -197,7 +197,7 @@ function renderClientDetail(el, params) {
           <div class="detail-row"><div class="detail-label">契約終了日</div><div class="detail-value">${editing ? inp('ed-contractEndDate', c?.contractEndDate, 'date') : val(c?.contractEndDate ? formatDate(c.contractEndDate) : '')}</div></div>
           <div class="detail-row"><div class="detail-label">記帳代行契約開始日</div><div class="detail-value">${editing ? inp('ed-bookkeepingStartDate', c?.bookkeepingStartDate, 'date') : val(c?.bookkeepingStartDate ? formatDate(c.bookkeepingStartDate) : '')}</div></div>
           <div class="detail-row"><div class="detail-label">記帳代行契約終了日</div><div class="detail-value">${editing ? inp('ed-bookkeepingEndDate', c?.bookkeepingEndDate, 'date') : val(c?.bookkeepingEndDate ? formatDate(c.bookkeepingEndDate) : '')}</div></div>
-          ${!editing && c?.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${c.memo}</div></div>` : ''}
+          ${!editing && c?.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${escapeHtml(c.memo)}</div></div>` : ''}
 
           ${!isNew ? `
           <div class="detail-section-title">関連顧客</div>

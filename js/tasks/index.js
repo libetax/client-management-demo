@@ -154,7 +154,7 @@ function renderTaskDetail(el, params) {
       <div class="card">
         <div class="card-header"><h3>タスク情報</h3><button class="btn btn-secondary btn-sm" onclick="openTaskEditModal('${t.id}')">編集</button></div>
         <div class="card-body">
-          <div class="detail-row"><div class="detail-label">タスク名</div><div class="detail-value">${t.title}</div></div>
+          <div class="detail-row"><div class="detail-label">タスク名</div><div class="detail-value">${escapeHtml(t.title)}</div></div>
           ${t.description ? `<div class="detail-row"><div class="detail-label">説明</div><div class="detail-value">${escapeHtml(t.description)}</div></div>` : ''}
           <div class="detail-row"><div class="detail-label">顧客</div><div class="detail-value"><a href="#" onclick="event.preventDefault();navigateTo('client-detail',{id:'${t.clientId}'})">${client?.name || '-'}</a></div></div>
           <div class="detail-row"><div class="detail-label">担当者</div><div class="detail-value">${assignee?.name || '-'}</div></div>

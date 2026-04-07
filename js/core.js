@@ -184,7 +184,7 @@ function renderNotifDropdown() {
           <div class="notif-dropdown-item ${n.isRead ? '' : 'unread'}" onclick="onNotifClick('${n.id}')">
             <div class="notif-type-icon ${n.type}">${typeIcons[n.type] || '\ud83d\udd14'}</div>
             <div>
-              <div class="notif-dropdown-text">${n.message}</div>
+              <div class="notif-dropdown-text">${escapeHtml(n.message)}</div>
               <div class="notif-dropdown-time">${formatRelativeTime(n.createdAt)}</div>
             </div>
           </div>

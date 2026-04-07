@@ -142,7 +142,7 @@ function renderStaffDetail(el, params) {
           <div class="detail-row"><div class="detail-label">役職</div><div class="detail-value">${u.position || '-'}</div></div>
           <div class="detail-row"><div class="detail-label">雇用形態</div><div class="detail-value">${u.employmentType || '-'}</div></div>
           <div class="detail-row"><div class="detail-label">入社日</div><div class="detail-value">${formatDate(u.joinDate)}</div></div>
-          ${u.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${u.memo}</div></div>` : ''}
+          ${u.memo ? `<div class="detail-row"><div class="detail-label">備考</div><div class="detail-value">${escapeHtml(u.memo)}</div></div>` : ''}
           <div class="detail-row"><div class="detail-label">ステータス</div><div class="detail-value">${u.isActive ? '有効' : '無効'}</div></div>
         </div>
       </div>

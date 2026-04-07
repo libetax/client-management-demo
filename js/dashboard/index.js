@@ -92,7 +92,7 @@ function renderDashboard(el) {
               <li class="notification-item"${clickAttr}>
                 <div class="notification-dot ${n.isRead ? 'read' : 'unread'}"></div>
                 <div>
-                  <div class="notification-text">${n.message}</div>
+                  <div class="notification-text">${escapeHtml(n.message)}</div>
                   <div class="notification-time">${formatRelativeTime(n.createdAt)}</div>
                 </div>
               </li>`;
