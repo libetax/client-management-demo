@@ -48,8 +48,8 @@ function renderProgress(el) {
             <table>
               <thead><tr>
                 <th>分類</th><th>進捗管理表名</th><th>対象</th>
-                <th>期限到来（担当先）</th><th>期限到来（全体）</th>
                 <th>未完了（担当先）</th><th>未完了（全体）</th>
+                <th>完了（担当先）</th><th>完了（全体）</th>
                 <th>管理者</th><th>操作</th>
               </tr></thead>
               <tbody>
@@ -62,14 +62,16 @@ function renderProgress(el) {
                     return c && getAssigneeUserId(c.id, 'main') === MOCK_DATA.currentUser.id;
                   });
                   const myIncomplete = myTargets.filter(t => Object.values(t.steps).some(v => v !== '完了')).length;
+                  const myComplete = myTargets.length - myIncomplete;
+                  const complete = totalTargets - incomplete;
                   return `<tr class="clickable" onclick="navigateTo('progress-detail',{id:'${s.id}'})">
                     <td><span class="type-badge type-corp">${s.category}</span></td>
                     <td><strong>${s.name}</strong></td>
                     <td>${totalTargets}件</td>
                     <td>${myIncomplete > 0 ? `<span class="count-badge count-warn">${myIncomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${incomplete > 0 ? `<span class="count-badge count-warn">${incomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
-                    <td>${myIncomplete > 0 ? `<span class="count-badge count-warn">${myIncomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
-                    <td>${incomplete > 0 ? `<span class="count-badge count-warn">${incomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
+                    <td>${myComplete > 0 ? `<span class="count-badge" style="background:var(--success-light);color:var(--success);">${myComplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
+                    <td>${complete > 0 ? `<span class="count-badge" style="background:var(--success-light);color:var(--success);">${complete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${mgr?.name || '-'}</td>
                     <td>
                       <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openProgressSettingsModal('${s.id}')">設定変更</button>
