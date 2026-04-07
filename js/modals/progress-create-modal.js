@@ -210,6 +210,8 @@ function pgRenameColumn(idx, newName) {
     pgSelectedColumns[idx] = trimmed;
   }
   renderPgColumnsList();
+  pgCreateRenderDisplay();
+  pgCreateRenderCandidates();
 }
 
 // 顧客フィルタ + チェックボックス

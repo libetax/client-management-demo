@@ -87,7 +87,14 @@ function submitNewStaff() {
     navigateTo('staff-detail', { id: editingStaffId });
     editingStaffId = null;
   } else {
-    const nextCode = 'A' + String(MOCK_DATA.users.length + 1).padStart(3, '0');
+    let maxCode = 0;
+    MOCK_DATA.users.forEach(function(u) {
+      if (u.staffCode && u.staffCode.startsWith('A')) {
+        var num = parseInt(u.staffCode.slice(1), 10);
+        if (num > maxCode) maxCode = num;
+      }
+    });
+    const nextCode = 'A' + String(maxCode + 1).padStart(3, '0');
     const newId = generateId('u-', MOCK_DATA.users);
 
     MOCK_DATA.users.push({

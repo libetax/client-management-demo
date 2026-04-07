@@ -111,11 +111,14 @@ function renderContractTrends(el) {
 
 // MOCK_DATAから月次の契約推移を算出
 function calcContractTrends(monthCount) {
-  var now = new Date();
+  var todayStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+  var todayParts = todayStr.split('-');
+  var nowYear = parseInt(todayParts[0], 10);
+  var nowMonth = parseInt(todayParts[1], 10) - 1;
   var results = [];
 
   for (var i = monthCount - 1; i >= 0; i--) {
-    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var d = new Date(nowYear, nowMonth - i, 1);
     var ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     var monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0);
     var monthEndStr = monthEnd.getFullYear() + '-' + String(monthEnd.getMonth() + 1).padStart(2, '0') + '-' + String(monthEnd.getDate()).padStart(2, '0');

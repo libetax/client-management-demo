@@ -13,7 +13,7 @@ function exportClientCSV() {
     const cfv = c.customFieldValues || {};
     const mainUser = getAssigneeUser(c.id, 'main');
     const subUser = getAssigneeUser(c.id, 'sub');
-    return [c.clientCode, c.name, c.clientType, c.fiscalMonth, c.postalCode || '', c.address || '', c.tel || '', c.email || '', c.representative || '', c.industry || '', c.taxOffice || '', c.monthlySales || 0, c.annualFee || 0, c.contractStatus || '', c.consumptionTaxCategory || '', c.invoiceRegistered || '', c.monthlyBookkeepingFee || 0, c.bookkeepingStartDate || '', c.bookkeepingEndDate || '', c.mfBusinessNo || '', c.delegationStatus || '', c.nichizeiRegistration || '', c.debitAccountKana || '', mainUser?.staffCode || '', subUser?.staffCode || '', c.cwAccountId || '', c.displayCode || '', c.capitalAmount || '', c.corporateNumber || '', c.yearEndAdjustment ? 'あり' : '', c.interimFiling ? 'あり' : '', c.filingType || '', ...cfIds.map(id => cfv[id] || '')];
+    return [c.clientCode, c.name, c.clientType, c.fiscalMonth, c.postalCode || '', c.address || '', c.tel || '', c.email || '', c.representative || '', c.industry || '', c.taxOffice || '', c.monthlySales || 0, c.annualFee || 0, c.contractStatus || '', c.consumptionTaxCategory || '', c.invoiceRegistered || '', c.monthlyBookkeepingFee || 0, c.bookkeepingStartDate || '', c.bookkeepingEndDate || '', c.mfBusinessNo || '', c.delegationStatus || '', c.nichizeiRegistration || '', c.debitAccountKana || '', mainUser?.staffCode || '', subUser?.staffCode || '', c.cwAccountId || '', c.displayCode || '', c.capitalAmount || '', c.corporateNumber || '', c.yearEndAdjustment ? 'あり' : '', c.interimFiling || '', c.filingType || '', ...cfIds.map(id => cfv[id] || '')];
   });
 
   downloadCSV('顧客一覧.csv', header, rows);
@@ -120,7 +120,7 @@ function importClientCSV() {
       return 'updated';
     } else {
       const newId = generateId('c-', MOCK_DATA.clients);
-      const code = obj.clientCode || String(parseInt(MOCK_DATA.clients[MOCK_DATA.clients.length - 1].clientCode) + 1).padStart(6, '0');
+      const code = obj.clientCode || generateClientCode();
       const cfv = {};
       customFields.forEach(cf => { if (obj[cf.name]) cfv[cf.id] = obj[cf.name]; });
       MOCK_DATA.clients.push({
