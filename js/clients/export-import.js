@@ -84,7 +84,7 @@ function importClientCSV() {
     if (existing) {
       if (obj.name) existing.name = obj.name;
       if (obj.clientType) existing.clientType = obj.clientType;
-      if (obj.fiscalMonth) existing.fiscalMonth = parseInt(obj.fiscalMonth) || existing.fiscalMonth;
+      if (obj.fiscalMonth) existing.fiscalMonth = obj.fiscalMonth === 'personal' ? 'personal' : (parseInt(obj.fiscalMonth) || existing.fiscalMonth);
       if (obj.address !== undefined) existing.address = obj.address;
       if (obj.tel !== undefined) existing.tel = obj.tel;
       if (obj.email !== undefined) existing.email = obj.email;
@@ -125,7 +125,7 @@ function importClientCSV() {
       customFields.forEach(cf => { if (obj[cf.name]) cfv[cf.id] = obj[cf.name]; });
       MOCK_DATA.clients.push({
         id: newId, clientCode: code, name: obj.name || '名称未設定',
-        clientType: obj.clientType || '法人', fiscalMonth: parseInt(obj.fiscalMonth) || 3,
+        clientType: obj.clientType || '法人', fiscalMonth: obj.fiscalMonth === 'personal' ? 'personal' : (parseInt(obj.fiscalMonth) || 3),
         isActive: true, mainUserId: mainUser?.id || MOCK_DATA.users[1]?.id || 'u-002',
         subUserId: subUser?.id || null,
         mgrUserId: mainUser?.id || MOCK_DATA.users[1]?.id || 'u-002',

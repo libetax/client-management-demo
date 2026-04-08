@@ -44,7 +44,7 @@ function openTaskEditModal(taskId) {
 
   const assigneeSelect = document.getElementById('edit-task-assignee');
   assigneeSelect.innerHTML = getActiveUsers().filter(u => u.role !== 'admin').map(u =>
-    `<option value="${u.id}" ${u.id === t.assigneeUserId ? 'selected' : ''}>${u.name}</option>`
+    `<option value="${u.id}" ${u.id === t.assigneeUserId ? 'selected' : ''}>${escapeHtml(u.name)}</option>`
   ).join('');
 
   showModal('task-edit-modal');

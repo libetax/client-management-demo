@@ -55,13 +55,13 @@ function renderChatRoomTable() {
   renderTableBody('cr-table-body', rooms, r => {
     const clientNames = r.clientIds.map(cid => {
       const c = getClientById(cid);
-      return c ? `<a href="#" onclick="event.preventDefault();navigateTo('client-detail',{id:'${cid}'})">${c.name}</a>` : cid;
+      return c ? `<a href="#" onclick="event.preventDefault();navigateTo('client-detail',{id:'${cid}'})">${escapeHtml(c.name)}</a>` : escapeHtml(cid);
     }).join(', ');
     return `<tr>
-      <td><strong>${r.roomName}</strong></td>
-      <td style="font-family:monospace;font-size:12px;">${r.roomId}</td>
+      <td><strong>${escapeHtml(r.roomName)}</strong></td>
+      <td style="font-family:monospace;font-size:12px;">${escapeHtml(r.roomId)}</td>
       <td>${clientNames}</td>
-      <td style="color:var(--gray-500);font-size:12px;">${r.memo || '-'}</td>
+      <td style="color:var(--gray-500);font-size:12px;">${escapeHtml(r.memo || '-')}</td>
       <td><button class="btn btn-secondary btn-sm" onclick="openChatRoomModal('${r.id}')">編集</button></td>
     </tr>`;
   }, 5);
@@ -112,8 +112,8 @@ function openChatRoomModal(roomId) {
   const checkboxes = document.getElementById('cr-client-checkboxes');
   checkboxes.innerHTML = getActiveClients().map(c =>
     `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 0;cursor:pointer;">
-      <input type="checkbox" value="${c.id}" class="cr-client-cb"> ${c.name}
-      ${c.cwAccountId ? '<span style="font-size:11px;color:var(--gray-400);">(CW: ' + c.cwAccountId + ')</span>' : '<span style="font-size:11px;color:var(--warning);">(CW未設定)</span>'}
+      <input type="checkbox" value="${c.id}" class="cr-client-cb"> ${escapeHtml(c.name)}
+      ${c.cwAccountId ? '<span style="font-size:11px;color:var(--gray-400);">(CW: ' + escapeHtml(c.cwAccountId) + ')</span>' : '<span style="font-size:11px;color:var(--warning);">(CW未設定)</span>'}
     </label>`
   ).join('');
 

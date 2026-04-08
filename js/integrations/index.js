@@ -242,7 +242,7 @@ function renderGoogleDetails(st) {
         <div style="font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:6px;">カレンダー選択</div>
         ${cals.map((c, i) => `
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:4px;cursor:pointer;">
-            <input type="checkbox" ${c.checked ? 'checked' : ''} onchange="event.stopPropagation();toggleGoogleCalendar(${i})"> ${c.name}
+            <input type="checkbox" ${c.checked ? 'checked' : ''} onchange="event.stopPropagation();toggleGoogleCalendar(${i})"> ${escapeHtml(c.name)}
           </label>
         `).join('')}
       </div>

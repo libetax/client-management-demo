@@ -51,7 +51,7 @@ function renderTeamCards() {
               const u = getUserById(m.userId);
               if (!u) return '';
               return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--gray-100);">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">${u.name[0]}</div>
+                <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">${escapeHtml(u.name[0] || '')}</div>
                 <div style="flex:1;font-size:13px;">${escapeHtml(u.name)}</div>
                 <span style="font-size:11px;color:var(--gray-500);">${m.role === 'leader' ? 'リーダー' : 'メンバー'}</span>
                 <button class="btn-icon" onclick="removeTeamMember('${team.id}','${m.id}')" title="削除" style="font-size:14px;color:var(--gray-400);">&times;</button>
@@ -60,7 +60,7 @@ function renderTeamCards() {
             <div style="display:flex;gap:8px;margin-top:8px;">
               <select id="team-add-member-${team.id}" class="filter-select" style="flex:1;font-size:12px;">
                 <option value="">職員を選択...</option>
-                ${getActiveUsers().filter(u => !members.some(m => m.userId === u.id)).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+                ${getActiveUsers().filter(u => !members.some(m => m.userId === u.id)).map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('')}
               </select>
               <select id="team-add-role-${team.id}" class="filter-select" style="font-size:12px;">
                 <option value="member">メンバー</option>

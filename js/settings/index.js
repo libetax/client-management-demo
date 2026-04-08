@@ -123,15 +123,15 @@ function renderSettings(el) {
           <div class="card-header"><h3>マイ設定</h3></div>
           <div class="card-body">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-              <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:600;">${u.name[0]}</div>
+              <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:600;">${escapeHtml(u.name[0] || '')}</div>
               <div>
-                <div style="font-size:18px;font-weight:600;">${u.name}</div>
-                <div style="font-size:13px;color:var(--gray-500);">${u.email} / ${getRoleBadge(u.role)}</div>
+                <div style="font-size:18px;font-weight:600;">${escapeHtml(u.name)}</div>
+                <div style="font-size:13px;color:var(--gray-500);">${escapeHtml(u.email)} / ${getRoleBadge(u.role)}</div>
               </div>
             </div>
             <div id="personal-flash"></div>
-            <div class="form-group"><label>表示名</label><input type="text" id="set-personal-name" value="${u.name}"></div>
-            <div class="form-group"><label>メールアドレス</label><input type="email" id="set-personal-email" value="${u.email}"></div>
+            <div class="form-group"><label>表示名</label><input type="text" id="set-personal-name" value="${escapeHtml(u.name)}"></div>
+            <div class="form-group"><label>メールアドレス</label><input type="email" id="set-personal-email" value="${escapeHtml(u.email)}"></div>
             <div class="form-group"><label>所属チーム</label><input type="text" value="${fullUser?.team || '（なし）'}" disabled style="background:var(--gray-50);"></div>
             <button class="btn btn-primary" onclick="savePersonalSettings()">保存</button>
           </div>

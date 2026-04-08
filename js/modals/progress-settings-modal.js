@@ -13,7 +13,7 @@ function openProgressSettingsModal(sheetId) {
 
   document.getElementById('edit-pg-manager').innerHTML = MOCK_DATA.users
     .filter(u => u.isActive && (u.role === 'admin' || u.role === 'team_leader'))
-    .map(u => `<option value="${u.id}" ${u.id === s.managerId ? 'selected' : ''}>${u.name}</option>`)
+    .map(u => `<option value="${u.id}" ${u.id === s.managerId ? 'selected' : ''}>${escapeHtml(u.name)}</option>`)
     .join('');
 
   // タブ切替ロジック

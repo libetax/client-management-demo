@@ -147,7 +147,7 @@ function renderAIDraft(panel) {
             <label>顧客</label>
             <select id="ai-draft-client">
               <option value="">-- 顧客を選択 --</option>
-              ${activeClients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+              ${activeClients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
             </select>
           </div>
           <div class="form-group">

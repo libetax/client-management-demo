@@ -65,8 +65,8 @@ function renderProgress(el) {
                   const myComplete = myTargets.length - myIncomplete;
                   const complete = totalTargets - incomplete;
                   return `<tr class="clickable" onclick="navigateTo('progress-detail',{id:'${s.id}'})">
-                    <td><span class="type-badge type-corp">${s.category}</span></td>
-                    <td><strong>${s.name}</strong></td>
+                    <td><span class="type-badge type-corp">${escapeHtml(s.category)}</span></td>
+                    <td><strong>${escapeHtml(s.name)}</strong></td>
                     <td>${totalTargets}件</td>
                     <td>${myIncomplete > 0 ? `<span class="count-badge count-warn">${myIncomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
                     <td>${incomplete > 0 ? `<span class="count-badge count-warn">${incomplete}</span>` : '<span style="color:var(--gray-400)">0</span>'}</td>
@@ -92,8 +92,8 @@ function renderProgress(el) {
         return `
           <div class="card clickable" onclick="navigateTo('progress-detail',{id:'${s.id}'})" style="cursor:pointer;">
             <div class="card-header">
-              <h3>${s.name}</h3>
-              <span class="type-badge type-corp">${s.category}</span>
+              <h3>${escapeHtml(s.name)}</h3>
+              <span class="type-badge type-corp">${escapeHtml(s.category)}</span>
             </div>
             <div class="card-body">
               <div class="pg-progress-bar"><div class="pg-progress-fill" style="width:${pct}%"></div></div>
@@ -325,7 +325,6 @@ function openStatusSelect(sheetId, clientId, colName, span) {
     if (newVal === '完了') {
       // JST基準で MM/DD 形式の日付を設定
       const now = new Date();
-      const jstStr = now.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', month: '2-digit', day: '2-digit' }).replace('/', '/');
       const parts = now.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }).split('-');
       target.completedDates[colName] = `${parseInt(parts[1])}/${parseInt(parts[2])}`;
     } else {
