@@ -66,6 +66,24 @@ function rpGetFiltered() {
   reports = filterByField(reports, 'type', typeFilter);
   reports = filterByField(reports, 'category', categoryFilter);
 
+  // 既読/未読フィルタ
+  if (rpReadFilter === 'unread') reports = reports.filter(r => r.readStatus === '未読');
+  else if (rpReadFilter === 'read') reports = reports.filter(r => r.readStatus !== '未読');
+
+  // 詳細検索条件
+  if (rpSearchState.author) reports = reports.filter(r => r.authorId === rpSearchState.author);
+  if (rpSearchState.category) reports = reports.filter(r => r.category === rpSearchState.category);
+  if (rpSearchState.client) reports = reports.filter(r => (r.clientName || '').includes(rpSearchState.client));
+  if (rpSearchState.keyword) {
+    const kw = rpSearchState.keyword.toLowerCase();
+    reports = reports.filter(r => (r.title || '').toLowerCase().includes(kw) || (r.body || '').toLowerCase().includes(kw));
+  }
+  if (rpSearchState.dateFrom) reports = reports.filter(r => r.createdAt >= rpSearchState.dateFrom);
+  if (rpSearchState.dateTo) reports = reports.filter(r => r.createdAt <= rpSearchState.dateTo + 'T23:59:59');
+  if (rpSearchState.ranks.length > 0) reports = reports.filter(r => rpSearchState.ranks.includes(r.rank));
+  if (rpSearchState.attachOnly) reports = reports.filter(r => r.hasAttachment);
+  if (rpSearchState.draftOnly) reports = reports.filter(r => r.readStatus === '一時保存中');
+
   reports.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return reports;
 }

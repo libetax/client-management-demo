@@ -69,16 +69,6 @@ function toggleIntCard(key) {
   if (content) renderIntegrations(content);
 }
 
-function intFlash(elementId, msg, type) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const bg = type === 'success' ? '#d1ecf1' : type === 'warning' ? '#fff3cd' : '#d1ecf1';
-  const border = type === 'success' ? '#bee5eb' : type === 'warning' ? '#ffeeba' : '#bee5eb';
-  const color = type === 'success' ? '#0c5460' : type === 'warning' ? '#856404' : '#0c5460';
-  el.innerHTML = `<div style="background:${bg};border:1px solid ${border};border-radius:6px;color:${color};font-size:12px;padding:6px 10px;margin-top:8px;">${msg}</div>`;
-  setTimeout(() => { if (el) el.innerHTML = ''; }, 3000);
-}
-
 function chatworkTestSend() {
   intFlash('int-flash-chatwork', 'テストメッセージを送信しました', 'success');
 }
