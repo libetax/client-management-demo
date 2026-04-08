@@ -223,25 +223,27 @@ function analyzeContractPdf(clientId) {
         <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="applyContractPdfData('${clientId}')">チェック項目を反映</button>
       </div>`;
 
-    // 抽出データを一時保存
-    window._pdfExtracted = extracted;
+    // 抽出データを一時保存（clientIdキーで管理）
+    if (!window._pdfExtracted) window._pdfExtracted = {};
+    window._pdfExtracted[clientId] = extracted;
   };
   reader.readAsArrayBuffer(file);
 }
 
 function applyContractPdfData(clientId) {
   const c = getClientById(clientId);
-  if (!c || !window._pdfExtracted) return;
+  const extracted = window._pdfExtracted && window._pdfExtracted[clientId];
+  if (!c || !extracted) return;
   const checks = document.querySelectorAll('.pdf-apply-check:checked');
   let applied = 0;
   checks.forEach(cb => {
     const key = cb.dataset.key;
-    if (window._pdfExtracted[key] !== undefined) {
-      c[key] = window._pdfExtracted[key];
+    if (extracted[key] !== undefined) {
+      c[key] = extracted[key];
       applied++;
     }
   });
-  window._pdfExtracted = null;
+  delete window._pdfExtracted[clientId];
   alert(`${applied}項目を反映しました`);
   navigateTo('client-detail', { id: clientId });
 }

@@ -301,13 +301,24 @@ function filterByField(items, fieldName, value) {
   return items.filter(item => item[fieldName] === value);
 }
 
-// フィルタ要素へのイベントバインド
+// debounceヘルパー
+function debounce(fn, delay) {
+  let timer;
+  return function() {
+    clearTimeout(timer);
+    timer = setTimeout(fn, delay);
+  };
+}
+
+// フィルタ要素へのイベントバインド（テキスト入力は200msデバウンス）
 function bindFilters(ids, handler) {
+  const debounced = debounce(handler, 200);
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    const event = el.tagName === 'SELECT' ? 'change' : el.type === 'checkbox' ? 'change' : 'input';
-    el.addEventListener(event, handler);
+    const isText = el.tagName !== 'SELECT' && el.type !== 'checkbox';
+    const event = isText ? 'input' : 'change';
+    el.addEventListener(event, isText ? debounced : handler);
   });
 }
 
