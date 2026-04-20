@@ -54,13 +54,20 @@ function renderClients(el) {
       </select>
       <div class="spacer"></div>
       <div style="position:relative;">
-        <button class="btn btn-secondary btn-sm" id="client-col-toggle-btn" title="表示列の設定">列 ▼</button>
-        <div id="client-col-dropdown" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:8px 12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:100;min-width:160px;">
+        <button class="btn btn-secondary btn-sm" id="client-col-toggle-btn" title="表示設定">☰ 表示設定</button>
+        <div id="client-col-dropdown" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--gray-200);border-radius:8px;padding:8px 12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:100;min-width:180px;">
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);margin-bottom:4px;letter-spacing:0.05em;">表示列</div>
           ${CLIENT_COLUMNS.filter(c => !c.required).map(c => `
             <label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer;">
               <input type="checkbox" class="client-col-check" data-key="${c.key}" ${c.visible ? 'checked' : ''}> ${c.label}
             </label>
           `).join('')}
+          <div style="border-top:1px solid var(--gray-100);margin:8px 0;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--gray-400);margin-bottom:6px;letter-spacing:0.05em;">ハイライト（強調表示）</div>
+          <select id="client-highlight-filter" style="width:100%;font-size:13px;padding:4px 6px;border:1px solid var(--gray-200);border-radius:6px;">
+            <option value="">なし</option>
+            ${buildUserOptions()}
+          </select>
         </div>
       </div>
       <button class="btn btn-csv btn-sm" onclick="exportClientCSV()">CSV出力</button>
@@ -106,6 +113,8 @@ function renderClients(el) {
       renderClientTable();
     });
   });
+  const highlightSel = document.getElementById('client-highlight-filter');
+  if (highlightSel) highlightSel.addEventListener('change', renderClientTable);
 }
 
 // 契約ステータスのグループ定義
@@ -163,9 +172,11 @@ function renderClientTable() {
   const start = (clientPage - 1) * clientPerPage;
   const pageItems = clients.slice(start, start + clientPerPage);
 
+  const highlightUserId = document.getElementById('client-highlight-filter')?.value || '';
   renderTableBody('client-table-body', pageItems, c => {
     const cells = visibleCols.map(col => colMap[col.key](c)).join('');
-    return `<tr class="clickable" onclick="navigateTo('client-detail',{id:'${c.id}'})">${cells}</tr>`;
+    const isHighlighted = highlightUserId && getAssigneeUserId(c.id, 'main') === highlightUserId;
+    return `<tr class="clickable${isHighlighted ? ' row-highlighted' : ''}" onclick="navigateTo('client-detail',{id:'${c.id}'})">${cells}</tr>`;
   }, visibleCols.length);
 
   const pag = document.getElementById('client-pagination');

@@ -146,6 +146,8 @@ thead th { background: var(--gray-50); padding: 10px 14px; text-align: left; fon
 tbody td { padding: 12px 14px; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
 tbody tr:hover { background: var(--gray-50); }
 tbody tr.clickable { cursor: pointer; }
+tbody tr.row-highlighted { background: #fefce8; }
+tbody tr.row-highlighted:hover { background: #fef9c3; }
 
 /* ── ステータスバッジ ── */
 .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
