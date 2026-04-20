@@ -124,23 +124,23 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>顧客</label>
+        <label for="new-task-client">顧客</label>
         <select id="new-task-client"></select>
       </div>
       <div class="form-group">
-        <label>タスク名</label>
+        <label for="new-task-title">タスク名 *</label>
         <input type="text" id="new-task-title" placeholder="例: 法人税確定申告書作成">
       </div>
       <div class="form-group">
-        <label>担当者</label>
+        <label for="new-task-assignee">担当者</label>
         <select id="new-task-assignee"></select>
       </div>
       <div class="form-group">
-        <label>期限</label>
+        <label for="new-task-due">期限 *</label>
         <input type="date" id="new-task-due">
       </div>
       <div class="form-group">
-        <label>ステータス</label>
+        <label for="new-task-status">ステータス</label>
         <select id="new-task-status">
           <option value="未着手">未着手</option>
           <option value="進行中">進行中</option>
@@ -163,77 +163,77 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>顧客名</label>
+        <label for="new-client-name">顧客名 *</label>
         <input type="text" id="new-client-name" placeholder="例: 株式会社サンプル">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>種別</label>
+          <label for="new-client-type">種別</label>
           <select id="new-client-type">
             <option value="法人">法人</option>
             <option value="個人">個人</option>
           </select>
         </div>
         <div class="form-group">
-          <label>決算月</label>
+          <label for="new-client-fiscal">決算月</label>
           <select id="new-client-fiscal"></select>
         </div>
       </div>
       <div class="form-group">
-        <label>税理士</label>
+        <label for="new-client-mgr">税理士</label>
         <select id="new-client-mgr"><option value="">なし</option></select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>主担当</label>
+          <label for="new-client-main">主担当</label>
           <select id="new-client-main"></select>
         </div>
         <div class="form-group">
-          <label>副担当</label>
+          <label for="new-client-sub">副担当</label>
           <select id="new-client-sub"><option value="">なし</option></select>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>記帳代行 主担当</label>
+          <label for="new-client-bookkeeper">記帳代行 主担当</label>
           <select id="new-client-bookkeeper"><option value="">なし</option></select>
         </div>
         <div class="form-group">
-          <label>記帳代行 副担当</label>
+          <label for="new-client-bookkeeping-sub">記帳代行 副担当</label>
           <select id="new-client-bookkeeping-sub"><option value="">なし</option></select>
         </div>
       </div>
       <div class="form-group">
-        <label>住所</label>
+        <label for="new-client-address">住所</label>
         <input type="text" id="new-client-address" placeholder="例: 東京都千代田区大手町1-1-1">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>電話番号</label>
+          <label for="new-client-tel">電話番号</label>
           <input type="text" id="new-client-tel" placeholder="例: 03-1234-5678">
         </div>
         <div class="form-group">
-          <label>業種</label>
+          <label for="new-client-industry">業種</label>
           <input type="text" id="new-client-industry" placeholder="例: 卸売業">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>代表者名</label>
+          <label for="new-client-representative">代表者名</label>
           <input type="text" id="new-client-representative" placeholder="例: 山本 太郎">
         </div>
         <div class="form-group">
-          <label>管轄税務署</label>
+          <label for="new-client-taxoffice">管轄税務署</label>
           <input type="text" id="new-client-taxoffice" placeholder="例: 千代田税務署">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>月額報酬（税抜・円）</label>
+          <label for="new-client-sales">月額報酬（税抜・円） *</label>
           <input type="number" id="new-client-sales" placeholder="50000" min="0" step="1000">
         </div>
         <div class="form-group">
-          <label>年1申告報酬（税抜・円）</label>
+          <label for="new-client-annual-fee">年1申告報酬（税抜・円）</label>
           <input type="number" id="new-client-annual-fee" placeholder="150000" min="0" step="1000">
         </div>
       </div>
@@ -241,7 +241,7 @@
       <div style="border-top:1px solid var(--gray-200);padding-top:16px;margin-top:8px;">
         <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:12px;">Chatwork連携</div>
         <div class="form-group">
-          <label>CWアカウントID</label>
+          <label for="new-client-cw-id">CWアカウントID</label>
           <input type="text" id="new-client-cw-id" placeholder="例: 1234567">
         </div>
       </div>
@@ -263,51 +263,51 @@
     <div class="modal-body">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>姓</label>
+          <label for="new-staff-lastName">姓 *</label>
           <input type="text" id="new-staff-lastName" placeholder="例: 山田">
         </div>
         <div class="form-group">
-          <label>名</label>
+          <label for="new-staff-firstName">名</label>
           <input type="text" id="new-staff-firstName" placeholder="例: 太郎">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>フリガナ（姓）</label>
+          <label for="new-staff-lastNameKana">フリガナ（姓）</label>
           <input type="text" id="new-staff-lastNameKana" placeholder="例: ヤマダ">
         </div>
         <div class="form-group">
-          <label>フリガナ（名）</label>
+          <label for="new-staff-firstNameKana">フリガナ（名）</label>
           <input type="text" id="new-staff-firstNameKana" placeholder="例: タロウ">
         </div>
       </div>
       <div class="form-group">
-        <label>メールアドレス</label>
+        <label for="new-staff-email">メールアドレス *</label>
         <input type="email" id="new-staff-email" placeholder="yamada@libetax.jp">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>電話番号</label>
+          <label for="new-staff-tel">電話番号</label>
           <input type="tel" id="new-staff-tel" placeholder="06-1234-5678">
         </div>
         <div class="form-group">
-          <label>携帯番号</label>
+          <label for="new-staff-mobile">携帯番号</label>
           <input type="tel" id="new-staff-mobile" placeholder="090-1234-5678">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>部署</label>
+          <label for="new-staff-deptId">部署</label>
           <select id="new-staff-deptId"></select>
         </div>
         <div class="form-group">
-          <label>役職</label>
+          <label for="new-staff-position">役職</label>
           <input type="text" id="new-staff-position" placeholder="例: スタッフ">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>雇用形態</label>
+          <label for="new-staff-employmentType">雇用形態</label>
           <select id="new-staff-employmentType">
             <option value="正社員">正社員</option>
             <option value="パート">パート</option>
@@ -315,13 +315,13 @@
           </select>
         </div>
         <div class="form-group">
-          <label>入社日</label>
+          <label for="new-staff-joinDate">入社日</label>
           <input type="date" id="new-staff-joinDate">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
-          <label>ロール</label>
+          <label for="new-staff-role">ロール</label>
           <select id="new-staff-role">
             <option value="member">メンバー</option>
             <option value="team_leader">チームリーダー</option>
@@ -329,7 +329,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>分類</label>
+          <label for="new-staff-staffFlag">分類</label>
           <select id="new-staff-staffFlag">
             <option value="税務">税務</option>
             <option value="記帳">記帳</option>
@@ -338,23 +338,23 @@
         </div>
       </div>
       <div class="form-group">
-        <label>CWID（ChatworkアカウントID）</label>
+        <label for="new-staff-cwAccountId">CWID（ChatworkアカウントID）</label>
         <input type="text" id="new-staff-cwAccountId" placeholder="例: 1234567">
       </div>
       <div class="form-group">
-        <label>顔写真URL</label>
+        <label for="new-staff-photoUrl">顔写真URL</label>
         <input type="text" id="new-staff-photoUrl" placeholder="https://example.com/photo.jpg">
       </div>
       <div class="form-group">
-        <label>リベシティプロフィールURL</label>
+        <label for="new-staff-libeProfileUrl">リベシティプロフィールURL</label>
         <input type="text" id="new-staff-libeProfileUrl" placeholder="https://libecity.com/user/...">
       </div>
       <div class="form-group">
-        <label>自己紹介</label>
+        <label for="new-staff-selfIntro">自己紹介</label>
         <textarea id="new-staff-selfIntro" rows="3" placeholder="自己紹介を入力..." style="width:100%;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
       </div>
       <div class="form-group">
-        <label>備考</label>
+        <label for="new-staff-memo">備考</label>
         <textarea id="new-staff-memo" rows="3" placeholder="備考を入力..." style="width:100%;padding:8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;resize:vertical;"></textarea>
       </div>
     </div>
