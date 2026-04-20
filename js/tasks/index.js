@@ -7,20 +7,70 @@ const taskPerPage = 20;
 function renderTasks(el) {
   taskPage = 1;
   el.innerHTML = `
+    <!-- フィルタードロワーオーバーレイ -->
+    <div class="filter-drawer-overlay" id="task-filter-overlay"></div>
+    <!-- フィルタードロワー本体 -->
+    <div class="filter-drawer" id="task-filter-drawer">
+      <div class="filter-drawer-header">
+        フィルター
+        <button class="btn-icon" id="task-filter-close" title="閉じる">&times;</button>
+      </div>
+      <div class="filter-drawer-body">
+        <div class="filter-drawer-group">
+          <label>検索</label>
+          <input type="text" class="search-input" placeholder="タスク名・顧客名で検索..." id="task-search-drawer">
+        </div>
+        <div class="filter-drawer-group">
+          <label>ステータス</label>
+          <select class="filter-select" id="task-status-filter-drawer">
+            <option value="">全ステータス</option>
+            <option value="incomplete" selected>未完了</option>
+            <option value="overdue">期限超過</option>
+            <option value="未着手">未着手</option>
+            <option value="進行中">進行中</option>
+            <option value="完了">完了</option>
+          </select>
+        </div>
+        ${MOCK_DATA.currentUser.role === 'admin' ? `
+        <div class="filter-drawer-group">
+          <label>担当者</label>
+          <select class="filter-select" id="task-assignee-filter-drawer">
+            <option value="">全担当者</option>
+            ${buildUserOptions()}
+          </select>
+        </div>` : ''}
+      </div>
+      <div class="filter-drawer-footer">
+        <button class="btn btn-secondary" style="width:100%" id="task-filter-reset">リセット</button>
+      </div>
+    </div>
+
     <div class="toolbar">
-      <input type="text" class="search-input" placeholder="タスク名・顧客名で検索..." id="task-search">
-      <select class="filter-select" id="task-status-filter">
-        <option value="">全ステータス</option>
-        <option value="incomplete" selected>未完了</option>
-        <option value="overdue">期限超過</option>
-        <option value="未着手">未着手</option>
-        <option value="進行中">進行中</option>
-        <option value="完了">完了</option>
-      </select>
-      <select class="filter-select" id="task-assignee-filter">
-        <option value="">全担当者</option>
-        ${buildUserOptions()}
-      </select>
+      <!-- モバイル用フィルターボタン -->
+      <button class="btn btn-secondary btn-sm toolbar-filter-mobile" id="task-filter-open">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        フィルター
+        <span class="filter-badge" id="task-filter-badge" style="display:none"></span>
+      </button>
+      <!-- モバイル用検索（md未満のみ） -->
+      <input type="text" class="search-input toolbar-filter-mobile" placeholder="タスク名・顧客名で検索..." id="task-search" style="flex:1">
+      <!-- PCインラインフィルター（md以上のみ） -->
+      <div class="toolbar-inline-filters" style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;">
+        <input type="text" class="search-input" placeholder="タスク名・顧客名で検索..." id="task-search-pc" style="min-width:200px;flex:1">
+        <select class="filter-select" id="task-status-filter">
+          <option value="">全ステータス</option>
+          <option value="incomplete" selected>未完了</option>
+          <option value="overdue">期限超過</option>
+          <option value="未着手">未着手</option>
+          <option value="進行中">進行中</option>
+          <option value="完了">完了</option>
+        </select>
+        ${MOCK_DATA.currentUser.role === 'admin' ? `
+        <select class="filter-select" id="task-assignee-filter">
+          <option value="">全担当者</option>
+          ${buildUserOptions()}
+        </select>` : ''}
+      </div>
       <div class="spacer"></div>
       <button class="btn btn-primary" onclick="openTaskModal()">+ 新規タスク</button>
     </div>
@@ -34,23 +84,96 @@ function renderTasks(el) {
       <div id="task-pagination" class="rp-pagination"></div>
     </div>
   `;
+
   // ダッシュボードからのフィルタ適用
   if (typeof dashTaskFilter !== 'undefined' && dashTaskFilter) {
-    const sel = document.getElementById('task-status-filter');
-    if (sel) sel.value = dashTaskFilter;
+    ['task-status-filter', 'task-status-filter-drawer'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = dashTaskFilter;
+    });
     dashTaskFilter = '';
   }
   // デフォルト担当フィルタ: adminは全員、それ以外は自分
   if (MOCK_DATA.currentUser.role !== 'admin') {
-    const assigneeSel = document.getElementById('task-assignee-filter');
-    if (assigneeSel) assigneeSel.value = MOCK_DATA.currentUser.id;
+    ['task-assignee-filter', 'task-assignee-filter-drawer'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.value = MOCK_DATA.currentUser.id;
+    });
   }
+
+  // ドロワー開閉
+  const drawer = document.getElementById('task-filter-drawer');
+  const overlay = document.getElementById('task-filter-overlay');
+  const openDrawer = () => { drawer.classList.add('open'); overlay.classList.add('show'); };
+  const closeDrawer = () => { drawer.classList.remove('open'); overlay.classList.remove('show'); };
+  document.getElementById('task-filter-open')?.addEventListener('click', openDrawer);
+  document.getElementById('task-filter-close')?.addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  // バッジ更新
+  function updateFilterBadge() {
+    const search = document.getElementById('task-search')?.value || document.getElementById('task-search-pc')?.value || '';
+    const status = document.getElementById('task-status-filter-drawer')?.value || document.getElementById('task-status-filter')?.value || '';
+    const assignee = document.getElementById('task-assignee-filter-drawer')?.value || document.getElementById('task-assignee-filter')?.value || '';
+    const count = (search ? 1 : 0) + (status && status !== 'incomplete' ? 1 : 0) + (assignee ? 1 : 0);
+    const badge = document.getElementById('task-filter-badge');
+    if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'inline-flex' : 'none'; }
+  }
+
+  // ドロワー内フィルター → PC側に同期して再描画
+  function syncFromDrawer() {
+    const drawerStatus = document.getElementById('task-status-filter-drawer');
+    const drawerAssignee = document.getElementById('task-assignee-filter-drawer');
+    const pcStatus = document.getElementById('task-status-filter');
+    const pcAssignee = document.getElementById('task-assignee-filter');
+    if (drawerStatus && pcStatus) pcStatus.value = drawerStatus.value;
+    if (drawerAssignee && pcAssignee) pcAssignee.value = drawerAssignee.value;
+  }
+
+  // PC側フィルター → ドロワーに同期
+  function syncFromPC() {
+    const pcStatus = document.getElementById('task-status-filter');
+    const pcAssignee = document.getElementById('task-assignee-filter');
+    const drawerStatus = document.getElementById('task-status-filter-drawer');
+    const drawerAssignee = document.getElementById('task-assignee-filter-drawer');
+    if (pcStatus && drawerStatus) drawerStatus.value = pcStatus.value;
+    if (pcAssignee && drawerAssignee) drawerAssignee.value = pcAssignee.value;
+  }
+
+  // リセット
+  document.getElementById('task-filter-reset')?.addEventListener('click', () => {
+    ['task-search', 'task-search-pc', 'task-search-drawer'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['task-status-filter', 'task-status-filter-drawer'].forEach(id => { const el = document.getElementById(id); if (el) el.value = 'incomplete'; });
+    ['task-assignee-filter', 'task-assignee-filter-drawer'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    taskPage = 1;
+    renderTaskTable();
+    updateFilterBadge();
+    closeDrawer();
+  });
+
+  // PC側イベント
+  ['task-search-pc', 'task-status-filter', 'task-assignee-filter'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => { syncFromPC(); taskPage = 1; renderTaskTable(); updateFilterBadge(); });
+    document.getElementById(id)?.addEventListener('change', () => { syncFromPC(); taskPage = 1; renderTaskTable(); updateFilterBadge(); });
+  });
+  // モバイル検索
+  document.getElementById('task-search')?.addEventListener('input', () => { taskPage = 1; renderTaskTable(); updateFilterBadge(); });
+  // ドロワー側イベント
+  ['task-search-drawer', 'task-status-filter-drawer', 'task-assignee-filter-drawer'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => { syncFromDrawer(); taskPage = 1; renderTaskTable(); updateFilterBadge(); });
+    document.getElementById(id)?.addEventListener('change', () => { syncFromDrawer(); taskPage = 1; renderTaskTable(); updateFilterBadge(); });
+  });
+
   renderTaskTable();
-  bindFilters(['task-search', 'task-status-filter', 'task-assignee-filter'], () => { taskPage = 1; renderTaskTable(); });
+  updateFilterBadge();
 }
 
 function renderTaskTable() {
-  const search = (document.getElementById('task-search')?.value || '').toLowerCase();
+  const search = (
+    document.getElementById('task-search')?.value ||
+    document.getElementById('task-search-pc')?.value ||
+    ''
+  ).toLowerCase();
   const statusFilter = document.getElementById('task-status-filter')?.value || '';
   const assigneeFilter = document.getElementById('task-assignee-filter')?.value || '';
 
