@@ -201,6 +201,11 @@ function renderClientDetail(el, params) {
     `<option value="${i}" ${c?.industry === i ? 'selected' : ''}>${i}</option>`
   ).join('');
 
+  // 従業員数選択肢
+  const employeeCountOptions = ['0〜5人','6〜9人','10〜19人','20〜29人','30〜39人','40〜49人','50〜59人','60〜69人','70〜79人','80〜89人','90〜99人','100人以上'].map(count =>
+    `<option value="${count}" ${c?.employeeCount === count ? 'selected' : ''}>${count}</option>`
+  ).join('');
+
   // 契約ステータス選択肢
   const contractStatusOptions = ['契約中','契約完了','契約書手続中','スポット依頼','見込み','顧問契約検討中','チャット作成済','Zoom','初回メール送信済','コンタクト送信済','契約解除','休止中','失注'].map(s =>
     `<option value="${s}" ${c?.contractStatus === s ? 'selected' : ''}>${s}</option>`
@@ -241,6 +246,7 @@ function renderClientDetail(el, params) {
           <div class="detail-row"><div class="detail-label">種別</div><div class="detail-value">${editing ? `<select id="ed-type" class="inline-edit-input"><option value="法人">法人</option><option value="個人">個人</option></select>` : renderTypeBadge(c.clientType)}</div></div>
           <div class="detail-row"><div class="detail-label">決算月</div><div class="detail-value">${editing ? `<select id="ed-fiscal" class="inline-edit-input">${fiscalOptionsWithPersonal}</select>` : (c.fiscalMonth === 'personal' ? '個人（12月）' : c.fiscalMonth + '月')}</div></div>
           <div class="detail-row"><div class="detail-label">業種</div><div class="detail-value">${editing ? `<select id="ed-industry-select" class="inline-edit-input" onchange="document.getElementById('ed-industry-wrap').style.display=this.value==='_other'?'':'none'"><option value="">選択...</option>${industryOptions}<option value="_other">その他（手入力）</option></select><div id="ed-industry-wrap" style="display:${c?.industry && !['卸売業','製造業','不動産業','不動産賃貸','小売業','サービス業','IT・ソフトウェア','建設業','飲食業','医療・福祉','農業','NPO・福祉','フリーランス（IT）','その他'].includes(c.industry) ? '' : 'none'};margin-top:6px;"><input type="text" id="ed-industry" class="inline-edit-input" value="${c?.industry && !['卸売業','製造業','不動産業','不動産賃貸','小売業','サービス業','IT・ソフトウェア','建設業','飲食業','医療・福祉','農業','NPO・福祉','フリーランス（IT）','その他'].includes(c.industry) ? (c.industry || '') : ''}" placeholder="業種を入力"></div>` : val(c?.industry)}</div></div>
+          <div class="detail-row"><div class="detail-label">従業員数</div><div class="detail-value">${editing ? `<select id="ed-employeeCount" class="inline-edit-input"><option value="">未設定</option>${employeeCountOptions}</select>` : val(c?.employeeCount, '未設定')}</div></div>
           <div class="detail-row"><div class="detail-label">郵便番号</div><div class="detail-value">${editing ? inp('ed-postalCode', c?.postalCode, 'text', '例: 100-0004') : val(c?.postalCode)}</div></div>
           <div class="detail-row"><div class="detail-label">住所</div><div class="detail-value">${editing ? inp('ed-address', c?.address, 'text', '例: 東京都千代田区大手町1-1-1') : val(c.address)}</div></div>
           <div class="detail-row"><div class="detail-label">電話番号</div><div class="detail-value">${editing ? inp('ed-tel', c?.tel, 'text', '例: 03-1234-5678') : val(c.tel)}</div></div>
@@ -437,6 +443,7 @@ function saveClientInline(id) {
   const representative = getValTrim('ed-representative');
   const industrySelect = getVal('ed-industry-select', '');
   const industry = industrySelect === '_other' ? getValTrim('ed-industry') : (industrySelect || getValTrim('ed-industry'));
+  const employeeCount = getVal('ed-employeeCount', '');
   const taxOffice = getValTrim('ed-taxoffice');
   const mgrUserId = getVal('ed-mgr', '');
   const mainUserId = getVal('ed-main', '');
@@ -501,7 +508,7 @@ function saveClientInline(id) {
     MOCK_DATA.clients.push({
       id: newId, clientCode: resolvedCode, name, clientType, fiscalMonth,
       isActive: true, mainUserId, subUserId, mgrUserId: mgrUserId || mainUserId,
-      monthlySales, annualFee, spotFees: [], address, tel, industry, representative, taxOffice,
+      monthlySales, annualFee, spotFees: [], address, tel, industry, employeeCount, representative, taxOffice,
       memo: '', establishDate: '', cwAccountId, cwRoomUrls: [], relatedClientIds: [], customFieldValues,
       contractStatus, contractStartDate, contractEndDate, nichizeiCode, managementNo, etaxId, etaxPassword, eltaxId, eltaxPassword, nichizeiPassword, nichizeiAccessCode, directDebitStatus,
       email, cityName, cityUrl, dropboxPath, consumptionTaxFee, consumptionTaxFreq, paymentInfo,
@@ -532,7 +539,7 @@ function saveClientInline(id) {
       upsertAssignment(c.id, 'bookkeeping_sub', bookkeepingSubId);
       c.monthlySales = monthlySales; c.annualFee = annualFee;
       c.address = address; c.tel = tel;
-      c.industry = industry; c.representative = representative; c.taxOffice = taxOffice;
+      c.industry = industry; c.employeeCount = employeeCount; c.representative = representative; c.taxOffice = taxOffice;
       c.cwAccountId = cwAccountId;
       c.customFieldValues = customFieldValues;
       c.contractStatus = contractStatus; c.contractStartDate = contractStartDate; c.contractEndDate = contractEndDate;
